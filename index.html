@@ -316,9 +316,12 @@ const CURRENT_USERS = {
 const ALL_ROLES = Object.keys(ROLES);
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
-  { key: "partsInventory", label: "Parts Inventory", icon: Package, roles: ALL_ROLES },
+  { key: "partsInventory", label: "Stock Room", icon: Package, roles: ALL_ROLES },
   { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["admin", "sales", "warehouse", "procurement", "finance"] },
-  { key: "sales", label: "Sales & Quotations", icon: ShoppingCart, roles: ["admin", "sales", "warehouse", "finance", "service"] },
+  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["admin", "sales", "finance"] },
+  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["admin", "sales", "warehouse", "finance"] },
+  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["admin", "sales", "finance"] },
+  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["admin", "service", "warehouse"] },
   { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["admin", "procurement", "finance"] },
   { key: "customers", label: "Customers", icon: Users, roles: ["admin", "sales", "finance"] },
   { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["admin", "finance"] },
@@ -354,25 +357,25 @@ const initialEquipment = [
   { id: "EQ-5005", type: "equipment", name: "Impact Crusher NP1213", brand: "Sandvik", category: "Crushing Plant", branch: "Tema Warehouse", stockRoom: "SR-05", qty: 0, reorder: 1, cost: 1650000, sell: 2050000 }
 ];
 const initialVendors = [
-  { id: "V-01", name: "Sandvik Parts Distribution", code: "SND-GH-014", contact: "Lars Eriksson", email: "parts@sandvik-gh.com", phone: "+233 30 222 1145", categories: "Crusher wear parts, bearings" },
-  { id: "V-02", name: "Terex Aftermarket", code: "TRX-WA-221", contact: "Mensah Owusu", email: "aftermarket@terex.com", phone: "+233 24 556 7788", categories: "Wear parts, filters, electrical" },
-  { id: "V-03", name: "AUROX Composites and Compounds Oy", code: "AUX-FI-009", contact: "Mika Laine", email: "sales@auroxcc.fi", phone: "+358 40 123 4567", categories: "Conveyor belting" },
-  { id: "V-04", name: "Voltline Electrical Supplies", code: "VLT-GH-077", contact: "Nana Yeboah", email: "info@voltline.com.gh", phone: "+233 20 334 8899", categories: "Electrical, VFD drives" }
+  { id: "V-01", name: "Sandvik Parts Distribution", code: "SND-GH-014", contact: "Lars Eriksson", email: "parts@sandvik-gh.com", phone: "+233 30 222 1145", altContact: "Mikael Roos, Accounts", categories: "Crusher wear parts, bearings", taxExempt: false, certificateFile: "sandvik-business-cert.pdf" },
+  { id: "V-02", name: "Terex Aftermarket", code: "TRX-WA-221", contact: "Mensah Owusu", email: "aftermarket@terex.com", phone: "+233 24 556 7788", altContact: "", categories: "Wear parts, filters, electrical", taxExempt: false, certificateFile: null },
+  { id: "V-03", name: "AUROX Composites and Compounds Oy", code: "AUX-FI-009", contact: "Mika Laine", email: "sales@auroxcc.fi", phone: "+358 40 123 4567", altContact: "", categories: "Conveyor belting", taxExempt: true, certificateFile: null },
+  { id: "V-04", name: "Voltline Electrical Supplies", code: "VLT-GH-077", contact: "Nana Yeboah", email: "info@voltline.com.gh", phone: "+233 20 334 8899", altContact: "", categories: "Electrical, VFD drives", taxExempt: false, certificateFile: null }
 ];
 const initialCustomers = [
-  { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
-  { id: "C-02", name: "Akwatia Gold Ltd", tier: "Gold", country: "Ghana", address: "Km 4 Akwatia-Kade Rd, Akwatia", email: "buying@akwatiagold.com", phone: "+233 24 220 6611", contactPerson: "Grace Antwi", contactAddress: "Km 4 Akwatia-Kade Rd, Akwatia", companyDetails: "Registered mining operator · TIN GH-0075512", poCode: "AWG-002", creditLimit: 100000, outstanding: 88000, contacts: [{ name: "Grace Antwi", role: "Purchasing Lead", email: "g.antwi@akwatiagold.com", phone: "+233 24 220 6611" }] },
-  { id: "C-03", name: "Ghana Gold Processing", tier: "Silver", country: "Ghana", address: "Industrial Area, Obuasi", email: "orders@ghanagoldproc.com", phone: "+233 20 445 1290", contactPerson: "Isaac Boadu", contactAddress: "Industrial Area, Obuasi", companyDetails: "Processing plant operator · TIN GH-0062341", poCode: "GGP-003", creditLimit: 60000, outstanding: 15000, contacts: [{ name: "Isaac Boadu", role: "Plant Manager", email: "i.boadu@ghanagoldproc.com", phone: "+233 20 445 1290" }] },
-  { id: "C-04", name: "Bamako Quarry Co.", tier: "Standard", country: "Mali", address: "Zone Industrielle, Bamako", email: "achats@bamakoquarry.ml", phone: "+223 76 334 220", contactPerson: "Moussa Traoré", contactAddress: "Zone Industrielle, Bamako", companyDetails: "Quarry operator · RCCM ML-BKO-2014", poCode: "BMQ-004", creditLimit: 30000, outstanding: 5000, contacts: [{ name: "Moussa Traoré", role: "Site Manager", email: "m.traore@bamakoquarry.ml", phone: "+223 76 334 220" }] },
-  { id: "C-05", name: "Ivorian Aggregates SARL", tier: "Silver", country: "Côte d'Ivoire", address: "Zone Industrielle Yopougon, Abidjan", email: "contact@ivorianagg.ci", phone: "+225 07 08 556 213", contactPerson: "Aya Kouassi", contactAddress: "Zone Industrielle Yopougon, Abidjan", companyDetails: "Aggregates producer · RCCM CI-ABJ-2011", poCode: "IVA-005", creditLimit: 50000, outstanding: 20000, contacts: [{ name: "Aya Kouassi", role: "Buyer", email: "a.kouassi@ivorianagg.ci", phone: "+225 07 08 556 213" }] }
+  { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, taxExempt: false, contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
+  { id: "C-02", name: "Akwatia Gold Ltd", tier: "Gold", country: "Ghana", address: "Km 4 Akwatia-Kade Rd, Akwatia", email: "buying@akwatiagold.com", phone: "+233 24 220 6611", contactPerson: "Grace Antwi", contactAddress: "Km 4 Akwatia-Kade Rd, Akwatia", companyDetails: "Registered mining operator · TIN GH-0075512", poCode: "AWG-002", creditLimit: 100000, outstanding: 88000, taxExempt: false, contacts: [{ name: "Grace Antwi", role: "Purchasing Lead", email: "g.antwi@akwatiagold.com", phone: "+233 24 220 6611" }] },
+  { id: "C-03", name: "Ghana Gold Processing", tier: "Silver", country: "Ghana", address: "Industrial Area, Obuasi", email: "orders@ghanagoldproc.com", phone: "+233 20 445 1290", contactPerson: "Isaac Boadu", contactAddress: "Industrial Area, Obuasi", companyDetails: "Processing plant operator · TIN GH-0062341", poCode: "GGP-003", creditLimit: 60000, outstanding: 15000, taxExempt: true, contacts: [{ name: "Isaac Boadu", role: "Plant Manager", email: "i.boadu@ghanagoldproc.com", phone: "+233 20 445 1290" }] },
+  { id: "C-04", name: "Bamako Quarry Co.", tier: "Standard", country: "Mali", address: "Zone Industrielle, Bamako", email: "achats@bamakoquarry.ml", phone: "+223 76 334 220", contactPerson: "Moussa Traoré", contactAddress: "Zone Industrielle, Bamako", companyDetails: "Quarry operator · RCCM ML-BKO-2014", poCode: "BMQ-004", creditLimit: 30000, outstanding: 5000, taxExempt: false, contacts: [{ name: "Moussa Traoré", role: "Site Manager", email: "m.traore@bamakoquarry.ml", phone: "+223 76 334 220" }] },
+  { id: "C-05", name: "Ivorian Aggregates SARL", tier: "Silver", country: "Côte d'Ivoire", address: "Zone Industrielle Yopougon, Abidjan", email: "contact@ivorianagg.ci", phone: "+225 07 08 556 213", contactPerson: "Aya Kouassi", contactAddress: "Zone Industrielle Yopougon, Abidjan", companyDetails: "Aggregates producer · RCCM CI-ABJ-2011", poCode: "IVA-005", creditLimit: 50000, outstanding: 20000, taxExempt: false, contacts: [{ name: "Aya Kouassi", role: "Buyer", email: "a.kouassi@ivorianagg.ci", phone: "+225 07 08 556 213" }] }
 ];
 const initialQuotations = [
-  { id: "QT-9001", type: "part", customerId: "C-01", country: "Ghana", lines: [{ itemId: "WP-1001", desc: "Jaw Crusher Wear Plate", qty: 2, unitPrice: 5200, newPart: false }], status: "Quoted", date: "2026-08-05", createdBy: "Kwabena Owusu" },
-  { id: "QT-9002", type: "equipment", customerId: "C-02", country: "Ghana", lines: [{ itemId: "EQ-5002", desc: "Cone Crusher CH430", qty: 1, unitPrice: 2650000, newPart: false }], status: "Sent", date: "2026-08-04", createdBy: "Kwabena Owusu" },
-  { id: "QT-9003", type: "part", customerId: "C-03", country: "Ghana", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], status: "Invoiced", date: "2026-08-01", createdBy: "Kwabena Owusu" }
+  { id: "QT-9001", type: "part", customerId: "C-01", country: "Ghana", lines: [{ itemId: "WP-1001", desc: "Jaw Crusher Wear Plate", qty: 2, unitPrice: 5200, newPart: false }], subtotal: 10400, applyTax: true, taxRate: 15, taxAmount: 1560, total: 11960, leadTimeDays: 14, eta: "2026-08-19", preparedBy: "Kwabena Owusu", feedbackLog: [], status: "Quoted", date: "2026-08-05", createdBy: "Kwabena Owusu" },
+  { id: "QT-9002", type: "equipment", customerId: "C-02", country: "Ghana", lines: [{ itemId: "EQ-5002", desc: "Cone Crusher CH430", qty: 1, unitPrice: 2650000, newPart: false }], subtotal: 2650000, applyTax: true, taxRate: 15, taxAmount: 397500, total: 3047500, leadTimeDays: 45, eta: "2026-09-20", preparedBy: "Kwabena Owusu", feedbackLog: [], status: "Sent", date: "2026-08-04", createdBy: "Kwabena Owusu" },
+  { id: "QT-9003", type: "part", customerId: "C-03", country: "Ghana", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], subtotal: 850, applyTax: false, taxRate: 15, taxAmount: 0, total: 850, leadTimeDays: 5, eta: "2026-08-06", preparedBy: "Kwabena Owusu", feedbackLog: [], status: "Invoiced", date: "2026-08-01", createdBy: "Kwabena Owusu" }
 ];
 const initialInvoices = [
-  { id: "INV-6001", quotationId: "QT-9003", type: "part", customerId: "C-03", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], status: "Paid", date: "2026-08-01", createdBy: "Kwabena Owusu" }
+  { id: "INV-6001", quotationId: "QT-9003", type: "part", customerId: "C-03", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], subtotal: 850, applyTax: false, taxRate: 15, taxAmount: 0, total: 850, status: "Paid", date: "2026-08-01", createdBy: "Kwabena Owusu" }
 ];
 const initialPurchaseOrders = [
   { id: "PO-7710", vendorId: "V-03", lines: [{ itemId: "CV-2004", itemName: "Conveyor Belt (per m)", qty: 50 }], status: "In Transit", date: "2026-08-02", expected: "2026-08-14", source: "manual" },
@@ -380,9 +383,10 @@ const initialPurchaseOrders = [
   { id: "PO-7698", vendorId: "V-02", lines: [{ itemId: "CN-3311", itemName: "Hydraulic Filter", qty: 30 }], status: "Received", date: "2026-07-25", expected: "2026-08-01", source: "manual" }
 ];
 const initialServiceJobs = [
-  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, status: "In Progress", date: "2026-08-05" },
-  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, status: "Completed", date: "2026-08-03" }
+  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, eta: "2026-08-12", preparedBy: "K. Boateng", feedbackLog: [], status: "In Progress", date: "2026-08-05" },
+  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, eta: "2026-08-06", preparedBy: "E. Adonoo", feedbackLog: [], status: "Completed", date: "2026-08-03" }
 ];
+const initialApprovalSettings = { valueThreshold: 20000, flaggedCustomers: ["Akwatia Gold Ltd"] };
 const initialUsers = [
   { id: "U-01", name: "Efua Mensah", email: "e.mensah@setvaco.com", username: "emensah", role: "admin", status: "Active" },
   { id: "U-02", name: "Kwabena Owusu", email: "k.owusu@setvaco.com", username: "kowusu", role: "sales", status: "Active" },
@@ -476,7 +480,9 @@ function statusColor(status) {
     Active: ["var(--safe)", "var(--safe-soft)"],
     Suspended: ["var(--vital)", "var(--vital-soft)"],
     Open: ["var(--info)", "var(--info-soft)"],
-    Issued: ["var(--info)", "var(--info-soft)"]
+    Issued: ["var(--info)", "var(--info-soft)"],
+    "Pending Approval": ["var(--caution)", "var(--caution-soft)"],
+    Rejected: ["var(--vital)", "var(--vital-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
@@ -816,26 +822,68 @@ function LineItemsEditor({ lines, setLines, inventoryItems }) {
   </div>;
 }
 
-function CreateQuotationModal({ type, customers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, onClose, onCreated, defaultCustomerId, defaultLines }) {
+function CustomerPickerField({ customerId, setCustomerId, isNew, setIsNew, newFields, setNewFields, customers }) {
+  return <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <label className="mis-label">Customer</label>
+      <button type="button" className="mis-link-btn" onClick={() => setIsNew(v => !v)}>{isNew ? "Pick existing customer" : "+ New customer"}</button>
+    </div>
+    {!isNew ? <TSelect required={!isNew} value={customerId} onChange={e => setCustomerId(e.target.value)}>
+      <option value="">Select customer…</option>
+      {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
+    </TSelect> : <div className="mis-grid-2">
+      <TInput required placeholder="Customer / company name" value={newFields.name} onChange={e => setNewFields(f => ({ ...f, name: e.target.value }))} />
+      <TInput required placeholder="Country" value={newFields.country} onChange={e => setNewFields(f => ({ ...f, country: e.target.value }))} />
+    </div>}
+  </div>;
+}
+function resolveOrCreateCustomer({ isNew, newFields, customerId, customers, setCustomers, logAction, currentUser }) {
+  if (!isNew) return customers.find(c => c.id === customerId) || null;
+  if (!newFields.name.trim()) return null;
+  const customer = { id: uid("C", customers, 2), name: newFields.name.trim(), country: newFields.country.trim() || "—", tier: "Standard", creditLimit: 0, outstanding: 0, taxExempt: false, address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", contacts: [], walkIn: true };
+  setCustomers(cs => [...cs, customer]);
+  logAction(currentUser, `Created walk-in customer record for ${customer.name}`, "Customers");
+  return customer;
+}
+
+function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, approvalSettings, onClose, onCreated, defaultCustomerId, defaultLines }) {
   const [customerId, setCustomerId] = useState(defaultCustomerId || "");
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
   const [lines, setLines] = useState(defaultLines && defaultLines.length ? defaultLines : [{ itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: false }]);
   const [notes, setNotes] = useState("");
-  const customer = customers.find(c => c.id === customerId);
+  const [leadTimeDays, setLeadTimeDays] = useState(7);
+  const [eta, setEta] = useState("");
+  const [preparedBy, setPreparedBy] = useState(currentUser);
+  const [applyTax, setApplyTax] = useState(true);
+  const [taxRate, setTaxRate] = useState(15);
+  const existingCustomer = !isNewCustomer ? customers.find(c => c.id === customerId) : null;
   const typeLabel = type === "part" ? "parts" : type === "equipment" ? "equipment" : "service";
+  const subtotal = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
+  const previewTaxExempt = existingCustomer ? existingCustomer.taxExempt : false;
+  const previewTax = applyTax && !previewTaxExempt ? Math.round(subtotal * (Number(taxRate) || 0) / 100) : 0;
 
   function submit(e) {
     e.preventDefault();
-    if (!customerId) return;
     const validLines = lines.filter(l => (l.itemId || l.desc) && Number(l.qty) > 0);
     if (!validLines.length) return;
+    const customer = resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId, customers, setCustomers, logAction, currentUser });
+    if (!customer) return;
+    const lineSubtotal = validLines.reduce((s, l) => s + Number(l.qty) * (Number(l.unitPrice) || 0), 0);
+    const effectiveApplyTax = applyTax && !customer.taxExempt;
+    const taxAmount = effectiveApplyTax ? Math.round(lineSubtotal * (Number(taxRate) || 0) / 100) : 0;
+    const total = lineSubtotal + taxAmount;
+    const needsApproval = total > approvalSettings.valueThreshold || approvalSettings.flaggedCustomers.includes(customer.name);
     const q = {
-      id: uid("QT", quotations, 4), type, customerId, country: customer ? customer.country : "",
+      id: uid("QT", quotations, 4), type, customerId: customer.id, country: customer.country || "",
       lines: validLines.map(l => ({ itemId: l.itemId || "", desc: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""), qty: Number(l.qty), unitPrice: Number(l.unitPrice) || 0, newPart: !!l.newPart })),
-      notes, status: "Quoted", date: todayISO(), createdBy: currentUser
+      notes, subtotal: lineSubtotal, applyTax: effectiveApplyTax, taxRate: Number(taxRate) || 0, taxAmount, total,
+      leadTimeDays: Number(leadTimeDays) || 0, eta, preparedBy: preparedBy || currentUser, feedbackLog: [],
+      status: needsApproval ? "Pending Approval" : "Quoted", date: todayISO(), createdBy: currentUser
     };
     setQuotations(qs => [q, ...qs]);
-    logAction(currentUser, `Created ${typeLabel} quotation ${q.id} for ${customer ? customer.name : "customer"}`, "Sales");
-    pushNotification("quote", `${q.id} created for ${customer ? customer.name : "customer"}`);
+    logAction(currentUser, `Created ${typeLabel} quotation ${q.id} for ${customer.name}${needsApproval ? " — held for management approval" : ""}`, "Sales");
+    pushNotification("quote", `${q.id} created for ${customer.name}${needsApproval ? " (pending approval)" : ""}`);
     onClose();
     onCreated && onCreated(q);
   }
@@ -846,20 +894,33 @@ function CreateQuotationModal({ type, customers, inventoryItems, quotations, set
   </React.Fragment>}>
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="mis-grid-2">
-        <Field label="Customer" hint="Quotation & invoice details are drawn from this customer's saved record.">
-          <TSelect required value={customerId} onChange={e => setCustomerId(e.target.value)}>
-            <option value="">Select customer…</option>
-            {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
-          </TSelect>
-        </Field>
-        {customer && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
-          <div>{customer.contactPerson} · {customer.email}</div>
-          <div>{customer.phone}</div>
-          <div>{customer.address}</div>
+        <CustomerPickerField customerId={customerId} setCustomerId={setCustomerId} isNew={isNewCustomer} setIsNew={setIsNewCustomer} newFields={newCustomerFields} setNewFields={setNewCustomerFields} customers={customers} />
+        {existingCustomer && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
+          <div>{existingCustomer.contactPerson} · {existingCustomer.email}</div>
+          <div>{existingCustomer.phone}</div>
+          <div>{existingCustomer.address}</div>
+          {existingCustomer.taxExempt && <Badge color="var(--safe)" soft="var(--safe-soft)">Tax-exempt</Badge>}
         </div>}
       </div>
       <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} />
+      <div className="mis-grid-3">
+        <Field label="Lead time (days)"><TInput type="number" min="0" value={leadTimeDays} onChange={e => setLeadTimeDays(e.target.value)} /></Field>
+        <Field label="ETA"><TInput type="date" value={eta} onChange={e => setEta(e.target.value)} /></Field>
+        <Field label="Prepared by"><TInput value={preparedBy} onChange={e => setPreparedBy(e.target.value)} placeholder={currentUser} /></Field>
+      </div>
+      <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+          <input type="checkbox" checked={applyTax} onChange={e => setApplyTax(e.target.checked)} /> Apply tax
+          {applyTax && <TInput type="number" min="0" max="100" value={taxRate} onChange={e => setTaxRate(e.target.value)} style={{ width: 70 }} />}
+          {applyTax && <span style={{ color: "var(--text-tertiary)" }}>%</span>}
+        </label>
+        <div className="mis-kv"><span>Subtotal</span><b>{fmtGHS(subtotal)}</b></div>
+        <div className="mis-kv"><span>Tax{previewTaxExempt ? " (waived — customer is tax-exempt)" : ""}</span><b>{fmtGHS(previewTax)}</b></div>
+        <div className="mis-kv" style={{ fontSize: 13 }}><span>Total</span><b>{fmtGHS(subtotal + previewTax)}</b></div>
+        {(subtotal + previewTax) > approvalSettings.valueThreshold && <p style={{ fontSize: 11, color: "var(--caution)" }}>Above the {fmtGHS(approvalSettings.valueThreshold)} approval threshold — this quotation will be held for management sign-off.</p>}
+      </div>
       <Field label="Notes (optional)"><TArea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Delivery terms, validity period, etc." /></Field>
+      <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Part not listed? Add it from Stock Room first, then quote it here. Tax-exempt customers automatically skip tax.</p>
     </form>
   </Modal>;
 }
@@ -924,21 +985,23 @@ function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction,
   </Modal>;
 }
 
-function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint }) {
+function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails }) {
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
-  function total(doc) { return doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
+  function total(doc) { return typeof doc.total === "number" ? doc.total : doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
   return <DataTable
     columns={[
       { header: kind === "invoice" ? "Invoice" : "Quotation", render: d => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.id}</span> },
       { header: "Customer", render: d => <span style={{ color: "var(--text-primary)" }}>{custName(d.customerId)}</span> },
       { header: "Lines", render: d => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.lines.length} item(s){d.lines.some(l => l.newPart) ? " · incl. to-source" : ""}</span> },
       { header: "Total", render: d => <span className="mis-mono">{fmtGHS(total(d))}</span> },
-      { header: "Date", render: d => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.date}</span> },
+      { header: "Prepared By", render: d => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.preparedBy || "—"}</span> },
+      { header: "ETA", render: d => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.eta || "—"}</span> },
       { header: "Status", render: d => { const cs = statusColor(d.status); return <Badge color={cs[0]} soft={cs[1]}>{d.status}</Badge>; } },
       { header: "Actions", render: d => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {onDetails && <button type="button" className="mis-link-btn" onClick={() => onDetails(d)}>Details</button>}
         <button type="button" className="mis-link-btn" onClick={() => onPrint(d)}>Print</button>
-        <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>Send</button>
-        {kind === "quotation" && d.status !== "Invoiced" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>Convert to invoice</button>}
+        {d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>Send</button>}
+        {kind === "quotation" && d.status !== "Invoiced" && d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>Convert to invoice</button>}
       </div> }
     ]}
     rows={docs}
@@ -947,32 +1010,83 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint }) {
   />;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, role, currentUser, logAction, openQuoteFor }) {
+function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, onComplete, onCreateQuote, onClose }) {
   const canManage = ["admin", "service"].includes(role);
-  const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "" });
+  const draft = feedbackDraft[job.id] || "";
+  return <Drawer title={`${job.jobNumber} — details`} onClose={onClose}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+      <div className="mis-kv"><span>Customer</span><b>{job.customer}</b></div>
+      <div className="mis-kv"><span>Customer ID</span><b className="mis-mono">{job.customerId}</b></div>
+      <div className="mis-kv"><span>Job type</span><b>{job.type}</b></div>
+      <div className="mis-kv"><span>Country</span><b>{job.country}</b></div>
+      <div className="mis-kv"><span>Date raised</span><b>{job.date}</b></div>
+      <div className="mis-kv"><span>ETA</span><b>{job.eta || "—"}</b></div>
+      <div className="mis-kv"><span>Prepared by</span><b>{job.preparedBy || "—"}</b></div>
+      <div className="mis-divider" />
+      <div className="mis-kv" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}><span>Description</span><span style={{ color: "var(--text-primary)" }}>{job.description || "—"}</span></div>
+    </div>
+    <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onCreateQuote(job); onClose(); }}>Create quotation</button>
+      {job.status !== "Completed" && canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => { onComplete(job.id); onClose(); }}><Check size={14} /> Mark completed</button>}
+    </div>
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Client feedback</div>
+    {(job.feedbackLog || []).length === 0 && <div className="mis-empty">No feedback logged yet.</div>}
+    {(job.feedbackLog || []).map((f, i) => <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{f.note}</div>
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{f.by} · {f.date}</div>
+    </div>)}
+    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <TInput value={draft} onChange={e => setFeedbackDraft(d => ({ ...d, [job.id]: e.target.value }))} placeholder="Log feedback from the client…" />
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendFeedback(setServiceJobs, job.id, draft, currentUser, logAction); setFeedbackDraft(d => ({ ...d, [job.id]: "" })); }}>Log</button>
+    </div>
+  </Drawer>;
+}
+
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification }) {
+  const canManage = ["admin", "service"].includes(role);
+  const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
+  const [detailJob, setDetailJob] = useState(null);
+  const [feedbackDraft, setFeedbackDraft] = useState({});
+  const [showCreate, setShowCreate] = useState(null);
+  const [sendDoc, setSendDoc] = useState(null);
+
   function submit(e) {
     e.preventDefault();
-    const customer = customers.find(c => c.id === form.customerId);
-    if (!customer || !form.jobType) return;
+    if (!form.jobType) return;
+    const customer = resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId: form.customerId, customers, setCustomers, logAction, currentUser });
+    if (!customer) return;
     const jobNumber = uid("SJ", serviceJobs, 3);
-    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, status: "Open", date: todayISO() };
+    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO() };
     setServiceJobs(js => [job, ...js]);
     logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
-    setForm({ customerId: "", jobType: "", country: "", description: "" });
+    setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
+    setIsNewCustomer(false);
+    setNewCustomerFields({ name: "", country: "" });
   }
   function complete(id) {
     setServiceJobs(js => js.map(j => j.id === id ? { ...j, status: "Completed" } : j));
     logAction(currentUser, `Completed service job ${id}`, "Service");
   }
+  function openQuoteFor(job) {
+    setShowCreate({ defaultCustomerId: job.customerId, defaultLines: [{ itemId: "", desc: `${job.type} — ${job.description || "service job"}`, qty: 1, unitPrice: 0, newPart: true }] });
+  }
+
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-      <Field label="Customer name"><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value }))} style={{ minWidth: 200 }}>
-        <option value="">Select customer…</option>{customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-      </TSelect></Field>
-      <Field label="Job type"><TInput required value={form.jobType} onChange={e => setForm(f => ({ ...f, jobType: e.target.value }))} placeholder="e.g. Crusher Reline" style={{ minWidth: 180 }} /></Field>
-      <Field label="Country"><TInput value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} placeholder="Defaults to customer country" style={{ width: 170 }} /></Field>
-      <Field label="Description"><TInput value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Scope of work" style={{ minWidth: 240 }} /></Field>
-      <button type="submit" className="mis-btn-primary mis-focus"><Plus size={14} /> Log service job</button>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="mis-grid-2">
+        <CustomerPickerField customerId={form.customerId} setCustomerId={id => setForm(f => ({ ...f, customerId: id }))} isNew={isNewCustomer} setIsNew={setIsNewCustomer} newFields={newCustomerFields} setNewFields={setNewCustomerFields} customers={customers} />
+        <Field label="Job type"><TInput required value={form.jobType} onChange={e => setForm(f => ({ ...f, jobType: e.target.value }))} placeholder="e.g. Crusher Reline" /></Field>
+      </div>
+      <div className="mis-grid-3">
+        <Field label="Country"><TInput value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} placeholder="Defaults to customer country" /></Field>
+        <Field label="ETA"><TInput type="date" value={form.eta} onChange={e => setForm(f => ({ ...f, eta: e.target.value }))} /></Field>
+        <Field label="Prepared by"><TInput value={form.preparedBy} onChange={e => setForm(f => ({ ...f, preparedBy: e.target.value }))} placeholder={currentUser} /></Field>
+      </div>
+      <Field label="Description"><TArea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Scope of work" /></Field>
+      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> Log service job</button>
     </form>}
     <DataTable
       columns={[
@@ -980,17 +1094,32 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, role, currentU
         { header: "Customer", render: j => <span style={{ color: "var(--text-primary)" }}>{j.customer}</span> },
         { header: "Job Type", render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.type}</span> },
         { header: "Country", render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.country}</span> },
-        { header: "Description", render: j => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{j.description}</span> },
         { header: "Status", render: j => { const cs = statusColor(j.status); return <Badge color={cs[0]} soft={cs[1]}>{j.status}</Badge>; } },
-        { header: "Actions", render: j => <div style={{ display: "flex", gap: 6 }}>
-          <button type="button" className="mis-link-btn" onClick={() => openQuoteFor(j)}>Create quotation</button>
-          {j.status !== "Completed" && canManage && <button type="button" className="mis-link-btn" onClick={() => complete(j.id)}>Mark completed</button>}
-        </div> }
+        { header: "Prepared By", render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.preparedBy || "—"}</span> },
+        { header: "ETA", render: j => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{j.eta || "—"}</span> },
+        { header: "", render: j => <button type="button" className="mis-link-btn" onClick={() => setDetailJob(j)}>Details</button> }
       ]}
       rows={serviceJobs}
       rowKey={j => j.id}
       empty="No service jobs logged yet."
     />
+    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} />}
+    {showCreate && <CreateQuotationModal
+      type="part"
+      customers={customers} setCustomers={setCustomers}
+      inventoryItems={items.filter(i => i.type === "part")}
+      quotations={quotations} setQuotations={setQuotations}
+      currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
+      approvalSettings={approvalSettings}
+      onClose={() => setShowCreate(null)}
+      defaultCustomerId={showCreate.defaultCustomerId}
+      defaultLines={showCreate.defaultLines}
+      onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
+    />}
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} onSent={() => {
+      setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
+      setSendDoc(null);
+    }} />}
   </div>;
 }
 
@@ -1023,52 +1152,105 @@ function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, ty
   </div>;
 }
 
-function SalesOverview({ quotations, invoices, serviceJobs, customers, items }) {
-  const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
-  const invoicedTotal = invoices.reduce((s, i) => s + i.lines.reduce((ss, l) => ss + l.qty * l.unitPrice, 0), 0);
+function SalesOverview({ quotations, invoices, serviceJobs, customers, items, purchaseOrders, role }) {
+  const [overviewFilter, setOverviewFilter] = useState("all");
+  const openPartQuotes = quotations.filter(q => q.type === "part" && q.status !== "Invoiced" && q.status !== "Rejected").length;
+  const openEquipQuotes = quotations.filter(q => q.type === "equipment" && q.status !== "Invoiced" && q.status !== "Rejected").length;
+  const activeJobs = serviceJobs.filter(j => j.status !== "Completed").length;
   const backOrderLines = [...quotations, ...invoices].reduce((n, d) => n + d.lines.filter(l => { if (!l.itemId) return true; const it = items.find(i => i.id === l.itemId); return it && it.qty < l.qty; }).length, 0);
-  const openJobs = serviceJobs.filter(j => j.status !== "Completed").length;
   const recent = quotations.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+  const showStats = ["all", "parts", "equipment", "service"].includes(overviewFilter);
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
-      <StatCard label="Invoiced Value" value={fmtGHS(invoicedTotal)} sub="All recorded invoices" icon={FileText} tint="var(--safe)" soft="var(--safe-soft)" />
-      <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
-      <StatCard label="Open Service Jobs" value={openJobs} sub="In progress or unassigned" icon={Wrench} tint="var(--info)" soft="var(--info-soft)" />
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Show:</span>
+      <TSelect value={overviewFilter} onChange={e => setOverviewFilter(e.target.value)} style={{ width: 200 }}>
+        <option value="all">Everything</option>
+        <option value="parts">Parts only</option>
+        <option value="equipment">Equipment only</option>
+        <option value="service">Service only</option>
+        <option value="backorder">Back-orders only</option>
+      </TSelect>
     </div>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+    {showStats && <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      {(overviewFilter === "all" || overviewFilter === "parts") && <StatCard label="Open Part Quotes" value={openPartQuotes} sub="Awaiting confirmation" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />}
+      {(overviewFilter === "all" || overviewFilter === "equipment") && <StatCard label="Open Equipment Quotes" value={openEquipQuotes} sub="Awaiting confirmation" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />}
+      {(overviewFilter === "all" || overviewFilter === "service") && <StatCard label="Active Service Jobs" value={activeJobs} sub="In progress" icon={Wrench} tint="var(--ore)" soft="var(--ore-soft)" />}
+      {overviewFilter === "all" && <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />}
+    </div>}
+    {(overviewFilter === "all" || overviewFilter === "backorder") && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" />}
+    {overviewFilter === "all" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent quotations</h3>
       {recent.length === 0 && <div className="mis-empty">No quotations yet.</div>}
       {recent.map(q => { const cs = statusColor(q.status); return <div key={q.id} className="mis-row" style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px", borderBottom: "1px solid var(--border-soft)" }}>
         <span style={{ fontSize: 13 }}>{q.id} · {custName(q.customerId)} <span style={{ color: "var(--text-tertiary)" }}>({q.type})</span></span>
         <Badge color={cs[0]} soft={cs[1]}>{q.status}</Badge>
       </div>; })}
-    </div>
+    </div>}
   </div>;
 }
+function approveOrder(setter, id, currentUser, logAction) {
+  setter(list => list.map(x => x.id === id ? { ...x, status: "Quoted" } : x));
+  logAction(currentUser, `${id} approved by ${currentUser}`, "Sales");
+}
+function rejectOrder(setter, id, currentUser, logAction) {
+  setter(list => list.map(x => x.id === id ? { ...x, status: "Rejected" } : x));
+  logAction(currentUser, `${id} rejected by ${currentUser}`, "Sales");
+}
+function appendFeedback(setter, id, note, currentUser, logAction) {
+  if (!note || !note.trim()) return;
+  setter(list => list.map(x => x.id === id ? { ...x, feedbackLog: [...(x.feedbackLog || []), { date: todayISO(), note: note.trim(), by: currentUser }] } : x));
+  logAction(currentUser, `Logged feedback on ${id}`, "Sales");
+}
+function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, feedbackDraft, setFeedbackDraft, onClose }) {
+  const canApprove = ["admin", "finance"].includes(role) && doc.status === "Pending Approval";
+  const draft = feedbackDraft[doc.id] || "";
+  return <Drawer title={`${doc.id} — details`} onClose={onClose}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+      <div className="mis-kv"><span>Customer</span><b>{customer ? customer.name : "—"}</b></div>
+      <div className="mis-kv"><span>Customer ID</span><b className="mis-mono">{doc.customerId}</b></div>
+      <div className="mis-kv"><span>Location</span><b>{doc.country || (customer && customer.country) || "—"}</b></div>
+      <div className="mis-kv"><span>Lead time</span><b>{doc.leadTimeDays != null ? `${doc.leadTimeDays} day(s)` : "—"}</b></div>
+      <div className="mis-kv"><span>ETA</span><b>{doc.eta || "—"}</b></div>
+      <div className="mis-kv"><span>Prepared by</span><b>{doc.preparedBy || "—"}</b></div>
+      <div className="mis-divider" />
+      <div className="mis-kv"><span>Subtotal</span><b>{fmtGHS(doc.subtotal ?? doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0))}</b></div>
+      <div className="mis-kv"><span>Tax</span><b>{fmtGHS(doc.taxAmount || 0)}</b></div>
+      <div className="mis-kv" style={{ fontSize: 13 }}><span>Total</span><b>{fmtGHS(doc.total ?? doc.subtotal ?? 0)}</b></div>
+    </div>
+    {doc.status === "Pending Approval" && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: "var(--caution)", marginBottom: 8 }}>Held for management approval.</div>
+      {canApprove ? <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" className="mis-btn-primary mis-focus" onClick={() => { approveOrder(setQuotations, doc.id, currentUser, logAction); onClose(); }}><Check size={14} /> Approve</button>
+        <button type="button" className="mis-btn-danger" onClick={() => { rejectOrder(setQuotations, doc.id, currentUser, logAction); onClose(); }}>Reject</button>
+      </div> : <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Only admin or finance can approve or reject this quotation.</p>}
+    </div>}
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Client feedback</div>
+    {(doc.feedbackLog || []).length === 0 && <div className="mis-empty">No feedback logged yet.</div>}
+    {(doc.feedbackLog || []).map((f, i) => <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{f.note}</div>
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{f.by} · {f.date}</div>
+    </div>)}
+    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <TInput value={draft} onChange={e => setFeedbackDraft(d => ({ ...d, [doc.id]: e.target.value }))} placeholder="Log feedback from the client…" />
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendFeedback(setQuotations, doc.id, draft, currentUser, logAction); setFeedbackDraft(d => ({ ...d, [doc.id]: "" })); }}>Log</button>
+    </div>
+  </Drawer>;
+}
 
-function SalesQuotations({ role, currentUser, customers, items, setItems, quotations, setQuotations, invoices, setInvoices, serviceJobs, setServiceJobs, purchaseOrders, users, logAction, pushNotification }) {
-  const subTabsAll = [
-    { key: "overview", label: "Overview" },
-    { key: "parts", label: "Parts" },
-    { key: "equipment", label: "Equipment" },
-    { key: "servicejobs", label: "Service Jobs" },
-    { key: "backorders", label: "Back-Order Report" }
-  ];
-  const visibleKeys = role === "service" ? ["overview", "servicejobs"] : role === "warehouse" ? ["overview", "backorders"] : subTabsAll.map(t => t.key);
-  const subTabs = subTabsAll.filter(t => visibleKeys.includes(t.key));
-  const [sub, setSub] = useState(subTabs[0].key);
-  useEffect(() => { if (!visibleKeys.includes(sub)) setSub(subTabs[0] ? subTabs[0].key : "overview"); /* eslint-disable-next-line */ }, [role]);
-
-  const [showCreate, setShowCreate] = useState(null);
+function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification }) {
+  const type = page === "equipmentsales" ? "equipment" : "part";
+  const [showCreate, setShowCreate] = useState(false);
   const [sendDoc, setSendDoc] = useState(null);
+  const [detailDoc, setDetailDoc] = useState(null);
   const [showProducts, setShowProducts] = useState(false);
+  const [feedbackDraft, setFeedbackDraft] = useState({});
 
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
 
   function convertQuotationToInvoice(q) {
-    const inv = { id: uid("INV", invoices, 4), quotationId: q.id, type: q.type, customerId: q.customerId, lines: q.lines, status: "Issued", date: todayISO(), createdBy: currentUser };
+    const inv = { id: uid("INV", invoices, 4), quotationId: q.id, type: q.type, customerId: q.customerId, lines: q.lines, subtotal: q.subtotal, applyTax: q.applyTax, taxRate: q.taxRate, taxAmount: q.taxAmount, total: q.total, status: "Issued", date: todayISO(), createdBy: currentUser };
     setInvoices(is => [inv, ...is]);
     setQuotations(qs => qs.map(x => x.id === q.id ? { ...x, status: "Invoiced" } : x));
     setItems(its => its.map(it => {
@@ -1079,53 +1261,37 @@ function SalesQuotations({ role, currentUser, customers, items, setItems, quotat
     pushNotification("invoice", `${inv.id} issued to ${custName(q.customerId)}`);
   }
 
-  function openQuoteForJob(job) {
-    setShowCreate({ type: "service", defaultCustomerId: job.customerId, defaultLines: [{ itemId: "", desc: `${job.type} — ${job.description || "service job"}`, qty: 1, unitPrice: 0, newPart: true }] });
-  }
-
   const partsList = items.filter(i => i.type === "part");
   const equipmentList = items.filter(i => i.type === "equipment");
+  const inventoryItems = type === "equipment" ? equipmentList : partsList;
+  const pageQuotations = quotations.filter(q => q.type === type);
+  const pageInvoices = invoices.filter(i => i.type === type);
 
-  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    <Tabs tabs={subTabs} active={sub} onChange={setSub} />
-    {sub === "overview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} />}
-    {sub === "parts" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate({ type: "part" })}><Plus size={14} /> Create quotation</button>}
-      </div>
-      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Quotations</h4>
-      <DocumentsTable docs={quotations.filter(q => q.type === "part")} customers={customers} kind="quotation" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
-      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
-      <DocumentsTable docs={invoices.filter(i => i.type === "part")} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
-    </div>}
-    {sub === "equipment" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowProducts(true)}><Boxes size={14} /> See products</button>
-        {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate({ type: "equipment" })}><Plus size={14} /> Create quotation</button>}
-      </div>
-      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Quotations</h4>
-      <DocumentsTable docs={quotations.filter(q => q.type === "equipment")} customers={customers} kind="quotation" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
-      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
-      <DocumentsTable docs={invoices.filter(i => i.type === "equipment")} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
-    </div>}
-    {sub === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} role={role} currentUser={currentUser} logAction={logAction} openQuoteFor={openQuoteForJob} />}
-    {sub === "backorders" && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" />}
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+      {type === "equipment" && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowProducts(true)}><Boxes size={14} /> See products</button>}
+      {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> Create quotation</button>}
+    </div>
+    <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Transaction History</h4>
+    <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
+    <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
+    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
 
     {showCreate && <CreateQuotationModal
-      type={showCreate.type}
-      customers={customers}
-      inventoryItems={showCreate.type === "part" ? partsList : showCreate.type === "equipment" ? equipmentList : items}
+      type={type}
+      customers={customers} setCustomers={setCustomers}
+      inventoryItems={inventoryItems}
       quotations={quotations} setQuotations={setQuotations}
       currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
-      onClose={() => setShowCreate(null)}
-      defaultCustomerId={showCreate.defaultCustomerId}
-      defaultLines={showCreate.defaultLines}
+      approvalSettings={approvalSettings}
+      onClose={() => setShowCreate(false)}
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
     />}
     {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} onSent={() => {
       if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
+    {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} onClose={() => setDetailDoc(null)} />}
     {showProducts && <Modal title="Equipment products" wide onClose={() => setShowProducts(false)}>
       <DataTable columns={[
         { header: "Product", render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
@@ -1215,7 +1381,7 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
 function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
   const canManage = ["admin", "procurement"].includes(role);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", categories: "" });
+  const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
   const [preview, setPreview] = useState(null);
   function submit(e) {
     e.preventDefault();
@@ -1223,7 +1389,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
     const vendor = { id: uid("V", vendors, 2), ...form };
     setVendors(vs => [...vs, vendor]);
     logAction(currentUser, `Added vendor ${vendor.name} (code ${vendor.code || "—"})`, "Purchasing");
-    setForm({ name: "", code: "", contact: "", email: "", phone: "", categories: "" });
+    setForm({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
     setShowAdd(false);
   }
   function handleUpload(file) {
@@ -1248,6 +1414,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
     {canManage && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
       <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add vendor</button>
     </div>}
+    {!canManage && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Vendor creation is restricted to Procurement and Admin roles.</p>}
     {canManage && <FileDrop label="Click or drop an Excel/CSV vendor list to bulk-upload" accept=".xlsx,.xls,.csv" onFile={handleUpload} hint="Expected columns: Name, Code, Contact, Email, Phone, Categories" />}
     {preview && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
       <p style={{ fontSize: 13 }}>{preview.fileName}: {preview.rows.length} vendor record(s) ready to import.</p>
@@ -1259,10 +1426,10 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
     <DataTable columns={[
       { header: "Vendor", render: v => <span style={{ color: "var(--text-primary)" }}>{v.name}</span> },
       { header: "Industry Code", render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.code || "—"}</span> },
-      { header: "Contact", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.contact}</span> },
-      { header: "Email", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.email}</span> },
-      { header: "Phone", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.phone}</span> },
-      { header: "Supplies", render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.categories}</span> }
+      { header: "Contacts", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.contact} · {v.email}<br />{v.phone}{v.altContact ? ` · ${v.altContact}` : ""}</span> },
+      { header: "Supplies", render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.categories}</span> },
+      { header: "Certificate", render: v => <Badge color={v.certificateFile ? "var(--safe)" : "var(--vital)"} soft={v.certificateFile ? "var(--safe-soft)" : "var(--vital-soft)"}>{v.certificateFile ? "On file" : "Missing"}</Badge> },
+      { header: "Tax", render: v => v.taxExempt ? <Badge color="var(--safe)" soft="var(--safe-soft)">Exempt</Badge> : <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Standard</span> }
     ]} rows={vendors} rowKey={v => v.id} empty="No vendors yet." />
     {showAdd && <Modal title="Add vendor" onClose={() => setShowAdd(false)} footer={<React.Fragment>
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(false)}>Cancel</button>
@@ -1275,8 +1442,15 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
           <Field label="Contact person"><TInput value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></Field>
           <Field label="Phone"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
         </div>
-        <Field label="Email"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+        <div className="mis-grid-2">
+          <Field label="Email"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+          <Field label="Additional contact (name, role)"><TInput value={form.altContact} onChange={e => setForm(f => ({ ...f, altContact: e.target.value }))} placeholder="e.g. Jane Doe, Accounts" /></Field>
+        </div>
         <Field label="Categories supplied"><TInput value={form.categories} onChange={e => setForm(f => ({ ...f, categories: e.target.value }))} placeholder="e.g. Wear parts, bearings" /></Field>
+        <div className="mis-grid-2">
+          <Field label="Business certificate"><input type="file" onChange={e => setForm(f => ({ ...f, certificateFile: e.target.files[0] ? e.target.files[0].name : null }))} style={{ fontSize: 12 }} /></Field>
+          <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 8 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> Tax-exempt vendor</label></Field>
+        </div>
       </form>
     </Modal>}
   </div>;
@@ -1360,7 +1534,7 @@ function ContactsEditor({ contacts, setContacts }) {
 }
 
 function CreateCustomerModal({ customers, setCustomers, currentUser, logAction, onClose }) {
-  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0 });
+  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0, taxExempt: false });
   const [contacts, setContacts] = useState([]);
   function submit(e) {
     e.preventDefault();
@@ -1393,7 +1567,10 @@ function CreateCustomerModal({ customers, setCustomers, currentUser, logAction, 
         <Field label="Industry PO code" hint="Unique code used to identify this client's purchase orders"><TInput value={form.poCode} onChange={e => setForm(f => ({ ...f, poCode: e.target.value }))} /></Field>
         <Field label="Credit limit (GH₵)"><TInput type="number" min="0" value={form.creditLimit} onChange={e => setForm(f => ({ ...f, creditLimit: e.target.value }))} /></Field>
       </div>
-      <Field label="Tier"><TSelect value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}><option>Standard</option><option>Silver</option><option>Gold</option></TSelect></Field>
+      <div className="mis-grid-2">
+        <Field label="Tier"><TSelect value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}><option>Standard</option><option>Silver</option><option>Gold</option></TSelect></Field>
+        <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 8 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> Tax-exempt customer</label></Field>
+      </div>
       <div className="mis-divider" />
       <Field label="Additional contacts" hint="Add more people from the client's company as needed"><ContactsEditor contacts={contacts} setContacts={setContacts} /></Field>
     </form>
@@ -1411,6 +1588,7 @@ function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClos
       <div className="mis-kv"><span>Phone</span><b>{customer.phone}</b></div>
       <div className="mis-kv"><span>Contact person</span><b>{customer.contactPerson}</b></div>
       <div className="mis-kv"><span>PO code</span><b className="mis-mono">{customer.poCode || "—"}</b></div>
+      <div className="mis-kv"><span>Tax status</span><b>{customer.taxExempt ? "Exempt" : "Standard"}</b></div>
       <div className="mis-kv"><span>Company details</span><b>{customer.companyDetails}</b></div>
     </div>
     {customer.contacts && customer.contacts.length > 0 && <React.Fragment>
@@ -1486,9 +1664,10 @@ function CreateUserModal({ users, setUsers, currentUser, logAction, onClose }) {
   </Modal>;
 }
 
-function UsersAccess({ role, currentUser, users, setUsers, logAction }) {
+function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, logAction }) {
   const isSuperUser = role === "admin";
   const [showCreate, setShowCreate] = useState(false);
+  const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
   function setUserRole(id, newRole) {
     const u = users.find(x => x.id === id);
     setUsers(us => us.map(x => x.id === id ? { ...x, role: newRole } : x));
@@ -1500,7 +1679,24 @@ function UsersAccess({ role, currentUser, users, setUsers, logAction }) {
     setUsers(us => us.map(x => x.id === id ? { ...x, status: x.status === "Active" ? "Suspended" : "Active" } : x));
     logAction(currentUser, `${wasActive ? "Suspended" : "Reactivated"} account for ${u ? u.name : id}`, "Users & Access");
   }
+  function updateThreshold(v) {
+    setApprovalSettings(s => ({ ...s, valueThreshold: Number(v) || 0 }));
+  }
+  function commitFlagged() {
+    const list = flaggedText.split(",").map(s => s.trim()).filter(Boolean);
+    setApprovalSettings(s => ({ ...s, flaggedCustomers: list }));
+    logAction(currentUser, `Updated approval rules — threshold ${fmtGHS(approvalSettings.valueThreshold)}, flagged: ${list.join(", ") || "none"}`, "Users & Access");
+  }
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>Approval Rules</h3>
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Quotations above this value, or from a flagged customer, require management sign-off before they can be sent.</p>
+      <div className="mis-grid-2">
+        <Field label="Value threshold (GH₵)"><TInput type="number" min="0" value={approvalSettings.valueThreshold} onChange={e => updateThreshold(e.target.value)} onBlur={commitFlagged} /></Field>
+        <Field label="Always-flagged customers (comma-separated)"><TInput value={flaggedText} onChange={e => setFlaggedText(e.target.value)} onBlur={commitFlagged} placeholder="e.g. Akwatia Gold Ltd" /></Field>
+      </div>
+      <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={commitFlagged}>Save approval rules</button>
+    </div>}
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>User accounts</h3>
@@ -1631,21 +1827,30 @@ function CommandPalette({ open, onClose, allowedNav, setNav, customers, items, q
 // DASHBOARD
 // ---------------------------------------------------------------------------
 function Dashboard({ items, quotations, invoices, purchaseOrders, customers, auditLog, role }) {
-  const stockValue = items.reduce((s, i) => s + i.qty * i.cost, 0);
-  const lowStock = items.filter(i => i.qty < i.reorder);
+  const [dashboardBranchFilter, setDashboardBranchFilter] = useState("All");
+  const dashboardItems = dashboardBranchFilter === "All" ? items : items.filter(i => i.branch === dashboardBranchFilter);
+  const stockValue = dashboardItems.reduce((s, i) => s + i.qty * i.cost, 0);
+  const lowStock = dashboardItems.filter(i => i.qty < i.reorder);
   const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
   const inTransitPOs = purchaseOrders.filter(p => p.status === "Ordered" || p.status === "In Transit").length;
   const recentActivity = auditLog.slice(0, 8);
   const fulfilledPct = Math.round(quotations.filter(q => q.status === "Invoiced").length / Math.max(quotations.length, 1) * 100);
-  const healthyPct = Math.round((items.length - lowStock.length) / Math.max(items.length, 1) * 100);
+  const healthyPct = Math.round((dashboardItems.length - lowStock.length) / Math.max(dashboardItems.length, 1) * 100);
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Focus on:</span>
+      <TSelect value={dashboardBranchFilter} onChange={e => setDashboardBranchFilter(e.target.value)} style={{ width: 200 }}>
+        <option value="All">All branches</option>
+        {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+      </TSelect>
+    </div>
     <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
-      <RingStat pct={healthyPct} color="var(--teal)" label="Items above reorder level" sub={`${items.length - lowStock.length} of ${items.length} items healthy`} big />
+      <RingStat pct={healthyPct} color="var(--teal)" label="Items above reorder level" sub={`${dashboardItems.length - lowStock.length} of ${dashboardItems.length} items healthy`} big />
       <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)" }} />
       <RingStat pct={fulfilledPct} color="var(--sky)" label="Quotations invoiced" sub={`${quotations.filter(q => q.status === "Invoiced").length} of ${quotations.length} quotations closed`} />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      <StatCard label="Total Stock Value" value={fmtGHS(stockValue)} sub="Parts & equipment, all branches" icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
+      <StatCard label="Stock Value" value={fmtGHS(stockValue)} sub={dashboardBranchFilter === "All" ? "Parts & equipment, all branches" : dashboardBranchFilter} icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
       <StatCard label="Below Reorder Point" value={lowStock.length} sub="Items needing replenishment" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
       <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
       <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
@@ -1703,6 +1908,7 @@ function SetvacoBusinessSystem() {
   const [users, setUsers] = useState(() => (persisted && persisted.users) || initialUsers);
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
+  const [approvalSettings, setApprovalSettings] = useState(() => (persisted && persisted.approvalSettings) || initialApprovalSettings);
   const [toast, setToast] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -1714,8 +1920,8 @@ function SetvacoBusinessSystem() {
 
   useEffect(() => { if (!allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -1798,11 +2004,13 @@ function SetvacoBusinessSystem() {
           {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} />}
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
-          {nav === "sales" && <SalesQuotations role={role} currentUser={currentUser} customers={customers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} purchaseOrders={purchaseOrders} users={users} logAction={logAction} pushNotification={pushNotification} />}
+          {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} />}
+          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
-          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} logAction={logAction} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} logAction={logAction} />}
         </div>
       </main>
     </div>
