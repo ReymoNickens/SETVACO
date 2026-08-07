@@ -1,0 +1,125 @@
+# SETVACO Backend Architecture
+
+## Why
+
+The app started as a single `index.html` file with all state in React `useState`,
+persisted only to per-browser `localStorage`. That means two staff in different
+browser tabs can't see each other's stock changes, "login" is a fake role
+dropdown, and record IDs are generated client-side via `max(existing)+1` — a
+race condition the moment two people use the system at once. This document
+describes the Supabase backend replacing that, designed so the system stays
+usable by a small team **without** needing a human to hand-run migrations or
+babysit infrastructure.
+
+## Stack
+
+- **Supabase**: managed Postgres + Auth + Row-Level Security + Storage.
+- **Supabase Edge Functions** (Deno): only for the two things Postgres can't
+  do itself — sending email (`send-document-email`) and admin auth operations
+  (`admin-manage-user`, which needs the service-role key to create/suspend an
+  `auth.users` row).
+- Everything else — CRUD and every multi-table business transaction — is
+  Postgres: direct PostgREST + RLS for plain CRUD, `SECURITY DEFINER` RPC
+  functions for anything with a status workflow and a side effect.
+
+## Schema
+
+See `supabase/migrations/` for the authoritative DDL, applied in order:
+
+1. `20260807000100_lookups.sql` — `roles`, `branches`, `nav_permissions`,
+   shared enums, and `gen_display_code()` (the per-prefix `SEQUENCE` +
+   trigger pattern that replaces the client-side `uid()` race condition).
+2. `20260807000200_core_tables.sql` — `profiles` (1:1 extension of
+   `auth.users`), `stock_rooms`, `items`, `vendors`, `customers`,
+   `customer_contacts`.
+3. `20260807000300_transactional_tables.sql` — `quotations`/`quotation_lines`,
+   `invoices`/`invoice_lines`, `purchase_orders`/`purchase_order_lines`,
+   `service_jobs`, `notes` (the shared feedback/manager-comment thread).
+4. `20260807000400_audit_notifications.sql` — `approval_settings`,
+   `approval_flagged_customers`, `audit_log`, `notifications`,
+   `variance_log`.
+5. `20260807000500_rls_policies.sql` — `has_role()` and every table's RLS
+   policy.
+6. `20260807000600_rpc_functions.sql` — every transactional RPC.
+
+Key departures from a literal 1:1 field mirror of `index.html`, and why:
+
+- **UUID primary keys everywhere**, with a separate unique `display_code`
+  column holding the `WP-1001` / `QT-9001` style codes the frontend already
+  uses. FKs on a variable-format text key are error-prone; `auth.users.id` is
+  already a UUID, so this keeps one currency throughout.
+- **`feedbackLog` / `managerNotes` → a normalized `notes` table**, not JSONB.
+  RLS operates per row, not per element inside a JSON array, and
+  `managerNotes` has stricter write access (admin/finance only) than
+  `feedbackLog` — a single JSONB column can't express that split safely.
+- **`approvalSettings.flaggedCustomers` → a join table** (`customer_id` FK),
+  not a name array — a customer rename no longer silently un-flags them.
+- **`role` is a lookup table, not an enum** — avoids Postgres's
+  `ALTER TYPE ... ADD VALUE` transactional restrictions and lets roles carry
+  a display label.
+
+## Authorization
+
+One primitive, used by every RLS policy and RPC:
+
+```sql
+create function has_role(allowed text[]) returns boolean
+language sql stable as $$
+  select exists (
+    select 1 from profiles
+    where id = auth.uid() and status = 'Active' and role = any(allowed)
+  )
+$$;
+```
+
+An indexed lookup on `profiles`, not a custom JWT-claims Auth Hook — fewer
+moving parts, and suspending a user takes effect on their very next request
+instead of waiting for their JWT to expire.
+
+**RLS handles plain CRUD** (items, vendors, customers, stock rooms, branches,
+service jobs, notes, ...), mirroring the `NAV` role matrix and each panel's
+`canManage` check in `index.html`.
+
+**RPCs handle every table with a workflow + side effect** — `quotations`,
+`invoices`, `purchase_orders` all have `INSERT`/`UPDATE` revoked from
+`authenticated` entirely, because RLS alone can't express "flip this
+quotation to Invoiced *and* deduct stock *and* write an audit row,
+atomically." See `20260807000600_rpc_functions.sql` for the full set:
+`create_quotation`, `approve_quotation`, `reject_quotation`,
+`convert_quotation_to_invoice`, `raise_purchase_order`,
+`advance_purchase_order`, `match_po_code`, `submit_matched_order`,
+`bulk_upsert_items`, `bulk_create_purchase_orders`.
+
+## Migrations ("not dependent on humans to manage")
+
+- Supabase CLI migrations in `supabase/migrations/`, applied **only** via CI
+  (`.github/workflows/migrate.yml`, `supabase db push` on merge to `main`) —
+  never hand-run against production through the Studio SQL editor.
+- `supabase/seed.sql` reproduces the demo dataset for local dev
+  (`supabase db reset`) — it is **not** applied in production; the only
+  production-required reference data (`roles`, `branches`, `nav_permissions`)
+  ships in the migrations themselves.
+- `packages/shared-types/database.types.ts` is regenerated by CI on every
+  migration change and consumed by both the frontend and the Edge Functions,
+  so a renamed column becomes a type error instead of a silent runtime bug.
+
+## Rollout (no big-bang rewrite)
+
+The prototype (`index.html`) keeps running unmodified through Phase 0.
+
+0. **Foundation** — this scaffolding, invisible to users.
+1. **Auth cutover + build step** — real Supabase Auth replaces the role
+   dropdown; introduces Vite + React (required — in-browser Babel can't hold
+   a scoped Supabase client or consume generated types).
+2. **Stock Rooms + Items** — first real data module; everything else FKs
+   into it, and it's where the localStorage-per-browser split is most
+   visibly broken today (add a Realtime subscription on `items` here).
+3. **Vendors & Customers** — plain CRUD, gives Phase 4 real FK targets.
+4. **Quotations/Invoices, Purchase Orders** — the RPC-heavy modules.
+5. **Service Jobs, Variance & Audit, Users & Access, Notifications, email.**
+
+On the frontend side: introduce TanStack Query module-by-module (each panel
+gets a hook like `useItems()` that starts as today's `useState(initialX)` and
+gets swapped to `useQuery`/`supabase-js` when its phase lands), and shrink the
+`savePersisted`/`loadPersisted` localStorage blob one module at a time as
+each goes live server-side.
