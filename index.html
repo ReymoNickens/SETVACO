@@ -1010,7 +1010,7 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
   />;
 }
 
-function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, onComplete, onCreateQuote, onClose }) {
+function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose }) {
   const canManage = ["admin", "service"].includes(role);
   const draft = feedbackDraft[job.id] || "";
   return <Drawer title={`${job.jobNumber} — details`} onClose={onClose}>
@@ -1040,6 +1040,7 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
       <TInput value={draft} onChange={e => setFeedbackDraft(d => ({ ...d, [job.id]: e.target.value }))} placeholder="Log feedback from the client…" />
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendFeedback(setServiceJobs, job.id, draft, currentUser, logAction); setFeedbackDraft(d => ({ ...d, [job.id]: "" })); }}>Log</button>
     </div>
+    <ManagerCommentsPanel record={job} role={role} currentUser={currentUser} logAction={logAction} setter={setServiceJobs} draft={managerDraft} setDraft={setManagerDraft} />
   </Drawer>;
 }
 
@@ -1048,6 +1049,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
+  const [managerDraft, setManagerDraft] = useState({});
   const [detailJob, setDetailJob] = useState(null);
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [showCreate, setShowCreate] = useState(null);
@@ -1103,7 +1105,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
       rowKey={j => j.id}
       empty="No service jobs logged yet."
     />
-    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} />}
+    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} />}
     {showCreate && <CreateQuotationModal
       type="part"
       customers={customers} setCustomers={setCustomers}
@@ -1202,7 +1204,32 @@ function appendFeedback(setter, id, note, currentUser, logAction) {
   setter(list => list.map(x => x.id === id ? { ...x, feedbackLog: [...(x.feedbackLog || []), { date: todayISO(), note: note.trim(), by: currentUser }] } : x));
   logAction(currentUser, `Logged feedback on ${id}`, "Sales");
 }
-function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, feedbackDraft, setFeedbackDraft, onClose }) {
+function appendManagerNote(setter, id, note, currentUser, logAction) {
+  if (!note || !note.trim()) return;
+  setter(list => list.map(x => x.id === id ? { ...x, managerNotes: [...(x.managerNotes || []), { date: todayISO(), note: note.trim(), by: currentUser }] } : x));
+  logAction(currentUser, `Added manager comment on ${id}`, "Sales");
+}
+function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, draft, setDraft }) {
+  const notes = record.managerNotes || [];
+  const canView = ["admin", "finance"].includes(role) || notes.length > 0;
+  const canComment = ["admin", "finance"].includes(role);
+  if (!canView) return null;
+  const text = draft[record.id] || "";
+  return <React.Fragment>
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Manager comments</div>
+    {notes.length === 0 && <div className="mis-empty">No manager comments yet.</div>}
+    {notes.map((f, i) => <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{f.note}</div>
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{f.by} · {f.date}</div>
+    </div>)}
+    {canComment && <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <TInput value={text} onChange={e => setDraft(d => ({ ...d, [record.id]: e.target.value }))} placeholder="Comment on this status update…" />
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendManagerNote(setter, record.id, text, currentUser, logAction); setDraft(d => ({ ...d, [record.id]: "" })); }}>Comment</button>
+    </div>}
+  </React.Fragment>;
+}
+function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onClose }) {
   const canApprove = ["admin", "finance"].includes(role) && doc.status === "Pending Approval";
   const draft = feedbackDraft[doc.id] || "";
   return <Drawer title={`${doc.id} — details`} onClose={onClose}>
@@ -1236,6 +1263,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
       <TInput value={draft} onChange={e => setFeedbackDraft(d => ({ ...d, [doc.id]: e.target.value }))} placeholder="Log feedback from the client…" />
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendFeedback(setQuotations, doc.id, draft, currentUser, logAction); setFeedbackDraft(d => ({ ...d, [doc.id]: "" })); }}>Log</button>
     </div>
+    <ManagerCommentsPanel record={doc} role={role} currentUser={currentUser} logAction={logAction} setter={setQuotations} draft={managerDraft} setDraft={setManagerDraft} />
   </Drawer>;
 }
 
@@ -1246,6 +1274,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
   const [detailDoc, setDetailDoc] = useState(null);
   const [showProducts, setShowProducts] = useState(false);
   const [feedbackDraft, setFeedbackDraft] = useState({});
+  const [managerDraft, setManagerDraft] = useState({});
 
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
 
@@ -1291,7 +1320,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
-    {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} onClose={() => setDetailDoc(null)} />}
+    {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onClose={() => setDetailDoc(null)} />}
     {showProducts && <Modal title="Equipment products" wide onClose={() => setShowProducts(false)}>
       <DataTable columns={[
         { header: "Product", render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
