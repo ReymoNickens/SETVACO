@@ -27,60 +27,88 @@ button{cursor:pointer;}
 // STYLE — design tokens + component classes
 // ---------------------------------------------------------------------------
 const Style = () => <style>{`
-  @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
   .mis-root {
-    --basalt: #0A2E52; --basalt-alt: #103F6D; --basalt-line: rgba(255,255,255,0.08);
-    --stone: #F3F7FB; --panel: #FFFFFF; --panel-alt: #EAF2FA; --border: #D3E2EF; --border-soft: #E3EDF6;
-    --ink: #0F2338; --ink-soft: #4D6377; --ink-faint: #8AA0B1;
-    --ore: #1E7FD6; --ore-soft: rgba(30,127,214,0.10);
-    --malachite: #1F8A5A; --malachite-soft: rgba(31,138,90,0.10);
-    --azurite: #2E6DA4; --azurite-soft: rgba(46,109,164,0.11);
-    --ochre: #C99A3D; --ochre-soft: rgba(201,154,61,0.14);
-    --vital: #C23B2E; --vital-soft: rgba(194,59,46,0.10);
-    --safe: var(--malachite); --safe-soft: var(--malachite-soft);
-    --caution: var(--ochre); --caution-soft: var(--ochre-soft);
-    --info: var(--azurite); --info-soft: var(--azurite-soft);
+    --brand: #2A3B94; --brand-deep: #131B4A; --brand-line: rgba(255,255,255,0.09);
+    --paper: #F3F5FC; --panel: #FFFFFF; --panel-alt: #EEF1FB; --border: #DBE1F5; --border-soft: #E9ECFA;
+    --ink: #0F1330; --ink-soft: #565E85; --ink-faint: #8D93B8;
+    --ore: #2A3B94; --ore-soft: rgba(42,59,148,0.09);
+    --coral: #F0555C; --coral-soft: rgba(240,85,92,0.12);
+    --teal: #14B8A6; --teal-soft: rgba(20,184,166,0.12);
+    --sky: #3E7BFA; --sky-soft: rgba(62,123,250,0.11);
+    --amber: #E3A73B; --amber-soft: rgba(227,167,59,0.15);
+    --vital: #DC3E4C; --vital-soft: rgba(220,62,76,0.10);
+    --safe: var(--teal); --safe-soft: var(--teal-soft);
+    --caution: var(--amber); --caution-soft: var(--amber-soft);
+    --info: var(--sky); --info-soft: var(--sky-soft);
     --text-primary: var(--ink); --text-secondary: var(--ink-soft); --text-tertiary: var(--ink-faint);
-    --shadow-sm: 0 1px 2px rgba(10,46,82,0.08); --shadow-md: 0 10px 22px rgba(10,46,82,0.12), 0 2px 6px rgba(10,46,82,0.07);
-    font-family: 'IBM Plex Sans', sans-serif; background: var(--stone);
-    background-image: radial-gradient(rgba(10,46,82,0.03) 1px, transparent 1px); background-size: 14px 14px;
+    --shadow-sm: 0 1px 2px rgba(19,27,74,0.07); --shadow-md: 0 14px 30px rgba(19,27,74,0.14), 0 2px 8px rgba(19,27,74,0.06);
+    --shadow-glow: 0 0 0 1px rgba(42,59,148,0.06), 0 18px 40px rgba(42,59,148,0.16);
+    font-family: 'IBM Plex Sans', sans-serif; background: var(--paper);
+    background-image: radial-gradient(circle at 12% 8%, rgba(42,59,148,0.07), transparent 42%),
+      radial-gradient(circle at 92% 4%, rgba(20,184,166,0.06), transparent 38%),
+      radial-gradient(rgba(19,27,74,0.035) 1px, transparent 1px);
+    background-size: auto, auto, 16px 16px;
     color: var(--ink);
   }
-  .mis-display { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; letter-spacing: 0.005em; }
+  .mis-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
   .mis-mono { font-family: 'IBM Plex Mono', monospace; }
   .mis-sidebar {
-    background: linear-gradient(160deg, var(--basalt) 0%, var(--basalt-alt) 100%);
-    background-image: linear-gradient(160deg, var(--basalt) 0%, var(--basalt-alt) 100%),
-      repeating-linear-gradient(0deg, transparent, transparent 37px, var(--basalt-line) 37px, var(--basalt-line) 38px);
+    background: linear-gradient(165deg, var(--brand) 0%, var(--brand-deep) 100%);
+    background-image: linear-gradient(165deg, var(--brand) 0%, var(--brand-deep) 100%),
+      radial-gradient(circle at 100% 0%, rgba(255,255,255,0.10), transparent 55%);
+    transition: width 0.22s cubic-bezier(.4,0,.2,1);
+    position: relative;
   }
-  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-left: 3px solid var(--border); box-shadow: var(--shadow-sm); }
-  .mis-panel-tab { border-left-color: var(--ore) !important; }
+  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 16px; box-shadow: var(--shadow-sm); }
   .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
-  .mis-nav-item { transition: background 0.14s ease, color 0.14s ease; background:none; border:none; text-align:left; cursor:pointer; border-radius: 6px; margin: 0 10px; width: calc(100% - 20px) !important; color: rgba(255,255,255,0.68); }
-  .mis-nav-item:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
-  .mis-nav-item.active { background: rgba(255,255,255,0.14); color: #FFFFFF !important; border-left: 3px solid var(--ore) !important; padding-left: calc(1rem - 3px) !important; }
+  .mis-nav-item { transition: color 0.16s ease; background:none; border:none; text-align:left; cursor:pointer; border-radius: 10px; margin: 0 10px; width: calc(100% - 20px) !important; color: rgba(255,255,255,0.62); position: relative; z-index: 1; }
+  .mis-nav-item:hover { color: #FFFFFF; }
+  .mis-nav-item.active { color: #FFFFFF !important; font-weight: 500; }
+  .mis-nav-pill { position: absolute; left: 10px; right: 10px; border-radius: 10px; background: rgba(255,255,255,0.14); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10); transition: top 0.28s cubic-bezier(.34,1.4,.4,1), height 0.28s cubic-bezier(.34,1.4,.4,1), opacity 0.2s ease; z-index: 0; }
+  .mis-nav-pill::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:2px; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
   .mis-row:hover { background: var(--panel-alt); }
-  .mis-btn-primary { background: var(--ore); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
-  .mis-btn-primary:hover { filter: brightness(1.1); }
-  .mis-btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
-  .mis-btn-accent { background: var(--basalt); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
-  .mis-btn-accent:hover { filter: brightness(1.3); }
+  .mis-btn-primary { background: linear-gradient(135deg, var(--brand) 0%, #3A4EC0 100%); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease, box-shadow 0.14s ease; border-radius:10px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
+  .mis-btn-primary:hover { filter: brightness(1.1); box-shadow: 0 6px 16px rgba(42,59,148,0.32); transform: translateY(-1px); }
+  .mis-btn-primary:active { transform: translateY(0); }
+  .mis-btn-primary:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:var(--shadow-sm); }
+  .mis-btn-accent { background: var(--teal); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease; border-radius:10px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
+  .mis-btn-accent:hover { filter: brightness(1.08); }
   .mis-btn-accent:active { transform: translateY(1px); }
-  .mis-btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--ink); transition: background 0.14s ease, border-color 0.14s ease; border-radius:6px; padding:7px 13px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-  .mis-btn-ghost:hover { background: var(--panel-alt); border-color: var(--ore); }
+  .mis-btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--ink); transition: background 0.14s ease, border-color 0.14s ease, transform 0.08s ease; border-radius:10px; padding:8px 15px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .mis-btn-ghost:hover { background: var(--panel-alt); border-color: var(--brand); }
+  .mis-btn-ghost:active { transform: translateY(1px); }
   .mis-btn-ghost:disabled { opacity:0.4; cursor:not-allowed; }
-  .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:6px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
+  .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:10px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; transition: background 0.14s ease; }
   .mis-btn-danger:hover { background: var(--vital-soft); }
   .mis-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
   .mis-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; padding:3px 8px; border-radius:4px; display:inline-block; }
-  .mis-focus:focus-visible { outline: 2px solid var(--ore); outline-offset: 2px; }
+  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; padding:3px 8px; border-radius:6px; display:inline-block; }
+  .mis-focus:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .mis-strata-seg { transition: opacity 0.15s ease; }
-  .mis-card-hover { transition: box-shadow 0.18s ease, transform 0.18s ease; }
-  .mis-card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-  .mis-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
-  .mis-strata-rule { height: 3px; width: 56px; border-radius: 2px; background: linear-gradient(90deg, var(--basalt) 0%, var(--basalt) 25%, var(--ore) 25%, var(--ore) 50%, var(--azurite) 50%, var(--azurite) 75%, var(--ochre) 75%, var(--ochre) 100%); }
-  .mis-seal { border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; }
+  .mis-card-hover { transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease; }
+  .mis-card-hover:hover { box-shadow: var(--shadow-glow); transform: translateY(-3px); border-color: rgba(42,59,148,0.18); }
+  .mis-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); display: flex; align-items: center; gap: 8px; }
+  .mis-strata-rule { height: 4px; width: 64px; border-radius: 2px; background: linear-gradient(90deg, var(--brand) 0%, var(--brand) 30%, var(--teal) 30%, var(--teal) 60%, var(--coral) 60%, var(--coral) 100%); }
+  .mis-seal { border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); }
+  .mis-gear-spin { animation: mis-spin 14s linear infinite; transform-origin: center; }
+  .mis-gear-spin-fast { animation: mis-spin 1.1s linear infinite; transform-origin: center; }
+  @keyframes mis-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes mis-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .mis-view-enter { animation: mis-fade-up 0.28s cubic-bezier(.2,.7,.3,1) both; }
+  .mis-row-in { animation: mis-fade-up 0.32s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes mis-shimmer { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+  .mis-skeleton { background: linear-gradient(90deg, var(--panel-alt) 25%, #F8F9FE 37%, var(--panel-alt) 63%); background-size: 400px 100%; animation: mis-shimmer 1.3s ease infinite; border-radius: 8px; }
+  @keyframes mis-toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .mis-toast { animation: mis-toast-in 0.24s cubic-bezier(.2,.8,.3,1) both; }
+  @keyframes mis-toast-bar { from { width: 100%; } to { width: 0%; } }
+  @keyframes mis-pop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+  .mis-pop-in { animation: mis-pop 0.4s cubic-bezier(.3,1.4,.4,1) both; }
+  .mis-cmdk-overlay { position: fixed; inset: 0; background: rgba(15,19,48,0.55); backdrop-filter: blur(2px); display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; z-index: 95; }
+  .mis-cmdk { width: 100%; max-width: 560px; background: var(--panel); border-radius: 16px; box-shadow: 0 30px 70px rgba(15,19,48,0.4); border: 1px solid var(--border-soft); overflow: hidden; animation: mis-fade-up 0.18s ease both; }
+  .mis-cmdk-item { display:flex; align-items:center; gap:10px; padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--ink); }
+  .mis-cmdk-item.active, .mis-cmdk-item:hover { background: var(--panel-alt); }
+  .mis-kbd { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-faint); background: var(--panel-alt); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
   .mis-field { display:flex; flex-direction:column; gap:5px; }
   .mis-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
   .mis-input, .mis-select, .mis-textarea { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 100%; }
@@ -181,11 +209,11 @@ function StrataRule({ className }) {
 const ROLE_COLORS = { admin: "#2E6DA4", sales: "#1F8A5A", warehouse: "#C99A3D", procurement: "#7A5FB8", service: "#1E7FD6", finance: "#5C6672" };
 function initials(name) { return (name || "").split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("").toUpperCase(); }
 function Avatar({ name, role, size = 34 }) {
-  const bg = ROLE_COLORS[role] || "var(--azurite)";
+  const bg = ROLE_COLORS[role] || "var(--sky)";
   return <div style={{ width: size, height: size, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: bg, color: "#FFFFFF", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{initials(name)}</div>;
 }
 function RolePill({ role }) {
-  const bg = ROLE_COLORS[role] || "var(--azurite)";
+  const bg = ROLE_COLORS[role] || "var(--sky)";
   return <span className="mis-badge" style={{ background: bg, color: "#FFFFFF" }}>{(ROLES[role] || {}).label || role}</span>;
 }
 function Toggle({ on, onChange }) {
@@ -194,21 +222,73 @@ function Toggle({ on, onChange }) {
   </button>;
 }
 function RingStat({ pct, size = 96, stroke = 10, color, label, big, sub }) {
-  const r = (size - stroke) / 2, c = 2 * Math.PI * r, offset = c - Math.min(pct, 100) / 100 * c;
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const [animated, setAnimated] = useState(0);
+  useEffect(() => { const raf = requestAnimationFrame(() => setAnimated(pct)); return () => cancelAnimationFrame(raf); }, [pct]);
+  const offset = c - Math.min(animated, 100) / 100 * c;
+  const shown = useCountUp(pct, 800);
   return <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--panel-alt)" strokeWidth={stroke} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" className="mis-display" fontSize={big ? 22 : 18} fill="var(--ink)">{pct}%</text>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" transform={`rotate(-90 ${size / 2} ${size / 2})`} style={{ transition: "stroke-dashoffset 1s cubic-bezier(.2,.8,.3,1)" }} />
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" className="mis-display" fontSize={big ? 22 : 18} fill="var(--ink)">{shown}%</text>
     </svg>
     <div><div style={{ fontSize: 13, color: "var(--ink)" }}>{label}</div>{sub && <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{sub}</div>}</div>
   </div>;
 }
-const BRANCH_COLORS = { "Accra HQ": "var(--ore)", "Kumasi Branch": "var(--malachite)", "Tema Warehouse": "var(--ochre)" };
+const BRANCH_COLORS = { "Accra HQ": "var(--ore)", "Kumasi Branch": "var(--teal)", "Tema Warehouse": "var(--amber)" };
 function BranchTag({ branch }) {
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-    <span style={{ width: 7, height: 7, borderRadius: "50%", background: BRANCH_COLORS[branch] || "var(--azurite)", flexShrink: 0 }} />{branch}
+    <span style={{ width: 7, height: 7, borderRadius: "50%", background: BRANCH_COLORS[branch] || "var(--sky)", flexShrink: 0 }} />{branch}
   </span>;
+}
+// Brand mark: a cog inspired by the SETVACO logo, with a small pixel-mosaic
+// accent standing in for the digital/data motif in the real wordmark.
+function GearMark({ size = 30, spin, mosaic = true }) {
+  const teeth = 10;
+  const cx = 12, cy = 12, rOuter = 10.4, rInner = 7.6, toothLen = 2.1;
+  let path = "";
+  for (let i = 0; i < teeth; i++) {
+    const a0 = (i / teeth) * Math.PI * 2, a1 = a0 + (Math.PI * 2) / teeth / 2;
+    const p = (a, r) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+    const [x0, y0] = p(a0, rOuter + toothLen);
+    const [x1, y1] = p(a1, rOuter + toothLen);
+    path += `${i === 0 ? "M" : "L"}${p(a0, rOuter).join(",")} L${x0},${y0} L${x1},${y1} L${p(a1, rOuter).join(",")} `;
+  }
+  path += "Z";
+  return <svg width={size} height={size} viewBox="0 0 24 24" className={spin ? "mis-gear-spin" : ""} style={{ flexShrink: 0 }}>
+    <path d={path} fill="#FFFFFF" opacity="0.92" />
+    <circle cx={cx} cy={cy} r={rInner - 1.6} fill="var(--brand-deep)" />
+    {mosaic && <g opacity="0.95">
+      <rect x="9" y="8.4" width="1.6" height="1.6" fill="var(--coral)" />
+      <rect x="10.8" y="8.4" width="1.6" height="1.6" fill="var(--teal)" />
+      <rect x="9" y="10.2" width="1.6" height="1.6" fill="var(--sky)" />
+      <rect x="12.6" y="10.2" width="1.6" height="1.6" fill="var(--coral)" />
+      <rect x="10.8" y="12" width="1.6" height="1.6" fill="var(--teal)" />
+      <rect x="12.6" y="13.8" width="1.6" height="1.6" fill="var(--sky)" />
+    </g>}
+  </svg>;
+}
+function useCountUp(value, duration = 700) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = typeof value === "number" ? value : 0;
+    if (typeof value !== "number" || from === to) { setDisplay(value); fromRef.current = to; return; }
+    const start = performance.now();
+    let raf;
+    const tick = now => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick); else fromRef.current = to;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => raf && cancelAnimationFrame(raf);
+    // eslint-disable-next-line
+  }, [value]);
+  return display;
 }
 // ---------------------------------------------------------------------------
 // ROLES / NAV / SEED DATA — modeled on SETVACO Holding Limited: Ghanaian
@@ -408,14 +488,15 @@ function Badge({ children, color, soft }) {
   return <span className="mis-badge" style={{ color, background: soft }}>{children}</span>;
 }
 function StatCard({ label, value, sub, icon: Ic, tint, soft }) {
-  return <div className="mis-panel mis-card-hover" style={{ borderRadius: 14, padding: 16, display: "flex", flexDirection: "column", gap: 12, borderLeftColor: tint }}>
+  const shown = useCountUp(value, 900);
+  return <div className="mis-panel mis-card-hover" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12, borderLeft: `3px solid ${tint || "var(--border)"}` }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--text-tertiary)" }}>{label}</span>
       <div style={{ width: 32, height: 32, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: soft || "var(--ore-soft)" }}>
         <Ic size={16} style={{ color: tint }} />
       </div>
     </div>
-    <div className="mis-display" style={{ fontSize: 24, color: "var(--text-primary)" }}>{value}</div>
+    <div className="mis-display" style={{ fontSize: 26, color: "var(--text-primary)" }}>{shown}</div>
     {sub && <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sub}</div>}
   </div>;
 }
@@ -456,12 +537,12 @@ function Tabs({ tabs, active, onChange }) {
   </div>;
 }
 function DataTable({ columns, rows, rowKey, empty }) {
-  return <div className="mis-panel mis-table-wrap" style={{ borderRadius: 8, overflow: "hidden" }}>
+  return <div className="mis-panel mis-table-wrap" style={{ borderRadius: 16, overflow: "hidden" }}>
     <table className="mis-table">
       <thead><tr>{columns.map((c, i) => <th key={c.key || i}>{c.header}</th>)}</tr></thead>
       <tbody>
         {rows.length === 0 && <tr><td colSpan={columns.length}><div className="mis-empty">{empty || "No records."}</div></td></tr>}
-        {rows.map(row => <tr key={rowKey(row)} className="mis-row">{columns.map((c, i) => <td key={c.key || i}>{c.render(row)}</td>)}</tr>)}
+        {rows.map((row, ri) => <tr key={rowKey(row)} className="mis-row mis-row-in" style={{ animationDelay: `${Math.min(ri, 12) * 22}ms` }}>{columns.map((c, i) => <td key={c.key || i}>{c.render(row)}</td>)}</tr>)}
       </tbody>
     </table>
   </div>;
@@ -606,7 +687,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 6, padding: "8px 12px", width: 260 }}>
+        <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 12px", width: 260 }}>
           <Search size={14} style={{ color: "var(--text-tertiary)" }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, code, or brand" style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", fontSize: 13, width: "100%" }} />
         </div>
@@ -678,7 +759,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
         <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>The system reads each line, groups it by PO number, and notifies Procurement once imported.</p>
       </React.Fragment>}
       {poPreview && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10 }}>
+        {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10 }}>
           <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{g.poNumber} — {g.vendor || "Unspecified vendor"}</div>
           <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{g.lines.length} line item(s){g.expected ? `, expected ${g.expected}` : ""}</div>
         </div>)}
@@ -712,7 +793,7 @@ function LineItemsEditor({ lines, setLines, inventoryItems }) {
   function addCustomLine() { setLines(ls => [...ls, { itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: true }]); }
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       {!line.newPart ? <Field label="Item"><TSelect value={line.itemId} onChange={e => {
         const it = inventoryItems.find(x => x.id === e.target.value);
         updateLine(idx, { itemId: e.target.value, desc: it ? it.name : "", unitPrice: it ? it.sell : 0 });
@@ -771,7 +852,7 @@ function CreateQuotationModal({ type, customers, inventoryItems, quotations, set
             {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
           </TSelect>
         </Field>
-        {customer && <div className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
+        {customer && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
           <div>{customer.contactPerson} · {customer.email}</div>
           <div>{customer.phone}</div>
           <div>{customer.address}</div>
@@ -884,7 +965,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, role, currentU
     logAction(currentUser, `Completed service job ${id}`, "Service");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label="Customer name"><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value }))} style={{ minWidth: 200 }}>
         <option value="">Select customer…</option>{customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </TSelect></Field>
@@ -956,7 +1037,7 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items }) 
       <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
       <StatCard label="Open Service Jobs" value={openJobs} sub="In progress or unassigned" icon={Wrench} tint="var(--info)" soft="var(--info-soft)" />
     </div>
-    <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent quotations</h3>
       {recent.length === 0 && <div className="mis-empty">No quotations yet.</div>}
       {recent.map(q => { const cs = statusColor(q.status); return <div key={q.id} className="mis-row" style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px", borderBottom: "1px solid var(--border-soft)" }}>
@@ -1065,7 +1146,7 @@ function POLineItemsEditor({ lines, setLines, items }) {
   function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
   function addLine() { setLines(ls => [...ls, { itemId: "", itemName: "", qty: 1 }]); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label="Item"><TSelect value={line.itemId} onChange={e => { const it = items.find(x => x.id === e.target.value); updateLine(idx, { itemId: e.target.value, itemName: it ? it.name : "" }); }} style={{ minWidth: 220 }}>
         <option value="">Select item…</option>
         {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id})</option>)}
@@ -1110,7 +1191,7 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
     return "Unspecified vendor";
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="mis-grid-2">
         <Field label="Vendor"><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
           <option value="">Select vendor…</option>{vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -1168,7 +1249,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
       <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add vendor</button>
     </div>}
     {canManage && <FileDrop label="Click or drop an Excel/CSV vendor list to bulk-upload" accept=".xlsx,.xls,.csv" onFile={handleUpload} hint="Expected columns: Name, Code, Contact, Email, Phone, Categories" />}
-    {preview && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+    {preview && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
       <p style={{ fontSize: 13 }}>{preview.fileName}: {preview.rows.length} vendor record(s) ready to import.</p>
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>Cancel</button>
@@ -1226,22 +1307,22 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>External customers issue purchase orders bearing an industry-standard code unique between SETVACO and that client. Enter the code from the incoming PO to identify the client (or vendor) it belongs to, then submit the order.</p>
-    <form onSubmit={search} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+    <form onSubmit={search} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label="Industry standard code"><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CHK-001" style={{ width: 200 }} /></Field>
       <Field label="External PO number (optional)"><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder="Customer's own PO #" style={{ width: 200 }} /></Field>
       <button type="submit" className="mis-btn-primary mis-focus"><Search size={14} /> Match code</button>
     </form>
-    {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+    {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>Matched customer: {match.record.name}</b></div>
       <div className="mis-kv"><span>Country</span><b>{match.record.country}</b></div>
       <div className="mis-kv"><span>Contact</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
       {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> Submit order for this customer</button>}
     </div>}
-    {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+    {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>This code belongs to vendor: {match.record.name}</b></div>
       <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Raise an internal purchase order to this vendor from the Internal Purchase Orders tab.</p>
     </div>}
-    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>No customer or vendor found with that code.</span></div>}
+    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>No customer or vendor found with that code.</span></div>}
   </div>;
 }
 
@@ -1267,7 +1348,7 @@ function ContactsEditor({ contacts, setContacts }) {
   function remove(idx) { setContacts(cs => cs.filter((_, i) => i !== idx)); }
   function add() { setContacts(cs => [...cs, { name: "", role: "", email: "", phone: "" }]); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {contacts.map((c, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {contacts.map((c, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label="Name"><TInput value={c.name} onChange={e => update(idx, { name: e.target.value })} style={{ minWidth: 150 }} /></Field>
       <Field label="Role"><TInput value={c.role} onChange={e => update(idx, { role: e.target.value })} style={{ minWidth: 130 }} /></Field>
       <Field label="Email"><TInput type="email" value={c.email} onChange={e => update(idx, { email: e.target.value })} style={{ minWidth: 170 }} /></Field>
@@ -1435,7 +1516,7 @@ function UsersAccess({ role, currentUser, users, setUsers, logAction }) {
     </div>
     <div>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Module access by role</h3>
-      <div className="mis-panel mis-table-wrap" style={{ borderRadius: 8, overflow: "hidden" }}>
+      <div className="mis-panel mis-table-wrap" style={{ borderRadius: 16, overflow: "hidden" }}>
         <table className="mis-table">
           <thead><tr><th>Role</th>{NAV.map(n => <th key={n.key} style={{ textAlign: "center" }}>{n.label}</th>)}</tr></thead>
           <tbody>{Object.entries(ROLES).map(([key, r]) => <tr key={key} className="mis-row">
@@ -1457,7 +1538,7 @@ function VarianceAudit({ auditLog }) {
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={[{ key: "variance", label: "Stock Variance" }, { key: "audit", label: "Audit Log" }]} active={sub} onChange={setSub} />
     {sub === "variance" && <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
         <TrendingDown size={18} style={{ color: "var(--vital)" }} />
         <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.</p>
       </div>
@@ -1495,7 +1576,7 @@ function NotificationBell({ notifications, setNotifications }) {
       <Bell size={16} />
       {unread > 0 && <span className="mis-bell-dot" />}
     </button>
-    {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 8, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
+    {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 16, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
       <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Notifications</div>
       {notifications.length === 0 && <div className="mis-empty">Nothing yet.</div>}
       {notifications.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
@@ -1503,6 +1584,47 @@ function NotificationBell({ notifications, setNotifications }) {
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{fmtDateTime(n.ts)}</div>
       </div>)}
     </div>}
+  </div>;
+}
+function CommandPalette({ open, onClose, allowedNav, setNav, customers, items, quotations, invoices }) {
+  const [q, setQ] = useState("");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const inputRef = useRef(null);
+  useEffect(() => { if (open) { setQ(""); setActiveIdx(0); setTimeout(() => inputRef.current && inputRef.current.focus(), 20); } }, [open]);
+  if (!open) return null;
+  const needle = q.trim().toLowerCase();
+  const navResults = allowedNav.filter(n => !needle || n.label.toLowerCase().includes(needle)).map(n => ({ kind: "nav", key: "nav-" + n.key, icon: n.icon, label: n.label, sub: "Go to module", action: () => { setNav(n.key); onClose(); } }));
+  const custResults = !needle ? [] : customers.filter(c => c.name.toLowerCase().includes(needle) || c.id.toLowerCase().includes(needle)).slice(0, 4).map(c => ({ kind: "customer", key: "c-" + c.id, icon: Users, label: c.name, sub: `Customer · ${c.country}`, action: () => { setNav("customers"); onClose(); } }));
+  const itemResults = !needle ? [] : items.filter(i => i.name.toLowerCase().includes(needle) || i.id.toLowerCase().includes(needle)).slice(0, 4).map(i => ({ kind: "item", key: "i-" + i.id, icon: i.type === "equipment" ? Boxes : Package, label: i.name, sub: `${i.id} · ${i.qty} on hand`, action: () => { setNav(i.type === "equipment" ? "equipmentInventory" : "partsInventory"); onClose(); } }));
+  const docResults = !needle ? [] : [...quotations, ...invoices].filter(d => d.id.toLowerCase().includes(needle)).slice(0, 4).map(d => ({ kind: "doc", key: "d-" + d.id, icon: FileText, label: d.id, sub: `${d.type} · ${d.status}`, action: () => { setNav("sales"); onClose(); } }));
+  const results = [...navResults, ...custResults, ...itemResults, ...docResults].slice(0, 10);
+  function onKeyDown(e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, results.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
+    else if (e.key === "Enter") { e.preventDefault(); const r = results[activeIdx]; if (r) r.action(); }
+    else if (e.key === "Escape") { onClose(); }
+  }
+  return <div className="mis-cmdk-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="mis-cmdk" onKeyDown={onKeyDown}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid var(--border-soft)" }}>
+        <Search size={16} style={{ color: "var(--text-tertiary)" }} />
+        <input ref={inputRef} value={q} onChange={e => { setQ(e.target.value); setActiveIdx(0); }} placeholder="Jump to a module, customer, part, or order…" style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 14, color: "var(--ink)" }} />
+        <span className="mis-kbd">ESC</span>
+      </div>
+      <div style={{ maxHeight: 360, overflowY: "auto", padding: "6px 0" }}>
+        {results.length === 0 && <div className="mis-empty">No matches.</div>}
+        {results.map((r, i) => { const Ic = r.icon; return <div key={r.key} className={"mis-cmdk-item" + (i === activeIdx ? " active" : "")} onMouseEnter={() => setActiveIdx(i)} onClick={r.action}>
+          <Ic size={15} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>{r.label}</span>
+          <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{r.sub}</span>
+        </div>; })}
+      </div>
+      <div style={{ display: "flex", gap: 10, padding: "8px 16px", borderTop: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)" }}>
+        <span><span className="mis-kbd">↑↓</span> navigate</span>
+        <span><span className="mis-kbd">↵</span> select</span>
+        <span style={{ marginLeft: "auto" }}><span className="mis-kbd">⌘K</span> toggle</span>
+      </div>
+    </div>
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -1518,9 +1640,9 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
   const healthyPct = Math.round((items.length - lowStock.length) / Math.max(items.length, 1) * 100);
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
     <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
-      <RingStat pct={healthyPct} color="var(--malachite)" label="Items above reorder level" sub={`${items.length - lowStock.length} of ${items.length} items healthy`} big />
+      <RingStat pct={healthyPct} color="var(--teal)" label="Items above reorder level" sub={`${items.length - lowStock.length} of ${items.length} items healthy`} big />
       <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)" }} />
-      <RingStat pct={fulfilledPct} color="var(--azurite)" label="Quotations invoiced" sub={`${quotations.filter(q => q.status === "Invoiced").length} of ${quotations.length} quotations closed`} />
+      <RingStat pct={fulfilledPct} color="var(--sky)" label="Quotations invoiced" sub={`${quotations.filter(q => q.status === "Invoiced").length} of ${quotations.length} quotations closed`} />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
       <StatCard label="Total Stock Value" value={fmtGHS(stockValue)} sub="Parts & equipment, all branches" icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
@@ -1529,7 +1651,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
       <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-      <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Items nearest depletion</h3>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
@@ -1542,7 +1664,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
           {lowStock.length === 0 && <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>All items above reorder level.</p>}
         </div>
       </div>
-      <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Customer credit risk</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {customers.map(c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <div key={c.id}>
@@ -1552,7 +1674,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
         </div>
       </div>
     </div>
-    {["admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+    {["admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent activity</h3>
       {recentActivity.length === 0 && <div className="mis-empty">No activity recorded yet.</div>}
       {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
@@ -1582,6 +1704,10 @@ function SetvacoBusinessSystem() {
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
   const [toast, setToast] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const navRefs = useRef({});
+  const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
 
   const currentUser = (CURRENT_USERS[role] || {}).name || "Unknown user";
   const allowedNav = NAV.filter(n => n.roles.includes(role));
@@ -1590,8 +1716,20 @@ function SetvacoBusinessSystem() {
   useEffect(() => {
     savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications });
   }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications]);
+  useEffect(() => {
+    const el = navRefs.current[nav];
+    if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
+  }, [nav, collapsed, allowedNav.length]);
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setPaletteOpen(o => !o); }
+      if (e.key === "Escape") setPaletteOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2600); }
+  function showToast(msg) { setToast({ msg, id: Date.now() }); setTimeout(() => setToast(t => (t && t.msg === msg ? null : t)), 3200); }
   function logAction(user, action, mod) {
     setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod }, ...al]);
     showToast(action);
@@ -1605,41 +1743,50 @@ function SetvacoBusinessSystem() {
     window.location.reload();
   }
 
+  const sidebarWidth = collapsed ? 76 : 236;
   return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex" }}>
     <Style />
-    <aside className="mis-sidebar" style={{ width: 236, flexShrink: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 16px", borderBottom: "1px solid var(--basalt-line)" }}>
+    <aside className="mis-sidebar" style={{ width: sidebarWidth, flexShrink: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "20px 0" : "20px 16px", justifyContent: collapsed ? "center" : "flex-start", borderBottom: "1px solid var(--brand-line)" }}>
         <div className="mis-seal" style={{ width: 44, height: 44, flexShrink: 0 }}>
-          <CoreSample layers={["var(--basalt)", "var(--ore)", "var(--azurite)", "#BFD8ED"]} size={30} />
+          <GearMark size={28} spin />
         </div>
-        <div>
-          <div className="mis-display" style={{ fontSize: 16, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
+        {!collapsed && <div>
+          <div className="mis-display" style={{ fontSize: 17, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
           <div className="mis-mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>BUSINESS SYSTEM</div>
-        </div>
+        </div>}
       </div>
-      <nav style={{ flex: 1, padding: "10px 0" }}>
-        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} type="button" className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", fontSize: 13, borderLeft: active ? undefined : "3px solid transparent" }}>
-          <Ic size={16} />{n.label}
+      <nav style={{ flex: 1, padding: "10px 0", position: "relative" }}>
+        <div className="mis-nav-pill" style={{ top: pill.top, height: pill.height, opacity: pill.opacity }} />
+        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} ref={el => { navRefs.current[n.key] = el; }} type="button" title={collapsed ? n.label : undefined} className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "10px 0" : "10px 16px", fontSize: 13, marginBottom: 2 }}>
+          <Ic size={16} />{!collapsed && n.label}
         </button>; })}
       </nav>
-      <div className="mis-mono" style={{ padding: "14px 16px", fontSize: 10, color: "rgba(255,255,255,0.42)", borderTop: "1px solid var(--basalt-line)" }}>
+      <div style={{ padding: collapsed ? "10px 0" : "10px 16px", display: "flex", justifyContent: collapsed ? "center" : "flex-end" }}>
+        <button type="button" className="mis-focus" onClick={() => setCollapsed(c => !c)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.65)", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <ChevronDown size={14} style={{ transform: collapsed ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 0.2s ease" }} />
+        </button>
+      </div>
+      {!collapsed && <div className="mis-mono" style={{ padding: "10px 16px 16px", fontSize: 10, color: "rgba(255,255,255,0.42)", borderTop: "1px solid var(--brand-line)" }}>
         SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA
         <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" style={{ color: "rgba(255,255,255,0.55)" }} onClick={resetDemoData}>Reset demo data</button></div>
-      </div>
+      </div>}
     </aside>
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--stone)" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--stone)", flexWrap: "wrap", gap: 12 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--paper)" }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--paper)", flexWrap: "wrap", gap: 12 }}>
         <div>
           <div className="mis-eyebrow" style={{ marginBottom: 2 }}>SETVACO · INTERNAL</div>
           <h1 className="mis-display" style={{ fontSize: 24, color: "var(--ink)", lineHeight: 1 }}>{((allowedNav.find(n => n.key === nav) || {}).label || "Dashboard").toUpperCase()}</h1>
           <StrataRule className="mt-1.5" />
           <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>Signed in as {currentUser} · {ROLES[role].label}</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPaletteOpen(true)} style={{ color: "var(--text-tertiary)" }}>
+            <Search size={14} /> Search or jump to… <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
+          </button>
           <NotificationBell notifications={notifications} setNotifications={setNotifications} />
-          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Role:</span>
           <div style={{ position: "relative" }}>
-            <select value={role} onChange={e => setRole(e.target.value)} className="mis-panel-alt mis-focus" style={{ fontSize: 13, borderRadius: 6, padding: "7px 26px 7px 12px", appearance: "none", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+            <select value={role} onChange={e => setRole(e.target.value)} className="mis-panel-alt mis-focus" style={{ fontSize: 13, borderRadius: 10, padding: "7px 26px 7px 12px", appearance: "none", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
               {Object.entries(ROLES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
             </select>
             <ChevronDown size={14} style={{ position: "absolute", right: 8, top: 9, color: "var(--text-tertiary)", pointerEvents: "none" }} />
@@ -1647,19 +1794,28 @@ function SetvacoBusinessSystem() {
         </div>
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
-        {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} />}
-        {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
-        {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
-        {nav === "sales" && <SalesQuotations role={role} currentUser={currentUser} customers={customers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} purchaseOrders={purchaseOrders} users={users} logAction={logAction} pushNotification={pushNotification} />}
-        {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
-        {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
-        {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
-        {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} logAction={logAction} />}
+        <div key={nav} className="mis-view-enter">
+          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} />}
+          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
+          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
+          {nav === "sales" && <SalesQuotations role={role} currentUser={currentUser} customers={customers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} purchaseOrders={purchaseOrders} users={users} logAction={logAction} pushNotification={pushNotification} />}
+          {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
+          {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
+          {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} logAction={logAction} />}
+        </div>
       </main>
     </div>
-    {toast && <div className="mis-panel-alt mis-focus" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 16px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 10px 15px -3px rgba(0,0,0,.3)", color: "var(--text-primary)", border: "1px solid var(--border)", maxWidth: 380, zIndex: 90 }}>
-      <Check size={14} style={{ color: "var(--safe)", flexShrink: 0 }} /> <span>{toast}</span>
+    {toast && <div key={toast.id} className="mis-panel mis-toast" style={{ position: "fixed", bottom: 24, right: 24, borderRadius: 14, fontSize: 13, overflow: "hidden", boxShadow: "0 16px 34px rgba(19,27,74,0.22)", color: "var(--text-primary)", maxWidth: 380, zIndex: 90 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px" }}>
+        <div className="mis-pop-in" style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--safe-soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Check size={13} style={{ color: "var(--safe)" }} />
+        </div>
+        <span>{toast.msg}</span>
+      </div>
+      <div style={{ height: 3, background: "var(--panel-alt)" }}><div style={{ height: 3, background: "var(--safe)", animation: "mis-toast-bar 3.2s linear forwards" }} /></div>
     </div>}
+    <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} allowedNav={allowedNav} setNav={setNav} customers={customers} items={items} quotations={quotations} invoices={invoices} />
   </div>;
 }
 
