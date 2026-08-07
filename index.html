@@ -27,38 +27,60 @@ button{cursor:pointer;}
 // STYLE — design tokens + component classes
 // ---------------------------------------------------------------------------
 const Style = () => <style>{`
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
   .mis-root {
-    --bg-deep: #1A1C1E; --panel: #232629; --panel-alt: #2B2F32; --border: #383D41; --border-soft: #2F3336;
-    --text-primary: #ECE9E2; --text-secondary: #9BA3A8; --text-tertiary: #6B7378;
-    --ore: #D9622B; --ore-soft: rgba(217,98,43,0.14);
-    --vital: #C1442E; --vital-soft: rgba(193,68,46,0.14);
-    --safe: #5C9270; --safe-soft: rgba(92,146,112,0.14);
-    --caution: #D9A441; --caution-soft: rgba(217,164,65,0.14);
-    --info: #5C8FA3; --info-soft: rgba(92,143,163,0.14);
-    font-family: 'IBM Plex Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary);
+    --basalt: #0A2E52; --basalt-alt: #103F6D; --basalt-line: rgba(255,255,255,0.08);
+    --stone: #F3F7FB; --panel: #FFFFFF; --panel-alt: #EAF2FA; --border: #D3E2EF; --border-soft: #E3EDF6;
+    --ink: #0F2338; --ink-soft: #4D6377; --ink-faint: #8AA0B1;
+    --ore: #1E7FD6; --ore-soft: rgba(30,127,214,0.10);
+    --malachite: #1F8A5A; --malachite-soft: rgba(31,138,90,0.10);
+    --azurite: #2E6DA4; --azurite-soft: rgba(46,109,164,0.11);
+    --ochre: #C99A3D; --ochre-soft: rgba(201,154,61,0.14);
+    --vital: #C23B2E; --vital-soft: rgba(194,59,46,0.10);
+    --safe: var(--malachite); --safe-soft: var(--malachite-soft);
+    --caution: var(--ochre); --caution-soft: var(--ochre-soft);
+    --info: var(--azurite); --info-soft: var(--azurite-soft);
+    --text-primary: var(--ink); --text-secondary: var(--ink-soft); --text-tertiary: var(--ink-faint);
+    --shadow-sm: 0 1px 2px rgba(10,46,82,0.08); --shadow-md: 0 10px 22px rgba(10,46,82,0.12), 0 2px 6px rgba(10,46,82,0.07);
+    font-family: 'IBM Plex Sans', sans-serif; background: var(--stone);
+    background-image: radial-gradient(rgba(10,46,82,0.03) 1px, transparent 1px); background-size: 14px 14px;
+    color: var(--ink);
   }
-  .mis-display { font-family: 'Oswald', sans-serif; letter-spacing: 0.01em; }
+  .mis-display { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; letter-spacing: 0.005em; }
   .mis-mono { font-family: 'IBM Plex Mono', monospace; }
-  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); }
+  .mis-sidebar {
+    background: linear-gradient(160deg, var(--basalt) 0%, var(--basalt-alt) 100%);
+    background-image: linear-gradient(160deg, var(--basalt) 0%, var(--basalt-alt) 100%),
+      repeating-linear-gradient(0deg, transparent, transparent 37px, var(--basalt-line) 37px, var(--basalt-line) 38px);
+  }
+  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-left: 3px solid var(--border); box-shadow: var(--shadow-sm); }
+  .mis-panel-tab { border-left-color: var(--ore) !important; }
   .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
-  .mis-nav-item { transition: background 0.12s ease, color 0.12s ease; background:none; border:none; text-align:left; cursor:pointer; }
-  .mis-nav-item:hover { background: var(--panel-alt); }
-  .mis-nav-item.active { background: var(--ore-soft); color: var(--ore); border-left: 2px solid var(--ore); }
+  .mis-nav-item { transition: background 0.14s ease, color 0.14s ease; background:none; border:none; text-align:left; cursor:pointer; border-radius: 6px; margin: 0 10px; width: calc(100% - 20px) !important; color: rgba(255,255,255,0.68); }
+  .mis-nav-item:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
+  .mis-nav-item.active { background: rgba(255,255,255,0.14); color: #FFFFFF !important; border-left: 3px solid var(--ore) !important; padding-left: calc(1rem - 3px) !important; }
   .mis-row:hover { background: var(--panel-alt); }
-  .mis-btn-primary { background: var(--ore); color: #1A1C1E; font-weight: 600; transition: filter 0.12s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; }
+  .mis-btn-primary { background: var(--ore); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
   .mis-btn-primary:hover { filter: brightness(1.1); }
   .mis-btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
-  .mis-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-primary); transition: background 0.12s ease; border-radius:6px; padding:7px 13px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-  .mis-btn-ghost:hover { background: var(--panel-alt); }
+  .mis-btn-accent { background: var(--basalt); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
+  .mis-btn-accent:hover { filter: brightness(1.3); }
+  .mis-btn-accent:active { transform: translateY(1px); }
+  .mis-btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--ink); transition: background 0.14s ease, border-color 0.14s ease; border-radius:6px; padding:7px 13px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .mis-btn-ghost:hover { background: var(--panel-alt); border-color: var(--ore); }
   .mis-btn-ghost:disabled { opacity:0.4; cursor:not-allowed; }
   .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:6px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
   .mis-btn-danger:hover { background: var(--vital-soft); }
   .mis-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
   .mis-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; padding:3px 8px; border-radius:4px; display:inline-block; }
+  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; padding:3px 8px; border-radius:4px; display:inline-block; }
   .mis-focus:focus-visible { outline: 2px solid var(--ore); outline-offset: 2px; }
   .mis-strata-seg { transition: opacity 0.15s ease; }
+  .mis-card-hover { transition: box-shadow 0.18s ease, transform 0.18s ease; }
+  .mis-card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .mis-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .mis-strata-rule { height: 3px; width: 56px; border-radius: 2px; background: linear-gradient(90deg, var(--basalt) 0%, var(--basalt) 25%, var(--ore) 25%, var(--ore) 50%, var(--azurite) 50%, var(--azurite) 75%, var(--ochre) 75%, var(--ochre) 100%); }
+  .mis-seal { border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; }
   .mis-field { display:flex; flex-direction:column; gap:5px; }
   .mis-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
   .mis-input, .mis-select, .mis-textarea { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 100%; }
@@ -152,6 +174,41 @@ function stockLayers(item) {
   const filled = Math.min(4, Math.max(1, Math.round(ratio * 4)));
   const base = ratio < 0.5 ? "var(--vital)" : ratio < 1 ? "var(--caution)" : "var(--safe)";
   return Array.from({ length: 4 }, (_, i) => i < filled ? base : "var(--border)");
+}
+function StrataRule({ className }) {
+  return <div className={"mis-strata-rule " + (className || "")} />;
+}
+const ROLE_COLORS = { admin: "#2E6DA4", sales: "#1F8A5A", warehouse: "#C99A3D", procurement: "#7A5FB8", service: "#1E7FD6", finance: "#5C6672" };
+function initials(name) { return (name || "").split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("").toUpperCase(); }
+function Avatar({ name, role, size = 34 }) {
+  const bg = ROLE_COLORS[role] || "var(--azurite)";
+  return <div style={{ width: size, height: size, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: bg, color: "#FFFFFF", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{initials(name)}</div>;
+}
+function RolePill({ role }) {
+  const bg = ROLE_COLORS[role] || "var(--azurite)";
+  return <span className="mis-badge" style={{ background: bg, color: "#FFFFFF" }}>{(ROLES[role] || {}).label || role}</span>;
+}
+function Toggle({ on, onChange }) {
+  return <button type="button" onClick={onChange} className="mis-focus" style={{ width: 40, height: 22, borderRadius: 999, position: "relative", flexShrink: 0, background: on ? "var(--ore)" : "var(--border)", transition: "background 0.15s ease", border: "none", cursor: "pointer" }}>
+    <span style={{ position: "absolute", top: 2, left: on ? 20 : 2, width: 18, height: 18, borderRadius: "50%", background: "#FFFFFF", transition: "left 0.15s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
+  </button>;
+}
+function RingStat({ pct, size = 96, stroke = 10, color, label, big, sub }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, offset = c - Math.min(pct, 100) / 100 * c;
+  return <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--panel-alt)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" transform={`rotate(-90 ${size / 2} ${size / 2})`} />
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" className="mis-display" fontSize={big ? 22 : 18} fill="var(--ink)">{pct}%</text>
+    </svg>
+    <div><div style={{ fontSize: 13, color: "var(--ink)" }}>{label}</div>{sub && <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{sub}</div>}</div>
+  </div>;
+}
+const BRANCH_COLORS = { "Accra HQ": "var(--ore)", "Kumasi Branch": "var(--malachite)", "Tema Warehouse": "var(--ochre)" };
+function BranchTag({ branch }) {
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+    <span style={{ width: 7, height: 7, borderRadius: "50%", background: BRANCH_COLORS[branch] || "var(--azurite)", flexShrink: 0 }} />{branch}
+  </span>;
 }
 // ---------------------------------------------------------------------------
 // ROLES / NAV / SEED DATA — modeled on SETVACO Holding Limited: Ghanaian
@@ -350,11 +407,13 @@ function statusColor(status) {
 function Badge({ children, color, soft }) {
   return <span className="mis-badge" style={{ color, background: soft }}>{children}</span>;
 }
-function StatCard({ label, value, sub, icon: Ic, tint }) {
-  return <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+function StatCard({ label, value, sub, icon: Ic, tint, soft }) {
+  return <div className="mis-panel mis-card-hover" style={{ borderRadius: 14, padding: 16, display: "flex", flexDirection: "column", gap: 12, borderLeftColor: tint }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--text-tertiary)" }}>{label}</span>
-      <Ic size={16} style={{ color: tint }} />
+      <div style={{ width: 32, height: 32, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: soft || "var(--ore-soft)" }}>
+        <Ic size={16} style={{ color: tint }} />
+      </div>
     </div>
     <div className="mis-display" style={{ fontSize: 24, color: "var(--text-primary)" }}>{value}</div>
     {sub && <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sub}</div>}
@@ -576,7 +635,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
         { header: label, render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
         { header: "Code", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.id}</span> },
         { header: "Brand", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
-        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.branch}</span> },
+        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}><BranchTag branch={it.branch} /></span> },
         { header: "Stock Room", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{roomLabel(it.stockRoom)}</span> },
         { header: "On Hand", render: it => <span className="mis-mono" style={{ color: it.qty < it.reorder ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
         { header: "Reorder At", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.reorder}</span> },
@@ -892,10 +951,10 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items }) 
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" />
-      <StatCard label="Invoiced Value" value={fmtGHS(invoicedTotal)} sub="All recorded invoices" icon={FileText} tint="var(--safe)" />
-      <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" />
-      <StatCard label="Open Service Jobs" value={openJobs} sub="In progress or unassigned" icon={Wrench} tint="var(--info)" />
+      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
+      <StatCard label="Invoiced Value" value={fmtGHS(invoicedTotal)} sub="All recorded invoices" icon={FileText} tint="var(--safe)" soft="var(--safe-soft)" />
+      <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
+      <StatCard label="Open Service Jobs" value={openJobs} sub="In progress or unassigned" icon={Wrench} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent quotations</h3>
@@ -991,7 +1050,7 @@ function SalesQuotations({ role, currentUser, customers, items, setItems, quotat
         { header: "Product", render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
         { header: "Brand", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
         { header: "Category", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.category}</span> },
-        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.branch}</span> },
+        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}><BranchTag branch={it.branch} /></span> },
         { header: "Available", render: it => <span className="mis-mono" style={{ color: it.qty <= 0 ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
         { header: "Price", render: it => <span className="mis-mono">{fmtGHS(it.sell)}</span> }
       ]} rows={equipmentList} rowKey={it => it.id} empty="No equipment products yet." />
@@ -1367,12 +1426,11 @@ function UsersAccess({ role, currentUser, users, setUsers, logAction }) {
         {isSuperUser && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><UserPlus size={14} /> Create user</button>}
       </div>
       <DataTable columns={[
-        { header: "Name", render: u => <span style={{ color: "var(--text-primary)" }}>{u.name}</span> },
+        { header: "Name", render: u => <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar name={u.name} role={u.role} size={28} /><span style={{ color: "var(--text-primary)" }}>{u.name}</span></div> },
         { header: "Company email", render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.email}</span> },
         { header: "Username", render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.username}</span> },
-        { header: "Access level", render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.entries(ROLES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</TSelect> : <span style={{ fontSize: 12 }}>{ROLES[u.role].label}</span> },
-        { header: "Status", render: u => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; } },
-        { header: "Actions", render: u => isSuperUser ? <button type="button" className="mis-link-btn" onClick={() => toggleStatus(u.id)}>{u.status === "Active" ? "Suspend" : "Reactivate"}</button> : null }
+        { header: "Access level", render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.entries(ROLES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</TSelect> : <RolePill role={u.role} /> },
+        { header: "Active", render: u => isSuperUser ? <Toggle on={u.status === "Active"} onChange={() => toggleStatus(u.id)} /> : (() => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; })() }
       ]} rows={users} rowKey={u => u.id} empty="No users yet." />
     </div>
     <div>
@@ -1456,12 +1514,19 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
   const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
   const inTransitPOs = purchaseOrders.filter(p => p.status === "Ordered" || p.status === "In Transit").length;
   const recentActivity = auditLog.slice(0, 8);
+  const fulfilledPct = Math.round(quotations.filter(q => q.status === "Invoiced").length / Math.max(quotations.length, 1) * 100);
+  const healthyPct = Math.round((items.length - lowStock.length) / Math.max(items.length, 1) * 100);
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
+      <RingStat pct={healthyPct} color="var(--malachite)" label="Items above reorder level" sub={`${items.length - lowStock.length} of ${items.length} items healthy`} big />
+      <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)" }} />
+      <RingStat pct={fulfilledPct} color="var(--azurite)" label="Quotations invoiced" sub={`${quotations.filter(q => q.status === "Invoiced").length} of ${quotations.length} quotations closed`} />
+    </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      <StatCard label="Total Stock Value" value={fmtGHS(stockValue)} sub="Parts & equipment, all branches" icon={Package} tint="var(--ore)" />
-      <StatCard label="Below Reorder Point" value={lowStock.length} sub="Items needing replenishment" icon={AlertTriangle} tint="var(--vital)" />
-      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" />
-      <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" />
+      <StatCard label="Total Stock Value" value={fmtGHS(stockValue)} sub="Parts & equipment, all branches" icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
+      <StatCard label="Below Reorder Point" value={lowStock.length} sub="Items needing replenishment" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
+      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
+      <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
       <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
@@ -1470,7 +1535,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
           {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <CoreSample layers={stockLayers(it)} size={30} />
-              <div><div style={{ fontSize: 13, color: "var(--text-primary)" }}>{it.name}</div><div className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{it.brand} · {it.branch}</div></div>
+              <div><div style={{ fontSize: 13, color: "var(--text-primary)" }}>{it.name}</div><div className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: 6 }}>{it.brand} · <BranchTag branch={it.branch} /></div></div>
             </div>
             <div style={{ textAlign: "right" }}><div className="mis-mono" style={{ fontSize: 13, color: "var(--vital)" }}>{it.qty} / {it.reorder}</div><div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>on hand / reorder</div></div>
           </div>)}
@@ -1542,29 +1607,33 @@ function SetvacoBusinessSystem() {
 
   return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex" }}>
     <Style />
-    <aside className="mis-panel" style={{ width: 230, flexShrink: 0, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 16px", borderBottom: "1px solid var(--border-soft)" }}>
-        <CoreSample layers={["var(--ore)", "var(--caution)", "var(--info)", "var(--safe)"]} size={34} />
+    <aside className="mis-sidebar" style={{ width: 236, flexShrink: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 16px", borderBottom: "1px solid var(--basalt-line)" }}>
+        <div className="mis-seal" style={{ width: 44, height: 44, flexShrink: 0 }}>
+          <CoreSample layers={["var(--basalt)", "var(--ore)", "var(--azurite)", "#BFD8ED"]} size={30} />
+        </div>
         <div>
-          <div className="mis-display" style={{ fontSize: 14, color: "var(--text-primary)" }}>SETVACO</div>
-          <div className="mis-mono" style={{ fontSize: 10, color: "var(--text-tertiary)" }}>BUSINESS SYSTEM</div>
+          <div className="mis-display" style={{ fontSize: 16, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
+          <div className="mis-mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>BUSINESS SYSTEM</div>
         </div>
       </div>
-      <nav style={{ flex: 1, padding: "8px 0" }}>
-        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} type="button" className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", fontSize: 13, color: active ? "var(--ore)" : "var(--text-secondary)", borderLeft: active ? undefined : "2px solid transparent" }}>
+      <nav style={{ flex: 1, padding: "10px 0" }}>
+        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} type="button" className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", fontSize: 13, borderLeft: active ? undefined : "3px solid transparent" }}>
           <Ic size={16} />{n.label}
         </button>; })}
       </nav>
-      <div className="mis-mono" style={{ padding: "14px 16px", fontSize: 10, color: "var(--text-tertiary)", borderTop: "1px solid var(--border-soft)" }}>
+      <div className="mis-mono" style={{ padding: "14px 16px", fontSize: 10, color: "rgba(255,255,255,0.42)", borderTop: "1px solid var(--basalt-line)" }}>
         SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA
-        <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" onClick={resetDemoData}>Reset demo data</button></div>
+        <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" style={{ color: "rgba(255,255,255,0.55)" }} onClick={resetDemoData}>Reset demo data</button></div>
       </div>
     </aside>
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border-soft)", flexWrap: "wrap", gap: 12 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--stone)" }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--stone)", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 className="mis-display" style={{ fontSize: 18, color: "var(--text-primary)" }}>{(allowedNav.find(n => n.key === nav) || {}).label || "Dashboard"}</h1>
-          <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Signed in as {currentUser} · {ROLES[role].label}</p>
+          <div className="mis-eyebrow" style={{ marginBottom: 2 }}>SETVACO · INTERNAL</div>
+          <h1 className="mis-display" style={{ fontSize: 24, color: "var(--ink)", lineHeight: 1 }}>{((allowedNav.find(n => n.key === nav) || {}).label || "Dashboard").toUpperCase()}</h1>
+          <StrataRule className="mt-1.5" />
+          <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>Signed in as {currentUser} · {ROLES[role].label}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <NotificationBell notifications={notifications} setNotifications={setNotifications} />
