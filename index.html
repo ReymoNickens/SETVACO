@@ -3,1696 +3,1599 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SETVACO Inventory System — Prototype</title>
+<title>SETVACO Business System — Prototype</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 html,body,#root{height:100%;margin:0;}
-*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.19 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.bottom-6{bottom:1.5rem}.right-6{right:1.5rem}.col-span-2{grid-column:span 2/span 2}.mb-1{margin-bottom:.25rem}.mb-3{margin-bottom:.75rem}.inline{display:inline}.flex{display:flex}.table{display:table}.grid{display:grid}.h-1\.5{height:.375rem}.min-h-screen{min-height:100vh}.w-24{width:6rem}.w-80{width:20rem}.w-full{width:100%}.min-w-0{min-width:0}.flex-1{flex:1 1 0%}.appearance-none{-webkit-appearance:none;-moz-appearance:none;appearance:none}.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.rounded{border-radius:.25rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.border{border-width:1px}.bg-transparent{background-color:transparent}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.pl-4{padding-left:1rem}.pr-8{padding-right:2rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.text-2xl{font-size:1.5rem;line-height:2rem}.text-\[10px\]{font-size:10px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.uppercase{text-transform:uppercase}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:.025em}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color),0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.outline-none{outline:2px solid transparent;outline-offset:2px}.outline{outline-style:solid}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}
+*{box-sizing:border-box;}
+body{margin:0;font-family:ui-sans-serif,system-ui,sans-serif;}
+table{border-collapse:collapse;}
+img,video{max-width:100%;height:auto;}
+button,input,select,textarea{font:inherit;color:inherit;}
+button{cursor:pointer;}
 </style>
 </head>
 <body>
 <div id="root"></div>
-<script>
-// ---------------------------------------------------------------------------
-// TOKENS
-// ---------------------------------------------------------------------------
-const Style = () => /*#__PURE__*/React.createElement("style", null, `
-    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+<script type="text/babel" data-presets="react">
+"use strict";
 
-    .mis-root {
-      --bg-deep: #1A1C1E;
-      --panel: #232629;
-      --panel-alt: #2B2F32;
-      --border: #383D41;
-      --border-soft: #2F3336;
-      --text-primary: #ECE9E2;
-      --text-secondary: #9BA3A8;
-      --text-tertiary: #6B7378;
-      --ore: #D9622B;
-      --ore-soft: rgba(217,98,43,0.14);
-      --vital: #C1442E;
-      --vital-soft: rgba(193,68,46,0.14);
-      --safe: #5C9270;
-      --safe-soft: rgba(92,146,112,0.14);
-      --caution: #D9A441;
-      --caution-soft: rgba(217,164,65,0.14);
-      --info: #5C8FA3;
-      --info-soft: rgba(92,143,163,0.14);
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--bg-deep);
-      color: var(--text-primary);
-    }
-    .mis-display { font-family: 'Oswald', sans-serif; letter-spacing: 0.01em; }
-    .mis-mono { font-family: 'IBM Plex Mono', monospace; }
-    .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); }
-    .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
-    .mis-nav-item { transition: background 0.12s ease, color 0.12s ease; }
-    .mis-nav-item:hover { background: var(--panel-alt); }
-    .mis-nav-item.active { background: var(--ore-soft); color: var(--ore); border-left: 2px solid var(--ore); }
-    .mis-row:hover { background: var(--panel-alt); }
-    .mis-btn-primary { background: var(--ore); color: #1A1C1E; font-weight: 600; transition: filter 0.12s ease; }
-    .mis-btn-primary:hover { filter: brightness(1.1); }
-    .mis-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-primary); transition: background 0.12s ease; }
-    .mis-btn-ghost:hover { background: var(--panel-alt); }
-    .mis-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-    .mis-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-    .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; }
-    .mis-focus:focus-visible { outline: 2px solid var(--ore); outline-offset: 2px; }
-    .mis-strata-seg { transition: opacity 0.15s ease; }
-    @media (prefers-reduced-motion: reduce) {
-      .mis-nav-item, .mis-btn-primary, .mis-btn-ghost, .mis-strata-seg { transition: none; }
-    }
-  `);
-const {
-  useState,
-  useMemo
-} = React;
+// ---------------------------------------------------------------------------
+// STYLE — design tokens + component classes
+// ---------------------------------------------------------------------------
+const Style = () => <style>{`
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  .mis-root {
+    --bg-deep: #1A1C1E; --panel: #232629; --panel-alt: #2B2F32; --border: #383D41; --border-soft: #2F3336;
+    --text-primary: #ECE9E2; --text-secondary: #9BA3A8; --text-tertiary: #6B7378;
+    --ore: #D9622B; --ore-soft: rgba(217,98,43,0.14);
+    --vital: #C1442E; --vital-soft: rgba(193,68,46,0.14);
+    --safe: #5C9270; --safe-soft: rgba(92,146,112,0.14);
+    --caution: #D9A441; --caution-soft: rgba(217,164,65,0.14);
+    --info: #5C8FA3; --info-soft: rgba(92,143,163,0.14);
+    font-family: 'IBM Plex Sans', sans-serif; background: var(--bg-deep); color: var(--text-primary);
+  }
+  .mis-display { font-family: 'Oswald', sans-serif; letter-spacing: 0.01em; }
+  .mis-mono { font-family: 'IBM Plex Mono', monospace; }
+  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); }
+  .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
+  .mis-nav-item { transition: background 0.12s ease, color 0.12s ease; background:none; border:none; text-align:left; cursor:pointer; }
+  .mis-nav-item:hover { background: var(--panel-alt); }
+  .mis-nav-item.active { background: var(--ore-soft); color: var(--ore); border-left: 2px solid var(--ore); }
+  .mis-row:hover { background: var(--panel-alt); }
+  .mis-btn-primary { background: var(--ore); color: #1A1C1E; font-weight: 600; transition: filter 0.12s ease; border-radius:6px; padding:8px 14px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; }
+  .mis-btn-primary:hover { filter: brightness(1.1); }
+  .mis-btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
+  .mis-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-primary); transition: background 0.12s ease; border-radius:6px; padding:7px 13px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .mis-btn-ghost:hover { background: var(--panel-alt); }
+  .mis-btn-ghost:disabled { opacity:0.4; cursor:not-allowed; }
+  .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:6px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
+  .mis-btn-danger:hover { background: var(--vital-soft); }
+  .mis-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .mis-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; padding:3px 8px; border-radius:4px; display:inline-block; }
+  .mis-focus:focus-visible { outline: 2px solid var(--ore); outline-offset: 2px; }
+  .mis-strata-seg { transition: opacity 0.15s ease; }
+  .mis-field { display:flex; flex-direction:column; gap:5px; }
+  .mis-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
+  .mis-input, .mis-select, .mis-textarea { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 100%; }
+  .mis-input:focus, .mis-select:focus, .mis-textarea:focus { outline: 2px solid var(--ore); outline-offset:1px; }
+  .mis-textarea { resize: vertical; min-height: 64px; font-family: inherit; }
+  .mis-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .mis-table th { text-align:left; padding: 10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color: var(--text-tertiary); border-bottom: 1px solid var(--border); white-space:nowrap; }
+  .mis-table td { padding: 9px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  .mis-table tbody tr:hover { background: var(--panel-alt); }
+  .mis-table-wrap { overflow-x: auto; }
+  .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:flex-start; justify-content:center; padding: 5vh 16px; overflow-y:auto; z-index: 80; }
+  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 640px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .mis-modal.wide { max-width: 940px; }
+  .mis-modal-head { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); }
+  .mis-modal-body { padding: 20px; display:flex; flex-direction:column; gap:14px; max-height: 72vh; overflow-y:auto; }
+  .mis-modal-foot { padding: 14px 20px; border-top: 1px solid var(--border-soft); display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  .mis-tabs { display:flex; gap: 4px; border-bottom: 1px solid var(--border-soft); flex-wrap:wrap; }
+  .mis-tab { padding: 9px 14px; font-size: 13px; color: var(--text-secondary); cursor:pointer; border-bottom: 2px solid transparent; background:none; border-left:none; border-right:none; border-top:none; }
+  .mis-tab:hover { color: var(--text-primary); }
+  .mis-tab.active { color: var(--ore); border-bottom-color: var(--ore); }
+  .mis-dropzone { border: 1.5px dashed var(--border); border-radius: 8px; padding: 22px; text-align:center; color: var(--text-tertiary); font-size:13px; cursor:pointer; }
+  .mis-dropzone:hover { background: var(--panel-alt); border-color: var(--ore); }
+  .mis-chip { display:inline-flex; align-items:center; gap:5px; background: var(--panel-alt); border:1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+  .mis-kv { display:flex; justify-content:space-between; gap:12px; font-size:12px; padding: 4px 0; color: var(--text-secondary); }
+  .mis-kv b { color: var(--text-primary); font-weight:500; }
+  .mis-divider { border-top: 1px solid var(--border-soft); margin: 4px 0; }
+  .mis-bell-dot { position:absolute; top:-2px; right:-2px; width:8px; height:8px; border-radius:50%; background: var(--vital); border: 1.5px solid var(--panel); }
+  .mis-drawer-overlay { position:fixed; inset:0; background: rgba(10,11,12,0.5); z-index: 70; }
+  .mis-drawer { position:fixed; top:0; right:0; bottom:0; width: 400px; max-width: 92vw; background: var(--panel); border-left: 1px solid var(--border); z-index: 71; overflow-y:auto; box-shadow: -12px 0 30px rgba(0,0,0,0.4); }
+  .mis-empty { color: var(--text-tertiary); font-size: 13px; padding: 24px; text-align:center; }
+  .mis-link-btn { background:none; border:none; color: var(--info); font-size:12px; text-decoration:underline; padding:0; cursor:pointer; }
+  .mis-grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mis-grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .mis-grid-2, .mis-grid-3 { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .mis-nav-item, .mis-btn-primary, .mis-btn-ghost, .mis-strata-seg { transition: none; } }
+`}</style>;
 
-// Lightweight inline icon set (no external icon library needed offline)
-function Icon({
-  paths,
-  size = 16,
-  style,
-  className
-}) {
-  return /*#__PURE__*/React.createElement("svg", {
-    width: size,
-    height: size,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    style: style,
-    className: className
-  }, paths);
+const { useState, useMemo, useEffect, useRef } = React;
+
+// ---------------------------------------------------------------------------
+// ICONS — lightweight inline icon set (no external icon library)
+// ---------------------------------------------------------------------------
+function Icon({ paths, size = 16, style, className }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>{paths}</svg>;
 }
-const LayoutDashboard = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
-    x: "3",
-    y: "3",
-    width: "7",
-    height: "9",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "14",
-    y: "3",
-    width: "7",
-    height: "5",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "14",
-    y: "12",
-    width: "7",
-    height: "9",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "3",
-    y: "16",
-    width: "7",
-    height: "5",
-    rx: "1"
-  }))
-});
-const Package = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: "M21 8l-9-5-9 5 9 5 9-5z"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M3 8v8l9 5 9-5V8"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M12 13v8"
-  }))
-});
-const ShoppingCart = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
-    cx: "9",
-    cy: "20",
-    r: "1.4"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "18",
-    cy: "20",
-    r: "1.4"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"
-  }))
-});
-const Truck = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
-    x: "1",
-    y: "6",
-    width: "13",
-    height: "11"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M14 10h5l3 3v4h-8z"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "6",
-    cy: "19",
-    r: "1.8"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "17.5",
-    cy: "19",
-    r: "1.8"
-  }))
-});
-const Wrench = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: "M15.5 6.5a4 4 0 0 1-5.6 5.6L4 18l2 2 5.9-5.9a4 4 0 0 1 5.6-5.6l-2.8 2.8-2-2 2.8-2.8z"
-  }))
-});
-const Users = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
-    cx: "9",
-    cy: "8",
-    r: "3.2"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M2.5 20a6.5 6.5 0 0 1 13 0"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "17.5",
-    cy: "9",
-    r: "2.6"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M15.5 13.2a5.2 5.2 0 0 1 6 6.8"
-  }))
-});
-const ShieldAlert = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: "M12 2l8 3.5v6c0 5-3.4 8.6-8 10.5-4.6-1.9-8-5.5-8-10.5v-6L12 2z"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "12",
-    y1: "8",
-    x2: "12",
-    y2: "13"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "16.3",
-    r: "0.9",
-    fill: "currentColor",
-    stroke: "none"
-  }))
-});
-const Search = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
-    cx: "11",
-    cy: "11",
-    r: "7"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "21",
-    y1: "21",
-    x2: "16.65",
-    y2: "16.65"
-  }))
-});
-const Plus = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
-    x1: "12",
-    y1: "5",
-    x2: "12",
-    y2: "19"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "5",
-    y1: "12",
-    x2: "19",
-    y2: "12"
-  }))
-});
-const Check = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement("polyline", {
-    points: "20 6 9 17 4 12"
-  })
-});
-const X = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
-    x1: "18",
-    y1: "6",
-    x2: "6",
-    y2: "18"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "6",
-    y1: "6",
-    x2: "18",
-    y2: "18"
-  }))
-});
-const ChevronDown = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement("polyline", {
-    points: "6 9 12 15 18 9"
-  })
-});
-const ArrowUpRight = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
-    x1: "7",
-    y1: "17",
-    x2: "17",
-    y2: "7"
-  }), /*#__PURE__*/React.createElement("polyline", {
-    points: "7 7 17 7 17 17"
-  }))
-});
-const ArrowDownRight = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
-    x1: "7",
-    y1: "7",
-    x2: "17",
-    y2: "17"
-  }), /*#__PURE__*/React.createElement("polyline", {
-    points: "10 17 17 17 17 10"
-  }))
-});
-const AlertTriangle = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: "M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "12",
-    y1: "9",
-    x2: "12",
-    y2: "13"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "16.3",
-    r: "0.9",
-    fill: "currentColor",
-    stroke: "none"
-  }))
-});
-const TrendingDown = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
-    points: "23 18 13.5 8.5 8.5 13.5 1 6"
-  }), /*#__PURE__*/React.createElement("polyline", {
-    points: "17 18 23 18 23 12"
-  }))
-});
-const MapPin = p => /*#__PURE__*/React.createElement(Icon, {
-  ...p,
-  paths: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-    d: "M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "12",
-    cy: "10",
-    r: "3"
-  }))
-});
+const LayoutDashboard = p => <Icon {...p} paths={<><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></>} />;
+const Package = p => <Icon {...p} paths={<><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></>} />;
+const Boxes = p => <Icon {...p} paths={<><path d="M2 8l5-3 5 3v6l-5 3-5-3V8z"/><path d="M12 11l5-3 5 3v6l-5 3-5-3"/><path d="M7 5l5 3 5-3"/></>} />;
+const ShoppingCart = p => <Icon {...p} paths={<><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 7H6"/></>} />;
+const Truck = p => <Icon {...p} paths={<><rect x="1" y="6" width="13" height="11"/><path d="M14 10h5l3 3v4h-8z"/><circle cx="6" cy="19" r="1.8"/><circle cx="17.5" cy="19" r="1.8"/></>} />;
+const Wrench = p => <Icon {...p} paths={<path d="M15.5 6.5a4 4 0 0 1-5.6 5.6L4 18l2 2 5.9-5.9a4 4 0 0 1 5.6-5.6l-2.8 2.8-2-2 2.8-2.8z"/>} />;
+const Users = p => <Icon {...p} paths={<><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M15.5 13.2a5.2 5.2 0 0 1 6 6.8"/></>} />;
+const ShieldAlert = p => <Icon {...p} paths={<><path d="M12 2l8 3.5v6c0 5-3.4 8.6-8 10.5-4.6-1.9-8-5.5-8-10.5v-6L12 2z"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/></>} />;
+const Search = p => <Icon {...p} paths={<><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />;
+const Plus = p => <Icon {...p} paths={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
+const Check = p => <Icon {...p} paths={<polyline points="20 6 9 17 4 12"/>} />;
+const X = p => <Icon {...p} paths={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+const ChevronDown = p => <Icon {...p} paths={<polyline points="6 9 12 15 18 9"/>} />;
+const ArrowDownRight = p => <Icon {...p} paths={<><line x1="7" y1="7" x2="17" y2="17"/><polyline points="10 17 17 17 17 10"/></>} />;
+const AlertTriangle = p => <Icon {...p} paths={<><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/></>} />;
+const TrendingDown = p => <Icon {...p} paths={<><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></>} />;
+const MapPin = p => <Icon {...p} paths={<><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>} />;
+const Upload = p => <Icon {...p} paths={<><path d="M12 16V4"/><polyline points="6 9 12 3 18 9"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></>} />;
+const Download = p => <Icon {...p} paths={<><path d="M12 3v13"/><polyline points="6 11 12 17 18 11"/><path d="M4 20h16"/></>} />;
+const Mail = p => <Icon {...p} paths={<><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M3 6l9 7 9-7"/></>} />;
+const Bell = p => <Icon {...p} paths={<><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0"/></>} />;
+const Building = p => <Icon {...p} paths={<><rect x="4" y="3" width="10" height="18"/><rect x="16" y="8" width="5" height="13"/><line x1="7.5" y1="7" x2="10.5" y2="7"/><line x1="7.5" y1="11" x2="10.5" y2="11"/><line x1="7.5" y1="15" x2="10.5" y2="15"/></>} />;
+const KeyRound = p => <Icon {...p} paths={<><circle cx="8" cy="15" r="4.5"/><path d="M11 12l9-9"/><path d="M17 6l3 3"/><path d="M14 9l2.5 2.5"/></>} />;
+const FileText = p => <Icon {...p} paths={<><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><line x1="9" y1="13" x2="16" y2="13"/><line x1="9" y1="17" x2="16" y2="17"/></>} />;
+const Trash2 = p => <Icon {...p} paths={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></>} />;
+const Edit2 = p => <Icon {...p} paths={<><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></>} />;
+const UserPlus = p => <Icon {...p} paths={<><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></>} />;
+const ClipboardList = p => <Icon {...p} paths={<><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="9" y="1.5" width="6" height="3" rx="1"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="13" y2="18"/></>} />;
+const HistoryIcon = p => <Icon {...p} paths={<><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 8 12 12 15 14"/></>} />;
+const Globe2 = p => <Icon {...p} paths={<><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/></>} />;
+const Printer = p => <Icon {...p} paths={<><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></>} />;
 
-// Core-sample mark: the signature element. A drill-core cylinder with
-// layered strata, recolored per item to represent stock health depth.
-function CoreSample({
-  layers,
-  size = 40
-}) {
-  const h = size;
-  const w = size * 0.42;
-  const segH = h / layers.length;
-  return /*#__PURE__*/React.createElement("svg", {
-    width: w,
-    height: h,
-    viewBox: `0 0 ${w} ${h}`,
-    style: {
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("clipPath", {
-    id: `clip-${w}-${h}`
-  }, /*#__PURE__*/React.createElement("rect", {
-    x: "1",
-    y: "1",
-    width: w - 2,
-    height: h - 2,
-    rx: w * 0.28
-  }))), /*#__PURE__*/React.createElement("g", {
-    clipPath: `url(#clip-${w}-${h})`
-  }, layers.map((l, i) => /*#__PURE__*/React.createElement("rect", {
-    key: i,
-    className: "mis-strata-seg",
-    x: "0",
-    y: i * segH,
-    width: w,
-    height: segH + 0.5,
-    fill: l
-  }))), /*#__PURE__*/React.createElement("rect", {
-    x: "1",
-    y: "1",
-    width: w - 2,
-    height: h - 2,
-    rx: w * 0.28,
-    fill: "none",
-    stroke: "var(--border)",
-    strokeWidth: "1"
-  }));
+// Core-sample mark: drill-core cylinder with layered strata, recolored per item.
+function CoreSample({ layers, size = 40 }) {
+  const h = size, w = size * 0.42, segH = h / layers.length;
+  return <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ flexShrink: 0 }}>
+    <defs><clipPath id={`clip-${w}-${h}`}><rect x="1" y="1" width={w - 2} height={h - 2} rx={w * 0.28} /></clipPath></defs>
+    <g clipPath={`url(#clip-${w}-${h})`}>
+      {layers.map((l, i) => <rect key={i} className="mis-strata-seg" x="0" y={i * segH} width={w} height={segH + 0.5} fill={l} />)}
+    </g>
+    <rect x="1" y="1" width={w - 2} height={h - 2} rx={w * 0.28} fill="none" stroke="var(--border)" strokeWidth="1" />
+  </svg>;
 }
 function stockLayers(item) {
   const ratio = item.qty / Math.max(item.reorder, 1);
   const filled = Math.min(4, Math.max(1, Math.round(ratio * 4)));
   const base = ratio < 0.5 ? "var(--vital)" : ratio < 1 ? "var(--caution)" : "var(--safe)";
-  return Array.from({
-    length: 4
-  }, (_, i) => i < filled ? base : "var(--border)");
+  return Array.from({ length: 4 }, (_, i) => i < filled ? base : "var(--border)");
 }
-
 // ---------------------------------------------------------------------------
-// MOCK DATA — modeled on SETVACO Holding Limited: Ghanaian distributor of
-// crushing & screening equipment, spare parts, and technical service to
-// mining/quarry/construction clients across West Africa (multi-branch,
-// multi-brand, sales + purchasing + service jobs).
+// ROLES / NAV / SEED DATA — modeled on SETVACO Holding Limited: Ghanaian
+// distributor of crushing & screening equipment, spare parts and technical
+// service to mining/quarry/construction clients across West Africa.
 // ---------------------------------------------------------------------------
 const ROLES = {
-  admin: {
-    label: "Administrator"
-  },
-  sales: {
-    label: "Sales Officer"
-  },
-  warehouse: {
-    label: "Warehouse Clerk"
-  },
-  procurement: {
-    label: "Procurement Officer"
-  },
-  service: {
-    label: "Service Technician Lead"
-  },
-  finance: {
-    label: "Finance / Audit"
-  }
+  admin: { label: "Administrator" },
+  sales: { label: "Sales Officer" },
+  warehouse: { label: "Warehouse Clerk" },
+  procurement: { label: "Procurement Officer" },
+  service: { label: "Service Technician Lead" },
+  finance: { label: "Finance / Audit" }
 };
-const NAV = [{
-  key: "dashboard",
-  label: "Dashboard",
-  icon: LayoutDashboard,
-  roles: ["admin", "sales", "warehouse", "procurement", "service", "finance"]
-}, {
-  key: "inventory",
-  label: "Parts Inventory",
-  icon: Package,
-  roles: ["admin", "sales", "warehouse", "procurement", "service", "finance"]
-}, {
-  key: "sales",
-  label: "Sales & Quotations",
-  icon: ShoppingCart,
-  roles: ["admin", "sales", "warehouse", "finance"]
-}, {
-  key: "purchasing",
-  label: "Purchasing",
-  icon: Truck,
-  roles: ["admin", "procurement", "finance"]
-}, {
-  key: "servicejobs",
-  label: "Service Jobs",
-  icon: Wrench,
-  roles: ["admin", "service", "warehouse"]
-}, {
-  key: "customers",
-  label: "Customers",
-  icon: Users,
-  roles: ["admin", "sales", "finance"]
-}, {
-  key: "variance",
-  label: "Variance & Audit",
-  icon: ShieldAlert,
-  roles: ["admin", "finance"]
-}, {
-  key: "access",
-  label: "Users & Access",
-  icon: Users,
-  roles: ["admin"]
-}];
+// Simulated "logged in" identity per role — stands in for real authentication,
+// which this static prototype does not implement.
+const CURRENT_USERS = {
+  admin: { name: "Efua Mensah", email: "e.mensah@setvaco.com" },
+  sales: { name: "Kwabena Owusu", email: "k.owusu@setvaco.com" },
+  warehouse: { name: "Yaw Darko", email: "y.darko@setvaco.com" },
+  procurement: { name: "Abena Sarpong", email: "a.sarpong@setvaco.com" },
+  service: { name: "Kojo Boateng", email: "k.boateng@setvaco.com" },
+  finance: { name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com" }
+};
+const ALL_ROLES = Object.keys(ROLES);
+const NAV = [
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
+  { key: "partsInventory", label: "Parts Inventory", icon: Package, roles: ALL_ROLES },
+  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["admin", "sales", "warehouse", "procurement", "finance"] },
+  { key: "sales", label: "Sales & Quotations", icon: ShoppingCart, roles: ["admin", "sales", "warehouse", "finance", "service"] },
+  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["admin", "procurement", "finance"] },
+  { key: "customers", label: "Customers", icon: Users, roles: ["admin", "sales", "finance"] },
+  { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["admin", "finance"] },
+  { key: "access", label: "Users & Access", icon: KeyRound, roles: ["admin"] }
+];
 const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
-const initialItems = [{
-  id: "WP-1001",
-  name: "Jaw Crusher Wear Plate",
-  brand: "Terex Powerscreen",
-  category: "Wear Parts",
-  branch: "Accra HQ",
-  qty: 4,
-  reorder: 6,
-  cost: 3800,
-  sell: 5200
-}, {
-  id: "WP-1012",
-  name: "Cone Crusher Mantle",
-  brand: "Sandvik",
-  category: "Wear Parts",
-  branch: "Kumasi Branch",
-  qty: 2,
-  reorder: 3,
-  cost: 6200,
-  sell: 8600
-}, {
-  id: "CV-2004",
-  name: "Conveyor Belt (per m)",
-  brand: "AUROX",
-  category: "Conveyor",
-  branch: "Accra HQ",
-  qty: 40,
-  reorder: 20,
-  cost: 45,
-  sell: 68
-}, {
-  id: "SM-2110",
-  name: "Screen Mesh Panel",
-  brand: "Powerscreen",
-  category: "Screening Media",
-  branch: "Tema Warehouse",
-  qty: 15,
-  reorder: 10,
-  cost: 210,
-  sell: 310
-}, {
-  id: "BR-3005",
-  name: "Crusher Bearing Set",
-  brand: "Sandvik",
-  category: "Bearings",
-  branch: "Accra HQ",
-  qty: 6,
-  reorder: 8,
-  cost: 950,
-  sell: 1350
-}, {
-  id: "CN-3311",
-  name: "Hydraulic Filter",
-  brand: "Terex",
-  category: "Consumable",
-  branch: "Kumasi Branch",
-  qty: 22,
-  reorder: 12,
-  cost: 55,
-  sell: 85
-}, {
-  id: "EL-4002",
-  name: "VFD Drive Module",
-  brand: "Voltline",
-  category: "Electrical",
-  branch: "Accra HQ",
-  qty: 1,
-  reorder: 2,
-  cost: 4100,
-  sell: 5600
-}, {
-  id: "WP-1020",
-  name: "Feeder Grizzly Bar",
-  brand: "Powerscreen",
-  category: "Wear Parts",
-  branch: "Tema Warehouse",
-  qty: 8,
-  reorder: 6,
-  cost: 380,
-  sell: 540
-}, {
-  id: "WP-1031",
-  name: "Impact Crusher Blow Bar",
-  brand: "Sandvik",
-  category: "Wear Parts",
-  branch: "Accra HQ",
-  qty: 3,
-  reorder: 5,
-  cost: 1650,
-  sell: 2300
-}, {
-  id: "WP-1044",
-  name: "Toggle Plate",
-  brand: "Terex",
-  category: "Wear Parts",
-  branch: "Kumasi Branch",
-  qty: 5,
-  reorder: 4,
-  cost: 720,
-  sell: 990
-}];
-const initialCustomers = [{
-  id: "C-01",
-  name: "Chorkor Mines Ltd",
-  tier: "Gold",
-  country: "Ghana",
-  creditLimit: 150000,
-  outstanding: 42000
-}, {
-  id: "C-02",
-  name: "Akwatia Gold Ltd",
-  tier: "Gold",
-  country: "Ghana",
-  creditLimit: 100000,
-  outstanding: 88000
-}, {
-  id: "C-03",
-  name: "Ghana Gold Processing",
-  tier: "Silver",
-  country: "Ghana",
-  creditLimit: 60000,
-  outstanding: 15000
-}, {
-  id: "C-04",
-  name: "Bamako Quarry Co.",
-  tier: "Standard",
-  country: "Mali",
-  creditLimit: 30000,
-  outstanding: 5000
-}, {
-  id: "C-05",
-  name: "Ivorian Aggregates SARL",
-  tier: "Silver",
-  country: "Côte d'Ivoire",
-  creditLimit: 50000,
-  outstanding: 20000
-}];
-const initialSales = [{
-  id: "SO-3301",
-  customer: "Chorkor Mines Ltd",
-  itemId: "WP-1001",
-  itemName: "Jaw Crusher Wear Plate",
-  qty: 2,
-  status: "Quoted",
-  date: "2026-08-05"
-}, {
-  id: "SO-3298",
-  customer: "Akwatia Gold Ltd",
-  itemId: "WP-1012",
-  itemName: "Cone Crusher Mantle",
-  qty: 1,
-  status: "Confirmed",
-  date: "2026-08-04"
-}, {
-  id: "SO-3290",
-  customer: "Ghana Gold Processing",
-  itemId: "CN-3311",
-  itemName: "Hydraulic Filter",
-  qty: 10,
-  status: "Fulfilled",
-  date: "2026-08-01"
-}, {
-  id: "SO-3285",
-  customer: "Bamako Quarry Co.",
-  itemId: "SM-2110",
-  itemName: "Screen Mesh Panel",
-  qty: 4,
-  status: "Confirmed",
-  date: "2026-07-30"
-}];
-const initialPOs = [{
-  id: "PO-7710",
-  supplier: "AUROX Composites and Compounds Oy",
-  itemId: "CV-2004",
-  itemName: "Conveyor Belt (per m)",
-  qty: 50,
-  status: "In Transit",
-  date: "2026-08-02"
-}, {
-  id: "PO-7705",
-  supplier: "Sandvik Parts Distribution",
-  itemId: "WP-1012",
-  itemName: "Cone Crusher Mantle",
-  qty: 3,
-  status: "Ordered",
-  date: "2026-08-05"
-}, {
-  id: "PO-7698",
-  supplier: "Terex Aftermarket",
-  itemId: "CN-3311",
-  itemName: "Hydraulic Filter",
-  qty: 30,
-  status: "Received",
-  date: "2026-07-25"
-}];
-const initialJobs = [{
-  id: "SJ-210",
-  customer: "Chorkor Mines Ltd",
-  type: "Crusher Reline",
-  technician: "K. Boateng",
-  itemId: "WP-1001",
-  itemName: "Jaw Crusher Wear Plate",
-  qty: 2,
-  status: "In Progress",
-  date: "2026-08-05"
-}, {
-  id: "SJ-208",
-  customer: "Akwatia Gold Ltd",
-  type: "Feeder Repair",
-  technician: "E. Adonoo",
-  itemId: "WP-1020",
-  itemName: "Feeder Grizzly Bar",
-  qty: 2,
-  status: "Completed",
-  date: "2026-08-03"
-}];
-const varianceLog = [{
-  id: "VAR-118",
-  item: "Hydraulic Filter",
-  branch: "Kumasi Branch",
-  expected: 26,
-  counted: 22,
-  delta: -4,
-  severity: "Low",
-  note: "Within normal consumption drift"
-}, {
-  id: "VAR-117",
-  item: "Crusher Bearing Set",
-  branch: "Accra HQ",
-  expected: 8,
-  counted: 6,
-  delta: -2,
-  severity: "High",
-  note: "Unreconciled against sales orders and service jobs — flagged for review"
-}, {
-  id: "VAR-116",
-  item: "Screen Mesh Panel",
-  branch: "Tema Warehouse",
-  expected: 18,
-  counted: 15,
-  delta: -3,
-  severity: "Medium",
-  note: "One unit issued without matching sales order"
-}];
+
+const initialStockRooms = [
+  { id: "SR-01", name: "Main Store", branch: "Accra HQ" },
+  { id: "SR-02", name: "Wear Parts Yard", branch: "Accra HQ" },
+  { id: "SR-03", name: "Main Store", branch: "Kumasi Branch" },
+  { id: "SR-04", name: "Main Store", branch: "Tema Warehouse" },
+  { id: "SR-05", name: "Bonded Store", branch: "Tema Warehouse" }
+];
+
+const initialParts = [
+  { id: "WP-1001", type: "part", name: "Jaw Crusher Wear Plate", brand: "Terex Powerscreen", category: "Wear Parts", branch: "Accra HQ", stockRoom: "SR-02", qty: 4, reorder: 6, cost: 3800, sell: 5200 },
+  { id: "WP-1012", type: "part", name: "Cone Crusher Mantle", brand: "Sandvik", category: "Wear Parts", branch: "Kumasi Branch", stockRoom: "SR-03", qty: 2, reorder: 3, cost: 6200, sell: 8600 },
+  { id: "CV-2004", type: "part", name: "Conveyor Belt (per m)", brand: "AUROX", category: "Conveyor", branch: "Accra HQ", stockRoom: "SR-01", qty: 40, reorder: 20, cost: 45, sell: 68 },
+  { id: "SM-2110", type: "part", name: "Screen Mesh Panel", brand: "Powerscreen", category: "Screening Media", branch: "Tema Warehouse", stockRoom: "SR-04", qty: 15, reorder: 10, cost: 210, sell: 310 },
+  { id: "BR-3005", type: "part", name: "Crusher Bearing Set", brand: "Sandvik", category: "Bearings", branch: "Accra HQ", stockRoom: "SR-01", qty: 6, reorder: 8, cost: 950, sell: 1350 },
+  { id: "CN-3311", type: "part", name: "Hydraulic Filter", brand: "Terex", category: "Consumable", branch: "Kumasi Branch", stockRoom: "SR-03", qty: 22, reorder: 12, cost: 55, sell: 85 },
+  { id: "EL-4002", type: "part", name: "VFD Drive Module", brand: "Voltline", category: "Electrical", branch: "Accra HQ", stockRoom: "SR-01", qty: 1, reorder: 2, cost: 4100, sell: 5600 },
+  { id: "WP-1020", type: "part", name: "Feeder Grizzly Bar", brand: "Powerscreen", category: "Wear Parts", branch: "Tema Warehouse", stockRoom: "SR-05", qty: 8, reorder: 6, cost: 380, sell: 540 },
+  { id: "WP-1031", type: "part", name: "Impact Crusher Blow Bar", brand: "Sandvik", category: "Wear Parts", branch: "Accra HQ", stockRoom: "SR-02", qty: 3, reorder: 5, cost: 1650, sell: 2300 },
+  { id: "WP-1044", type: "part", name: "Toggle Plate", brand: "Terex", category: "Wear Parts", branch: "Kumasi Branch", stockRoom: "SR-03", qty: 5, reorder: 4, cost: 720, sell: 990 }
+];
+const initialEquipment = [
+  { id: "EQ-5001", type: "equipment", name: "Mobile Jaw Crusher MJ-42", brand: "Terex Powerscreen", category: "Crushing Plant", branch: "Accra HQ", stockRoom: "SR-01", qty: 1, reorder: 1, cost: 1850000, sell: 2350000 },
+  { id: "EQ-5002", type: "equipment", name: "Cone Crusher CH430", brand: "Sandvik", category: "Crushing Plant", branch: "Kumasi Branch", stockRoom: "SR-03", qty: 1, reorder: 1, cost: 2100000, sell: 2650000 },
+  { id: "EQ-5003", type: "equipment", name: "Mobile Screening Plant MS-18", brand: "Powerscreen", category: "Screening Plant", branch: "Tema Warehouse", stockRoom: "SR-04", qty: 2, reorder: 1, cost: 980000, sell: 1250000 },
+  { id: "EQ-5004", type: "equipment", name: "Radial Stacking Conveyor 24m", brand: "AUROX", category: "Conveying", branch: "Accra HQ", stockRoom: "SR-02", qty: 3, reorder: 1, cost: 210000, sell: 275000 },
+  { id: "EQ-5005", type: "equipment", name: "Impact Crusher NP1213", brand: "Sandvik", category: "Crushing Plant", branch: "Tema Warehouse", stockRoom: "SR-05", qty: 0, reorder: 1, cost: 1650000, sell: 2050000 }
+];
+const initialVendors = [
+  { id: "V-01", name: "Sandvik Parts Distribution", code: "SND-GH-014", contact: "Lars Eriksson", email: "parts@sandvik-gh.com", phone: "+233 30 222 1145", categories: "Crusher wear parts, bearings" },
+  { id: "V-02", name: "Terex Aftermarket", code: "TRX-WA-221", contact: "Mensah Owusu", email: "aftermarket@terex.com", phone: "+233 24 556 7788", categories: "Wear parts, filters, electrical" },
+  { id: "V-03", name: "AUROX Composites and Compounds Oy", code: "AUX-FI-009", contact: "Mika Laine", email: "sales@auroxcc.fi", phone: "+358 40 123 4567", categories: "Conveyor belting" },
+  { id: "V-04", name: "Voltline Electrical Supplies", code: "VLT-GH-077", contact: "Nana Yeboah", email: "info@voltline.com.gh", phone: "+233 20 334 8899", categories: "Electrical, VFD drives" }
+];
+const initialCustomers = [
+  { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
+  { id: "C-02", name: "Akwatia Gold Ltd", tier: "Gold", country: "Ghana", address: "Km 4 Akwatia-Kade Rd, Akwatia", email: "buying@akwatiagold.com", phone: "+233 24 220 6611", contactPerson: "Grace Antwi", contactAddress: "Km 4 Akwatia-Kade Rd, Akwatia", companyDetails: "Registered mining operator · TIN GH-0075512", poCode: "AWG-002", creditLimit: 100000, outstanding: 88000, contacts: [{ name: "Grace Antwi", role: "Purchasing Lead", email: "g.antwi@akwatiagold.com", phone: "+233 24 220 6611" }] },
+  { id: "C-03", name: "Ghana Gold Processing", tier: "Silver", country: "Ghana", address: "Industrial Area, Obuasi", email: "orders@ghanagoldproc.com", phone: "+233 20 445 1290", contactPerson: "Isaac Boadu", contactAddress: "Industrial Area, Obuasi", companyDetails: "Processing plant operator · TIN GH-0062341", poCode: "GGP-003", creditLimit: 60000, outstanding: 15000, contacts: [{ name: "Isaac Boadu", role: "Plant Manager", email: "i.boadu@ghanagoldproc.com", phone: "+233 20 445 1290" }] },
+  { id: "C-04", name: "Bamako Quarry Co.", tier: "Standard", country: "Mali", address: "Zone Industrielle, Bamako", email: "achats@bamakoquarry.ml", phone: "+223 76 334 220", contactPerson: "Moussa Traoré", contactAddress: "Zone Industrielle, Bamako", companyDetails: "Quarry operator · RCCM ML-BKO-2014", poCode: "BMQ-004", creditLimit: 30000, outstanding: 5000, contacts: [{ name: "Moussa Traoré", role: "Site Manager", email: "m.traore@bamakoquarry.ml", phone: "+223 76 334 220" }] },
+  { id: "C-05", name: "Ivorian Aggregates SARL", tier: "Silver", country: "Côte d'Ivoire", address: "Zone Industrielle Yopougon, Abidjan", email: "contact@ivorianagg.ci", phone: "+225 07 08 556 213", contactPerson: "Aya Kouassi", contactAddress: "Zone Industrielle Yopougon, Abidjan", companyDetails: "Aggregates producer · RCCM CI-ABJ-2011", poCode: "IVA-005", creditLimit: 50000, outstanding: 20000, contacts: [{ name: "Aya Kouassi", role: "Buyer", email: "a.kouassi@ivorianagg.ci", phone: "+225 07 08 556 213" }] }
+];
+const initialQuotations = [
+  { id: "QT-9001", type: "part", customerId: "C-01", country: "Ghana", lines: [{ itemId: "WP-1001", desc: "Jaw Crusher Wear Plate", qty: 2, unitPrice: 5200, newPart: false }], status: "Quoted", date: "2026-08-05", createdBy: "Kwabena Owusu" },
+  { id: "QT-9002", type: "equipment", customerId: "C-02", country: "Ghana", lines: [{ itemId: "EQ-5002", desc: "Cone Crusher CH430", qty: 1, unitPrice: 2650000, newPart: false }], status: "Sent", date: "2026-08-04", createdBy: "Kwabena Owusu" },
+  { id: "QT-9003", type: "part", customerId: "C-03", country: "Ghana", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], status: "Invoiced", date: "2026-08-01", createdBy: "Kwabena Owusu" }
+];
+const initialInvoices = [
+  { id: "INV-6001", quotationId: "QT-9003", type: "part", customerId: "C-03", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], status: "Paid", date: "2026-08-01", createdBy: "Kwabena Owusu" }
+];
+const initialPurchaseOrders = [
+  { id: "PO-7710", vendorId: "V-03", lines: [{ itemId: "CV-2004", itemName: "Conveyor Belt (per m)", qty: 50 }], status: "In Transit", date: "2026-08-02", expected: "2026-08-14", source: "manual" },
+  { id: "PO-7705", vendorId: "V-01", lines: [{ itemId: "WP-1012", itemName: "Cone Crusher Mantle", qty: 3 }], status: "Ordered", date: "2026-08-05", expected: "2026-08-20", source: "manual" },
+  { id: "PO-7698", vendorId: "V-02", lines: [{ itemId: "CN-3311", itemName: "Hydraulic Filter", qty: 30 }], status: "Received", date: "2026-07-25", expected: "2026-08-01", source: "manual" }
+];
+const initialServiceJobs = [
+  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, status: "In Progress", date: "2026-08-05" },
+  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, status: "Completed", date: "2026-08-03" }
+];
+const initialUsers = [
+  { id: "U-01", name: "Efua Mensah", email: "e.mensah@setvaco.com", username: "emensah", role: "admin", status: "Active" },
+  { id: "U-02", name: "Kwabena Owusu", email: "k.owusu@setvaco.com", username: "kowusu", role: "sales", status: "Active" },
+  { id: "U-03", name: "Yaw Darko", email: "y.darko@setvaco.com", username: "ydarko", role: "warehouse", status: "Active" },
+  { id: "U-04", name: "Abena Sarpong", email: "a.sarpong@setvaco.com", username: "asarpong", role: "procurement", status: "Active" },
+  { id: "U-05", name: "Kojo Boateng", email: "k.boateng@setvaco.com", username: "kboateng", role: "service", status: "Active" },
+  { id: "U-06", name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com", username: "aamponsah", role: "finance", status: "Active" }
+];
+const initialAuditLog = [
+  { id: "AL-001", ts: "2026-08-05T09:12:00", user: "Kwabena Owusu", action: "Created quotation QT-9001 for Chorkor Mines Ltd", module: "Sales" },
+  { id: "AL-002", ts: "2026-08-05T10:40:00", user: "Abena Sarpong", action: "Raised PO-7705 to Sandvik Parts Distribution", module: "Purchasing" },
+  { id: "AL-003", ts: "2026-08-03T14:05:00", user: "Kojo Boateng", action: "Completed service job SJ-208 — parts consumed from stock", module: "Service" }
+];
+const initialNotifications = [
+  { id: "N-001", ts: "2026-08-02T08:00:00", type: "po", message: "PO-7710 received from AUROX — 1 line item in transit", read: true }
+];
+const varianceLog = [
+  { id: "VAR-118", item: "Hydraulic Filter", branch: "Kumasi Branch", expected: 26, counted: 22, delta: -4, severity: "Low", note: "Within normal consumption drift" },
+  { id: "VAR-117", item: "Crusher Bearing Set", branch: "Accra HQ", expected: 8, counted: 6, delta: -2, severity: "High", note: "Unreconciled against sales orders and service jobs — flagged for review" },
+  { id: "VAR-116", item: "Screen Mesh Panel", branch: "Tema Warehouse", expected: 18, counted: 15, delta: -3, severity: "Medium", note: "One unit issued without matching sales order" }
+];
 
 // ---------------------------------------------------------------------------
-// HELPERS
+// UTILITIES
 // ---------------------------------------------------------------------------
-const fmtGHS = n => `GH₵ ${n.toLocaleString()}`;
-function Badge({
-  children,
-  color,
-  soft
-}) {
-  return /*#__PURE__*/React.createElement("span", {
-    className: "mis-badge px-2 py-1 rounded",
-    style: {
-      color,
-      background: soft
-    }
-  }, children);
+const uid = (prefix, list, pad = 4) => {
+  const nums = list.map(x => parseInt(String(x.id).split("-").pop(), 10)).filter(n => !isNaN(n));
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `${prefix}-${String(next).padStart(pad, "0")}`;
+};
+const fmtGHS = n => `GH₵ ${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const nowISO = () => new Date().toISOString();
+const fmtDateTime = iso => { try { return new Date(iso).toLocaleString(); } catch (e) { return iso; } };
+
+const STORAGE_KEY = "setvaco_system_state_v1";
+function loadPersisted() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
 }
-function StatCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  tint
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg p-4 flex flex-col gap-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-between"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, label), /*#__PURE__*/React.createElement(Icon, {
-    size: 16,
-    style: {
-      color: tint
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mis-display text-2xl",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, value), sub && /*#__PURE__*/React.createElement("div", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, sub));
+function savePersisted(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+}
+
+function exportRowsToExcel(filename, rows, sheetName) {
+  if (!window.XLSX || !rows || !rows.length) return false;
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName || "Sheet1");
+  XLSX.writeFile(wb, filename);
+  return true;
+}
+function parseExcelFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!window.XLSX) return reject(new Error("Excel engine not loaded"));
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(sheet, { defval: "" }));
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = () => reject(reader.error || new Error("File read failed"));
+    reader.readAsArrayBuffer(file);
+  });
+}
+function buildMailto(to, cc, subject, body) {
+  const parts = [];
+  if (cc) parts.push("cc=" + encodeURIComponent(cc));
+  parts.push("subject=" + encodeURIComponent(subject));
+  parts.push("body=" + encodeURIComponent(body));
+  return `mailto:${encodeURIComponent(to)}?${parts.join("&")}`;
 }
 function statusColor(status) {
   const map = {
+    Draft: ["var(--text-secondary)", "var(--panel-alt)"],
     Quoted: ["var(--info)", "var(--info-soft)"],
+    Sent: ["var(--info)", "var(--info-soft)"],
     Confirmed: ["var(--caution)", "var(--caution-soft)"],
+    Invoiced: ["var(--safe)", "var(--safe-soft)"],
     Fulfilled: ["var(--safe)", "var(--safe-soft)"],
+    Paid: ["var(--safe)", "var(--safe-soft)"],
+    "Back-Ordered": ["var(--vital)", "var(--vital-soft)"],
     Ordered: ["var(--info)", "var(--info-soft)"],
     "In Transit": ["var(--caution)", "var(--caution-soft)"],
     Received: ["var(--safe)", "var(--safe-soft)"],
+    "Partially Received": ["var(--caution)", "var(--caution-soft)"],
+    Cancelled: ["var(--vital)", "var(--vital-soft)"],
     "In Progress": ["var(--caution)", "var(--caution-soft)"],
-    Completed: ["var(--safe)", "var(--safe-soft)"]
+    Completed: ["var(--safe)", "var(--safe-soft)"],
+    Active: ["var(--safe)", "var(--safe-soft)"],
+    Suspended: ["var(--vital)", "var(--vital-soft)"],
+    Open: ["var(--info)", "var(--info-soft)"],
+    Issued: ["var(--info)", "var(--info-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
 
 // ---------------------------------------------------------------------------
-// MAIN APP
+// SHARED UI PRIMITIVES
 // ---------------------------------------------------------------------------
-function SetvacoInventorySystem() {
-  const [role, setRole] = useState("admin");
-  const [nav, setNav] = useState("dashboard");
-  const [items, setItems] = useState(initialItems);
-  const [sales, setSales] = useState(initialSales);
-  const [pos, setPOs] = useState(initialPOs);
-  const [jobs, setJobs] = useState(initialJobs);
-  const [customers] = useState(initialCustomers);
-  const [saleForm, setSaleForm] = useState({
-    customer: "",
-    itemId: "",
-    qty: 1
+function Badge({ children, color, soft }) {
+  return <span className="mis-badge" style={{ color, background: soft }}>{children}</span>;
+}
+function StatCard({ label, value, sub, icon: Ic, tint }) {
+  return <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--text-tertiary)" }}>{label}</span>
+      <Ic size={16} style={{ color: tint }} />
+    </div>
+    <div className="mis-display" style={{ fontSize: 24, color: "var(--text-primary)" }}>{value}</div>
+    {sub && <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sub}</div>}
+  </div>;
+}
+function Field({ label, children, hint }) {
+  return <div className="mis-field"><label className="mis-label">{label}</label>{children}{hint && <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{hint}</span>}</div>;
+}
+function TInput(props) { const { className, ...rest } = props; return <input {...rest} className={"mis-input mis-focus " + (className || "")} />; }
+function TSelect({ children, className, ...rest }) { return <select {...rest} className={"mis-select mis-focus " + (className || "")}>{children}</select>; }
+function TArea(props) { const { className, ...rest } = props; return <textarea {...rest} className={"mis-textarea mis-focus " + (className || "")} />; }
+
+function Modal({ title, onClose, children, footer, wide }) {
+  return <div className="mis-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className={"mis-modal" + (wide ? " wide" : "")}>
+      <div className="mis-modal-head">
+        <h3 className="mis-display" style={{ fontSize: 16 }}>{title}</h3>
+        <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+      </div>
+      <div className="mis-modal-body">{children}</div>
+      {footer && <div className="mis-modal-foot">{footer}</div>}
+    </div>
+  </div>;
+}
+function Drawer({ title, onClose, children }) {
+  return <React.Fragment>
+    <div className="mis-drawer-overlay" onClick={onClose} />
+    <div className="mis-drawer">
+      <div className="mis-modal-head">
+        <h3 className="mis-display" style={{ fontSize: 15 }}>{title}</h3>
+        <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+      </div>
+      <div style={{ padding: 18 }}>{children}</div>
+    </div>
+  </React.Fragment>;
+}
+function Tabs({ tabs, active, onChange }) {
+  return <div className="mis-tabs">
+    {tabs.map(t => <button key={t.key} type="button" className={"mis-tab" + (active === t.key ? " active" : "")} onClick={() => onChange(t.key)}>{t.label}</button>)}
+  </div>;
+}
+function DataTable({ columns, rows, rowKey, empty }) {
+  return <div className="mis-panel mis-table-wrap" style={{ borderRadius: 8, overflow: "hidden" }}>
+    <table className="mis-table">
+      <thead><tr>{columns.map((c, i) => <th key={c.key || i}>{c.header}</th>)}</tr></thead>
+      <tbody>
+        {rows.length === 0 && <tr><td colSpan={columns.length}><div className="mis-empty">{empty || "No records."}</div></td></tr>}
+        {rows.map(row => <tr key={rowKey(row)} className="mis-row">{columns.map((c, i) => <td key={c.key || i}>{c.render(row)}</td>)}</tr>)}
+      </tbody>
+    </table>
+  </div>;
+}
+function FileDrop({ label, accept, onFile, hint }) {
+  const ref = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
+  const handle = f => { if (f) onFile(f); };
+  return <div
+    className="mis-dropzone"
+    style={dragOver ? { borderColor: "var(--ore)", background: "var(--panel-alt)" } : undefined}
+    onClick={() => ref.current && ref.current.click()}
+    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+    onDragLeave={() => setDragOver(false)}
+    onDrop={e => { e.preventDefault(); setDragOver(false); handle(e.dataTransfer.files[0]); }}
+  >
+    <input ref={ref} type="file" accept={accept} style={{ display: "none" }} onChange={e => handle(e.target.files[0])} />
+    <Upload size={18} style={{ margin: "0 auto 6px" }} />
+    <div>{label}</div>
+    {hint && <div style={{ fontSize: 11, marginTop: 4 }}>{hint}</div>}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// INVENTORY (shared by Parts Inventory & Equipment Inventory)
+// ---------------------------------------------------------------------------
+function mergeInventoryRows(rows, type, items, stockRooms, branchFallback) {
+  let newItems = items.slice();
+  let newRooms = stockRooms.slice();
+  let created = 0, updated = 0;
+  rows.forEach(r => {
+    const id = String(r.Code || r.ID || r.SKU || r.id || "").trim();
+    const name = String(r.Name || r.Part || r.Description || r.name || "").trim();
+    if (!id && !name) return;
+    const branch = String(r.Branch || branchFallback || BRANCHES[0]).trim();
+    const roomName = String(r["Stock Room"] || r.StockRoom || r.Room || "Main Store").trim();
+    let room = newRooms.find(sr => sr.name === roomName && sr.branch === branch);
+    if (!room) { room = { id: uid("SR", newRooms, 2), name: roomName, branch }; newRooms = [...newRooms, room]; }
+    const qty = Number(r.Qty ?? r.Quantity ?? r["On Hand"] ?? 0) || 0;
+    const reorder = Number(r.Reorder ?? r["Reorder At"] ?? r.ReorderPoint ?? 0) || 0;
+    const cost = Number(r.Cost ?? r["Unit Cost"] ?? 0) || 0;
+    const sell = Number(r.Sell ?? r["Sell Price"] ?? r.Price ?? 0) || 0;
+    const brand = String(r.Brand || "").trim();
+    const category = String(r.Category || "").trim();
+    const existingIdx = newItems.findIndex(it => id && it.id === id);
+    if (existingIdx >= 0) {
+      newItems[existingIdx] = { ...newItems[existingIdx], name: name || newItems[existingIdx].name, brand: brand || newItems[existingIdx].brand, category: category || newItems[existingIdx].category, branch, stockRoom: room.id, qty, reorder: reorder || newItems[existingIdx].reorder, cost: cost || newItems[existingIdx].cost, sell: sell || newItems[existingIdx].sell };
+      updated++;
+    } else {
+      const newId = id || uid(type === "equipment" ? "EQ" : "PT", newItems, 4);
+      newItems = [...newItems, { id: newId, type, name: name || newId, brand, category, branch, stockRoom: room.id, qty, reorder, cost, sell }];
+      created++;
+    }
   });
-  const [poForm, setPoForm] = useState({
-    supplier: "",
-    itemId: "",
-    qty: 1
+  return { items: newItems, stockRooms: newRooms, created, updated };
+}
+function groupPORows(rows) {
+  const groups = {};
+  rows.forEach(r => {
+    const poNum = String(r["PO Number"] || r.PONumber || r.PO || "").trim();
+    if (!poNum) return;
+    if (!groups[poNum]) groups[poNum] = { poNumber: poNum, vendor: String(r.Vendor || r.Supplier || "").trim(), expected: String(r["Expected Date"] || r.Expected || "").trim(), lines: [] };
+    groups[poNum].lines.push({
+      itemId: String(r["Item Code"] || r.ItemId || r.Code || "").trim(),
+      itemName: String(r["Item Name"] || r.Item || r.Description || "").trim(),
+      qty: Number(r.Qty || r.Quantity || 0) || 0
+    });
   });
-  const [toast, setToast] = useState(null);
+  return Object.values(groups);
+}
+
+function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog }) {
+  const label = type === "equipment" ? "Equipment" : "Part";
+  const canManage = ["admin", "warehouse", "procurement"].includes(role);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("All");
-  const allowedNav = NAV.filter(n => n.roles.includes(role));
-  React.useEffect(() => {
-    if (!allowedNav.find(n => n.key === nav)) setNav(allowedNav[0]?.key || "dashboard");
-    // eslint-disable-next-line
-  }, [role]);
-  const showToast = msg => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2400);
-  };
-  const stockValue = useMemo(() => items.reduce((s, i) => s + i.qty * i.cost, 0), [items]);
-  const lowStock = useMemo(() => items.filter(i => i.qty < i.reorder), [items]);
-  const openQuotes = sales.filter(s => s.status === "Quoted").length;
-  const inTransitPOs = pos.filter(p => p.status === "In Transit" || p.status === "Ordered").length;
-  const atRiskCustomers = customers.filter(c => c.outstanding / c.creditLimit > 0.75);
-  function confirmSale(id) {
-    setSales(ss => ss.map(s => s.id === id ? {
-      ...s,
-      status: "Confirmed"
-    } : s));
-    showToast(`${id} confirmed`);
+  const [roomFilter, setRoomFilter] = useState("All");
+  const [showUpload, setShowUpload] = useState(false);
+  const [showAddRoom, setShowAddRoom] = useState(false);
+  const [showUploadPO, setShowUploadPO] = useState(false);
+  const [historyItem, setHistoryItem] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [poPreview, setPoPreview] = useState(null);
+  const [newRoomForm, setNewRoomForm] = useState({ name: "", branch: BRANCHES[0] });
+
+  const typedItems = items.filter(i => i.type === type);
+  const rooms = stockRooms.filter(r => branchFilter === "All" || r.branch === branchFilter);
+  const filtered = typedItems
+    .filter(i => branchFilter === "All" || i.branch === branchFilter)
+    .filter(i => roomFilter === "All" || i.stockRoom === roomFilter)
+    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase()) || (i.brand || "").toLowerCase().includes(search.toLowerCase()));
+
+  function roomLabel(id) { const r = stockRooms.find(x => x.id === id); return r ? `${r.name} · ${r.branch}` : "—"; }
+
+  function handleUploadFile(file) {
+    parseExcelFile(file).then(rows => {
+      const result = mergeInventoryRows(rows, type, items, stockRooms, branchFilter !== "All" ? branchFilter : BRANCHES[0]);
+      setPreview({ ...result, fileName: file.name });
+    }).catch(err => window.alert("Could not read file: " + err.message));
   }
-  function fulfillSale(id) {
-    setSales(ss => {
-      const s = ss.find(x => x.id === id);
-      if (s) setItems(its => its.map(it => it.id === s.itemId ? {
-        ...it,
-        qty: Math.max(0, it.qty - s.qty)
-      } : it));
-      return ss.map(x => x.id === id ? {
-        ...x,
-        status: "Fulfilled"
-      } : x);
-    });
-    showToast(`${id} fulfilled & invoiced — stock updated`);
+  function confirmUpload() {
+    if (!preview) return;
+    setItems(preview.items);
+    setStockRooms(preview.stockRooms);
+    logAction(currentUser, `Uploaded ${label.toLowerCase()} inventory sheet "${preview.fileName}" — ${preview.created} new, ${preview.updated} updated`, "Inventory");
+    pushNotification("inventory", `${preview.created + preview.updated} ${label.toLowerCase()} record(s) imported from ${preview.fileName}`);
+    setPreview(null);
+    setShowUpload(false);
   }
-  function submitSale(e) {
+  function addRoom(e) {
     e.preventDefault();
-    const item = items.find(i => i.id === saleForm.itemId);
-    if (!item || !saleForm.customer) return;
-    const newSO = {
-      id: `SO-${String(3301 + sales.length + 1)}`,
-      customer: saleForm.customer,
-      itemId: item.id,
-      itemName: item.name,
-      qty: Number(saleForm.qty),
-      status: "Quoted",
-      date: "2026-08-06"
-    };
-    setSales(ss => [newSO, ...ss]);
-    setSaleForm({
-      customer: "",
-      itemId: "",
-      qty: 1
-    });
-    showToast(`${newSO.id} quotation created`);
+    if (!newRoomForm.name.trim()) return;
+    const room = { id: uid("SR", stockRooms, 2), name: newRoomForm.name.trim(), branch: newRoomForm.branch };
+    setStockRooms(rs => [...rs, room]);
+    logAction(currentUser, `Created stock room "${room.name}" at ${room.branch}`, "Inventory");
+    setNewRoomForm({ name: "", branch: BRANCHES[0] });
+    setShowAddRoom(false);
   }
-  function receivePO(id) {
-    setPOs(ps => {
-      const p = ps.find(x => x.id === id);
-      if (p) setItems(its => its.map(it => it.id === p.itemId ? {
-        ...it,
-        qty: it.qty + p.qty
-      } : it));
-      return ps.map(x => x.id === id ? {
-        ...x,
-        status: "Received"
-      } : x);
-    });
-    showToast(`${id} received — stock updated`);
+  function handleUploadPO(file) {
+    parseExcelFile(file).then(rows => setPoPreview({ groups: groupPORows(rows), fileName: file.name })).catch(err => window.alert("Could not read file: " + err.message));
   }
-  function submitPO(e) {
-    e.preventDefault();
-    const item = items.find(i => i.id === poForm.itemId);
-    if (!item || !poForm.supplier) return;
-    const newPO = {
-      id: `PO-${String(7710 + pos.length + 1)}`,
-      supplier: poForm.supplier,
-      itemId: item.id,
-      itemName: item.name,
-      qty: Number(poForm.qty),
-      status: "Ordered",
-      date: "2026-08-06"
-    };
-    setPOs(ps => [newPO, ...ps]);
-    setPoForm({
-      supplier: "",
-      itemId: "",
-      qty: 1
+  function confirmUploadPO() {
+    if (!poPreview) return;
+    const newPOs = poPreview.groups.map(g => {
+      const vendor = vendors.find(v => v.name.toLowerCase() === g.vendor.toLowerCase());
+      return { id: /^PO-/.test(g.poNumber) ? g.poNumber : uid("PO", purchaseOrders, 4), vendorId: vendor ? vendor.id : null, vendorNameRaw: vendor ? undefined : (g.vendor || "Unspecified vendor"), lines: g.lines, status: "Ordered", date: todayISO(), expected: g.expected || "", source: "uploaded" };
     });
-    showToast(`${newPO.id} raised to ${newPO.supplier}`);
+    setPurchaseOrders(ps => [...newPOs, ...ps]);
+    newPOs.forEach(po => pushNotification("po", `Purchase order ${po.id} uploaded — ${po.lines.length} line item(s) awaiting delivery`));
+    logAction(currentUser, `Uploaded purchase order file "${poPreview.fileName}" (${newPOs.length} PO's)`, "Purchasing");
+    setPoPreview(null);
+    setShowUploadPO(false);
   }
-  function completeJob(id) {
-    setJobs(js => {
-      const j = js.find(x => x.id === id);
-      if (j && j.status !== "Completed") {
-        setItems(its => its.map(it => it.id === j.itemId ? {
-          ...it,
-          qty: Math.max(0, it.qty - j.qty)
-        } : it));
-      }
-      return js.map(x => x.id === id ? {
-        ...x,
-        status: "Completed"
-      } : x);
-    });
-    showToast(`${id} completed — parts consumed from stock`);
+  function exportReport() {
+    const rows = filtered.map(i => ({ Code: i.id, Name: i.name, Brand: i.brand, Category: i.category, Branch: i.branch, "Stock Room": roomLabel(i.stockRoom), "On Hand": i.qty, "Reorder At": i.reorder, Cost: i.cost, "Sell Price": i.sell }));
+    const ok = exportRowsToExcel(`setvaco-${type}-inventory-${todayISO()}.xlsx`, rows, label + " Inventory");
+    if (ok) logAction(currentUser, `Exported ${label.toLowerCase()} inventory report (${rows.length} rows)`, "Inventory");
+    else window.alert("Nothing to export for the current filter.");
   }
-  const filteredItems = items.filter(i => branchFilter === "All" || i.branch === branchFilter).filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase()) || i.brand.toLowerCase().includes(search.toLowerCase()));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mis-root min-h-screen w-full flex",
-    style: {
-      minHeight: "700px"
-    }
-  }, /*#__PURE__*/React.createElement(Style, null), /*#__PURE__*/React.createElement("aside", {
-    className: "mis-panel flex flex-col",
-    style: {
-      width: "230px",
-      flexShrink: 0
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3 px-4 py-5",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement(CoreSample, {
-    layers: ["var(--ore)", "var(--caution)", "var(--info)", "var(--safe)"],
-    size: 34
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "mis-display text-sm leading-tight",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, "SETVACO"), /*#__PURE__*/React.createElement("div", {
-    className: "text-[10px] mis-mono",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "INVENTORY SYSTEM"))), /*#__PURE__*/React.createElement("nav", {
-    className: "flex-1 py-2"
-  }, allowedNav.map(n => {
-    const Icon = n.icon;
-    const active = nav === n.key;
-    return /*#__PURE__*/React.createElement("button", {
-      key: n.key,
-      onClick: () => setNav(n.key),
-      className: `mis-nav-item mis-focus w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left ${active ? "active" : ""}`,
-      style: {
-        color: active ? "var(--ore)" : "var(--text-secondary)",
-        borderLeft: active ? undefined : "2px solid transparent"
-      }
-    }, /*#__PURE__*/React.createElement(Icon, {
-      size: 16
-    }), n.label);
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "px-4 py-4 text-[10px] mis-mono",
-    style: {
-      color: "var(--text-tertiary)",
-      borderTop: "1px solid var(--border-soft)"
-    }
-  }, "SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA")), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex flex-col min-w-0"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "flex items-center justify-between px-6 py-4",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
-    className: "mis-display text-lg",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, allowedNav.find(n => n.key === nav)?.label || "Dashboard"), /*#__PURE__*/React.createElement("p", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Viewing as ", ROLES[role].label, " · demo access simulation")), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Role:"), /*#__PURE__*/React.createElement("div", {
-    className: "relative"
-  }, /*#__PURE__*/React.createElement("select", {
-    value: role,
-    onChange: e => setRole(e.target.value),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-1.5 pr-8 appearance-none",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, Object.entries(ROLES).map(([key, r]) => /*#__PURE__*/React.createElement("option", {
-    key: key,
-    value: key
-  }, r.label))), /*#__PURE__*/React.createElement(ChevronDown, {
-    size: 14,
-    style: {
-      position: "absolute",
-      right: 8,
-      top: 8,
-      color: "var(--text-tertiary)",
-      pointerEvents: "none"
-    }
-  })))), /*#__PURE__*/React.createElement("main", {
-    className: "flex-1 overflow-auto mis-scroll p-6"
-  }, nav === "dashboard" && /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-6"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-4 gap-4"
-  }, /*#__PURE__*/React.createElement(StatCard, {
-    label: "Total Stock Value",
-    value: fmtGHS(stockValue),
-    sub: "Across 3 branches",
-    icon: Package,
-    tint: "var(--ore)"
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Below Reorder Point",
-    value: lowStock.length,
-    sub: "Parts needing replenishment",
-    icon: AlertTriangle,
-    tint: "var(--vital)"
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Open Quotations",
-    value: openQuotes,
-    sub: "Awaiting customer confirmation",
-    icon: ShoppingCart,
-    tint: "var(--caution)"
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "POs In Progress",
-    value: inTransitPOs,
-    sub: "Ordered or in transit",
-    icon: Truck,
-    tint: "var(--info)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-3 gap-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg p-4 col-span-2"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "text-sm mb-3",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "Parts nearest depletion"), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col"
-  }, lowStock.map(it => /*#__PURE__*/React.createElement("div", {
-    key: it.id,
-    className: "mis-row flex items-center justify-between py-2.5 px-2 rounded",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3"
-  }, /*#__PURE__*/React.createElement(CoreSample, {
-    layers: stockLayers(it),
-    size: 30
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "text-sm",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, it.name), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs mis-mono",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, it.brand, " · ", it.branch))), /*#__PURE__*/React.createElement("div", {
-    className: "text-right"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mis-mono text-sm",
-    style: {
-      color: "var(--vital)"
-    }
-  }, it.qty, " / ", it.reorder), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "on hand / reorder")))), lowStock.length === 0 && /*#__PURE__*/React.createElement("p", {
-    className: "text-sm",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "All parts above reorder level."))), /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg p-4"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "text-sm mb-3",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "Customer credit risk"), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-3"
-  }, customers.map(c => {
-    const pct = Math.round(c.outstanding / c.creditLimit * 100);
-    const risky = pct > 75;
-    return /*#__PURE__*/React.createElement("div", {
-      key: c.id
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "flex justify-between text-xs mb-1",
-      style: {
-        color: risky ? "var(--vital)" : "var(--text-secondary)"
-      }
-    }, /*#__PURE__*/React.createElement("span", null, c.name), /*#__PURE__*/React.createElement("span", {
-      className: "mis-mono"
-    }, pct, "%")), /*#__PURE__*/React.createElement("div", {
-      className: "w-full rounded-full h-1.5",
-      style: {
-        background: "var(--panel-alt)"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "h-1.5 rounded-full",
-      style: {
-        width: `${Math.min(pct, 100)}%`,
-        background: risky ? "var(--vital)" : "var(--ore)"
-      }
-    })));
-  }))))), nav === "inventory" && /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3 flex-wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 mis-panel-alt rounded px-3 py-2 w-80"
-  }, /*#__PURE__*/React.createElement(Search, {
-    size: 14,
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }), /*#__PURE__*/React.createElement("input", {
-    value: search,
-    onChange: e => setSearch(e.target.value),
-    placeholder: "Search name, code, or brand",
-    className: "bg-transparent text-sm outline-none w-full mis-focus",
-    style: {
-      color: "var(--text-primary)"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement(MapPin, {
-    size: 14,
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }), /*#__PURE__*/React.createElement("select", {
-    value: branchFilter,
-    onChange: e => setBranchFilter(e.target.value),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, /*#__PURE__*/React.createElement("option", null, "All"), BRANCHES.map(b => /*#__PURE__*/React.createElement("option", {
-    key: b
-  }, b))))), /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["", "Part", "Code", "Brand", "Branch", "On Hand", "Reorder At", "Cost", "Sell Price"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, filteredItems.map(it => /*#__PURE__*/React.createElement("tr", {
-    key: it.id,
-    className: "mis-row",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "pl-4 py-2.5"
-  }, /*#__PURE__*/React.createElement(CoreSample, {
-    layers: stockLayers(it),
-    size: 26
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "px-2 py-2.5",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, it.name), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, it.id), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, it.brand), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, it.branch), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono",
-    style: {
-      color: it.qty < it.reorder ? "var(--vital)" : "var(--text-primary)"
-    }
-  }, it.qty), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, it.reorder), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, fmtGHS(it.cost)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, fmtGHS(it.sell)))))))), nav === "sales" && /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-6"
-  }, (role === "sales" || role === "admin") && /*#__PURE__*/React.createElement("form", {
-    onSubmit: submitSale,
-    className: "mis-panel rounded-lg p-4 flex items-end gap-3 flex-wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Customer"), /*#__PURE__*/React.createElement("select", {
-    required: true,
-    value: saleForm.customer,
-    onChange: e => setSaleForm(f => ({
-      ...f,
-      customer: e.target.value
-    })),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2",
-    style: {
-      color: "var(--text-primary)",
-      minWidth: "200px"
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Select customer…"), customers.map(c => /*#__PURE__*/React.createElement("option", {
-    key: c.id,
-    value: c.name
-  }, c.name)))), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Part"), /*#__PURE__*/React.createElement("select", {
-    required: true,
-    value: saleForm.itemId,
-    onChange: e => setSaleForm(f => ({
-      ...f,
-      itemId: e.target.value
-    })),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2",
-    style: {
-      color: "var(--text-primary)",
-      minWidth: "220px"
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Select part…"), items.map(i => /*#__PURE__*/React.createElement("option", {
-    key: i.id,
-    value: i.id
-  }, i.name, " (", i.id, ")")))), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Quantity"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    min: "1",
-    required: true,
-    value: saleForm.qty,
-    onChange: e => setSaleForm(f => ({
-      ...f,
-      qty: e.target.value
-    })),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2 w-24",
-    style: {
-      color: "var(--text-primary)"
-    }
-  })), /*#__PURE__*/React.createElement("button", {
-    type: "submit",
-    className: "mis-btn-primary mis-focus rounded px-4 py-2 text-sm flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement(Plus, {
-    size: 14
-  }), " Create quotation")), /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["Order", "Customer", "Part", "Qty", "Status", "Action"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, sales.map(s => {
-    const [c, soft] = statusColor(s.status);
-    return /*#__PURE__*/React.createElement("tr", {
-      key: s.id,
-      className: "mis-row",
-      style: {
-        borderBottom: "1px solid var(--border-soft)"
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono text-xs",
-      style: {
-        color: "var(--text-tertiary)"
-      }
-    }, s.id), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5",
-      style: {
-        color: "var(--text-primary)"
-      }
-    }, s.customer), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, s.itemName), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono"
-    }, s.qty), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, /*#__PURE__*/React.createElement(Badge, {
-      color: c,
-      soft: soft
-    }, s.status)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, s.status === "Quoted" && (role === "sales" || role === "admin") && /*#__PURE__*/React.createElement("button", {
-      onClick: () => confirmSale(s.id),
-      className: "mis-btn-ghost mis-focus rounded px-2 py-1 text-xs"
-    }, "Confirm order"), s.status === "Confirmed" && (role === "warehouse" || role === "admin") && /*#__PURE__*/React.createElement("button", {
-      onClick: () => fulfillSale(s.id),
-      className: "mis-btn-ghost mis-focus rounded px-2 py-1 text-xs"
-    }, "Fulfil & invoice")));
-  }))))), nav === "purchasing" && /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-6"
-  }, (role === "procurement" || role === "admin") && /*#__PURE__*/React.createElement("form", {
-    onSubmit: submitPO,
-    className: "mis-panel rounded-lg p-4 flex items-end gap-3 flex-wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Supplier"), /*#__PURE__*/React.createElement("input", {
-    required: true,
-    value: poForm.supplier,
-    onChange: e => setPoForm(f => ({
-      ...f,
-      supplier: e.target.value
-    })),
-    placeholder: "e.g. AUROX Composites and Compounds Oy",
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2",
-    style: {
-      color: "var(--text-primary)",
-      minWidth: "240px"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Part"), /*#__PURE__*/React.createElement("select", {
-    required: true,
-    value: poForm.itemId,
-    onChange: e => setPoForm(f => ({
-      ...f,
-      itemId: e.target.value
-    })),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2",
-    style: {
-      color: "var(--text-primary)",
-      minWidth: "220px"
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Select part…"), items.map(i => /*#__PURE__*/React.createElement("option", {
-    key: i.id,
-    value: i.id
-  }, i.name, " (", i.id, ")")))), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Quantity"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    min: "1",
-    required: true,
-    value: poForm.qty,
-    onChange: e => setPoForm(f => ({
-      ...f,
-      qty: e.target.value
-    })),
-    className: "mis-panel-alt mis-focus text-sm rounded px-3 py-2 w-24",
-    style: {
-      color: "var(--text-primary)"
-    }
-  })), /*#__PURE__*/React.createElement("button", {
-    type: "submit",
-    className: "mis-btn-primary mis-focus rounded px-4 py-2 text-sm flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement(Plus, {
-    size: 14
-  }), " Raise purchase order")), /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["PO", "Supplier", "Part", "Qty", "Status", "Action"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, pos.map(p => {
-    const [c, soft] = statusColor(p.status);
-    return /*#__PURE__*/React.createElement("tr", {
-      key: p.id,
-      className: "mis-row",
-      style: {
-        borderBottom: "1px solid var(--border-soft)"
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono text-xs",
-      style: {
-        color: "var(--text-tertiary)"
-      }
-    }, p.id), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5",
-      style: {
-        color: "var(--text-primary)"
-      }
-    }, p.supplier), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, p.itemName), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono"
-    }, p.qty), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, /*#__PURE__*/React.createElement(Badge, {
-      color: c,
-      soft: soft
-    }, p.status)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, p.status !== "Received" && (role === "procurement" || role === "admin") && /*#__PURE__*/React.createElement("button", {
-      onClick: () => receivePO(p.id),
-      className: "mis-btn-ghost mis-focus rounded px-2 py-1 text-xs"
-    }, "Mark received")));
-  }))))), nav === "servicejobs" && /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["Job", "Customer", "Job Type", "Technician", "Part Used", "Qty", "Status", "Action"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, jobs.map(j => {
-    const [c, soft] = statusColor(j.status);
-    return /*#__PURE__*/React.createElement("tr", {
-      key: j.id,
-      className: "mis-row",
-      style: {
-        borderBottom: "1px solid var(--border-soft)"
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono text-xs",
-      style: {
-        color: "var(--text-tertiary)"
-      }
-    }, j.id), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5",
-      style: {
-        color: "var(--text-primary)"
-      }
-    }, j.customer), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, j.type), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, j.technician), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, j.itemName), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono"
-    }, j.qty), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, /*#__PURE__*/React.createElement(Badge, {
-      color: c,
-      soft: soft
-    }, j.status)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, j.status !== "Completed" && (role === "service" || role === "admin") && /*#__PURE__*/React.createElement("button", {
-      onClick: () => completeJob(j.id),
-      className: "mis-btn-ghost mis-focus rounded px-2 py-1 text-xs"
-    }, "Complete & consume parts")));
-  })))), nav === "customers" && /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["Customer", "Country", "Tier", "Credit Limit", "Outstanding", "Utilization"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, customers.map(c => {
-    const pct = Math.round(c.outstanding / c.creditLimit * 100);
-    const risky = pct > 75;
-    return /*#__PURE__*/React.createElement("tr", {
-      key: c.id,
-      className: "mis-row",
-      style: {
-        borderBottom: "1px solid var(--border-soft)"
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5",
-      style: {
-        color: "var(--text-primary)"
-      }
-    }, c.name), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, c.country), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, /*#__PURE__*/React.createElement(Badge, {
-      color: c.tier === "Gold" ? "var(--ore)" : c.tier === "Silver" ? "var(--info)" : "var(--text-secondary)",
-      soft: c.tier === "Gold" ? "var(--ore-soft)" : c.tier === "Silver" ? "var(--info-soft)" : "var(--panel-alt)"
-    }, c.tier)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono text-xs",
-      style: {
-        color: "var(--text-secondary)"
-      }
-    }, fmtGHS(c.creditLimit)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5 mis-mono text-xs",
-      style: {
-        color: risky ? "var(--vital)" : "var(--text-secondary)"
-      }
-    }, fmtGHS(c.outstanding)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-2.5"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "flex items-center gap-2"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "w-24 rounded-full h-1.5",
-      style: {
-        background: "var(--panel-alt)"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "h-1.5 rounded-full",
-      style: {
-        width: `${Math.min(pct, 100)}%`,
-        background: risky ? "var(--vital)" : "var(--ore)"
-      }
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "mis-mono text-xs",
-      style: {
-        color: risky ? "var(--vital)" : "var(--text-tertiary)"
-      }
-    }, pct, "%"))));
-  })))), nav === "variance" && /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col gap-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg p-4 flex items-center gap-3"
-  }, /*#__PURE__*/React.createElement(TrendingDown, {
-    size: 18,
-    style: {
-      color: "var(--vital)"
-    }
-  }), /*#__PURE__*/React.createElement("p", {
-    className: "text-sm",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "Variance entries are raised automatically when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.")), /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, ["ID", "Part", "Branch", "Expected", "Counted", "Delta", "Severity", "Note"].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, varianceLog.map(v => /*#__PURE__*/React.createElement("tr", {
-    key: v.id,
-    className: "mis-row",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, v.id), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, v.item), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 text-xs",
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, v.branch), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono"
-  }, v.expected), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono"
-  }, v.counted), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 mis-mono flex items-center gap-1",
-    style: {
-      color: "var(--vital)"
-    }
-  }, /*#__PURE__*/React.createElement(ArrowDownRight, {
-    size: 12
-  }), v.delta), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5"
-  }, /*#__PURE__*/React.createElement(Badge, {
-    color: v.severity === "High" ? "var(--vital)" : v.severity === "Medium" ? "var(--caution)" : "var(--info)",
-    soft: v.severity === "High" ? "var(--vital-soft)" : v.severity === "Medium" ? "var(--caution-soft)" : "var(--info-soft)"
-  }, v.severity)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5 text-xs",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, v.note))))))), nav === "access" && /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel rounded-lg overflow-hidden"
-  }, /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-sm"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: "1px solid var(--border)"
-    }
-  }, /*#__PURE__*/React.createElement("th", {
-    className: "text-left px-4 py-3 text-xs uppercase tracking-wide",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "Role"), NAV.map(n => /*#__PURE__*/React.createElement("th", {
-    key: n.key,
-    className: "px-3 py-3 text-xs uppercase tracking-wide text-center",
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, n.label)))), /*#__PURE__*/React.createElement("tbody", null, Object.entries(ROLES).map(([key, r]) => /*#__PURE__*/React.createElement("tr", {
-    key: key,
-    className: "mis-row",
-    style: {
-      borderBottom: "1px solid var(--border-soft)"
-    }
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-2.5",
-    style: {
-      color: "var(--text-primary)"
-    }
-  }, r.label), NAV.map(n => /*#__PURE__*/React.createElement("td", {
-    key: n.key,
-    className: "px-3 py-2.5 text-center"
-  }, n.roles.includes(key) ? /*#__PURE__*/React.createElement(Check, {
-    size: 14,
-    style: {
-      color: "var(--safe)",
-      margin: "0 auto"
-    }
-  }) : /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-tertiary)"
-    }
-  }, "—")))))))))), toast && /*#__PURE__*/React.createElement("div", {
-    className: "mis-panel-alt mis-focus fixed bottom-6 right-6 px-4 py-3 rounded-lg text-sm flex items-center gap-2 shadow-lg",
-    style: {
-      color: "var(--text-primary)",
-      border: "1px solid var(--border)"
-    }
-  }, /*#__PURE__*/React.createElement(Check, {
-    size: 14,
-    style: {
-      color: "var(--safe)"
-    }
-  }), " ", toast));
+
+  const itemHistory = historyItem ? auditLog.filter(a => a.action.includes(historyItem.id) || a.action.includes(historyItem.name)) : [];
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 6, padding: "8px 12px", width: 260 }}>
+          <Search size={14} style={{ color: "var(--text-tertiary)" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, code, or brand" style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", fontSize: 13, width: "100%" }} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <MapPin size={14} style={{ color: "var(--text-tertiary)" }} />
+          <TSelect value={branchFilter} onChange={e => { setBranchFilter(e.target.value); setRoomFilter("All"); }} style={{ width: 170 }}>
+            <option>All</option>{BRANCHES.map(b => <option key={b}>{b}</option>)}
+          </TSelect>
+        </div>
+        <TSelect value={roomFilter} onChange={e => setRoomFilter(e.target.value)} style={{ width: 190 }}>
+          <option value="All">All stock rooms</option>
+          {rooms.map(r => <option key={r.id} value={r.id}>{r.name} · {r.branch}</option>)}
+        </TSelect>
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={exportReport}><Download size={14} /> Export report</button>
+        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(true)}><Plus size={14} /> Stock room</button>}
+        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowUploadPO(true)}><ClipboardList size={14} /> Upload purchase order</button>}
+        {canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowUpload(true)}><Upload size={14} /> Upload {label.toLowerCase()} sheet</button>}
+      </div>
+    </div>
+
+    <DataTable
+      columns={[
+        { header: "", render: it => <CoreSample layers={stockLayers(it)} size={26} /> },
+        { header: label, render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
+        { header: "Code", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.id}</span> },
+        { header: "Brand", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
+        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.branch}</span> },
+        { header: "Stock Room", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{roomLabel(it.stockRoom)}</span> },
+        { header: "On Hand", render: it => <span className="mis-mono" style={{ color: it.qty < it.reorder ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
+        { header: "Reorder At", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.reorder}</span> },
+        { header: "Cost", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.cost)}</span> },
+        { header: "Sell Price", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.sell)}</span> },
+        { header: "", render: it => <button type="button" className="mis-link-btn" onClick={() => setHistoryItem(it)}>History</button> }
+      ]}
+      rows={filtered}
+      rowKey={it => it.id}
+      empty={`No ${label.toLowerCase()}s match this filter.`}
+    />
+
+    {showAddRoom && <Modal title="Add stock room" onClose={() => setShowAddRoom(false)} footer={<React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(false)}>Cancel</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={addRoom}>Create room</button>
+    </React.Fragment>}>
+      <form onSubmit={addRoom} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Field label="Room name"><TInput required value={newRoomForm.name} onChange={e => setNewRoomForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Overflow Store" /></Field>
+        <Field label="Branch"><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</TSelect></Field>
+      </form>
+    </Modal>}
+
+    {showUpload && <Modal title={`Upload ${label.toLowerCase()} inventory sheet`} wide onClose={() => { setShowUpload(false); setPreview(null); }} footer={preview ? <React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>Choose different file</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> Import {preview.created + preview.updated} rows</button>
+    </React.Fragment> : null}>
+      {!preview && <React.Fragment>
+        <FileDrop label="Click or drop an Excel/CSV file" accept=".xlsx,.xls,.csv" onFile={handleUploadFile} hint="Expected columns: Code, Name, Brand, Category, Branch, Stock Room, Qty, Reorder, Cost, Sell" />
+        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Existing codes are updated in place; unmatched codes are created as new records. Stock rooms referenced by name are created automatically if they don't already exist.</p>
+      </React.Fragment>}
+      {preview && <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{preview.fileName}: <b style={{ color: "var(--safe)" }}>{preview.created} new</b>, <b style={{ color: "var(--caution)" }}>{preview.updated} updated</b>.</p>}
+    </Modal>}
+
+    {showUploadPO && <Modal title="Upload purchase order file" wide onClose={() => { setShowUploadPO(false); setPoPreview(null); }} footer={poPreview ? <React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPoPreview(null)}>Choose different file</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUploadPO}><Check size={14} /> Import {poPreview.groups.length} PO(s)</button>
+    </React.Fragment> : null}>
+      {!poPreview && <React.Fragment>
+        <FileDrop label="Click or drop an Excel/CSV purchase order file" accept=".xlsx,.xls,.csv" onFile={handleUploadPO} hint="Expected columns: PO Number, Vendor, Item Code, Item Name, Qty, Expected Date" />
+        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>The system reads each line, groups it by PO number, and notifies Procurement once imported.</p>
+      </React.Fragment>}
+      {poPreview && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10 }}>
+          <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{g.poNumber} — {g.vendor || "Unspecified vendor"}</div>
+          <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{g.lines.length} line item(s){g.expected ? `, expected ${g.expected}` : ""}</div>
+        </div>)}
+      </div>}
+    </Modal>}
+
+    {historyItem && <Drawer title={`${historyItem.name} — history`} onClose={() => setHistoryItem(null)}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
+        <div className="mis-kv"><span>Code</span><b className="mis-mono">{historyItem.id}</b></div>
+        <div className="mis-kv"><span>Branch</span><b>{historyItem.branch}</b></div>
+        <div className="mis-kv"><span>Stock room</span><b>{roomLabel(historyItem.stockRoom)}</b></div>
+        <div className="mis-kv"><span>On hand</span><b>{historyItem.qty} (reorder at {historyItem.reorder})</b></div>
+      </div>
+      <div className="mis-divider" style={{ marginBottom: 12 }} />
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".04em" }}>Activity — who did what</div>
+      {itemHistory.length === 0 && <div className="mis-empty">No recorded activity yet for this record.</div>}
+      {itemHistory.map(a => <div key={a.id} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
+        <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{a.action}</div>
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{a.user} · {fmtDateTime(a.ts)}</div>
+      </div>)}
+    </Drawer>}
+  </div>;
 }
+// ---------------------------------------------------------------------------
+// SALES & QUOTATIONS (parts + equipment + service jobs)
+// ---------------------------------------------------------------------------
+function LineItemsEditor({ lines, setLines, inventoryItems }) {
+  function updateLine(idx, patch) { setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l)); }
+  function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
+  function addInventoryLine() { setLines(ls => [...ls, { itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: false }]); }
+  function addCustomLine() { setLines(ls => [...ls, { itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: true }]); }
+  const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+      {!line.newPart ? <Field label="Item"><TSelect value={line.itemId} onChange={e => {
+        const it = inventoryItems.find(x => x.id === e.target.value);
+        updateLine(idx, { itemId: e.target.value, desc: it ? it.name : "", unitPrice: it ? it.sell : 0 });
+      }} style={{ minWidth: 220 }}>
+        <option value="">Select from inventory…</option>
+        {inventoryItems.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id}) — {it.qty} in stock</option>)}
+      </TSelect></Field>
+        : <Field label="Description (not in inventory)"><TInput value={line.desc} onChange={e => updateLine(idx, { desc: e.target.value })} placeholder="Describe the item to be sourced" style={{ minWidth: 220 }} /></Field>}
+      <Field label="Qty"><TInput type="number" min="1" value={line.qty} onChange={e => updateLine(idx, { qty: e.target.value })} style={{ width: 80 }} /></Field>
+      <Field label="Unit price"><TInput type="number" min="0" step="0.01" value={line.unitPrice} onChange={e => updateLine(idx, { unitPrice: e.target.value })} style={{ width: 130 }} /></Field>
+      <div style={{ fontSize: 12, color: "var(--text-tertiary)", minWidth: 100 }}>{fmtGHS((Number(line.qty) || 0) * (Number(line.unitPrice) || 0))}</div>
+      {line.newPart && <Badge color="var(--caution)" soft="var(--caution-soft)">To be sourced</Badge>}
+      <button type="button" className="mis-btn-danger" onClick={() => removeLine(idx)}><Trash2 size={12} /></button>
+    </div>)}
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={addInventoryLine}><Plus size={14} /> Add from inventory</button>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={addCustomLine}><Plus size={14} /> Add item not in inventory</button>
+    </div>
+    <div style={{ textAlign: "right", fontSize: 14, color: "var(--text-primary)" }}>Total: <b className="mis-mono">{fmtGHS(total)}</b></div>
+  </div>;
+}
+
+function CreateQuotationModal({ type, customers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, onClose, onCreated, defaultCustomerId, defaultLines }) {
+  const [customerId, setCustomerId] = useState(defaultCustomerId || "");
+  const [lines, setLines] = useState(defaultLines && defaultLines.length ? defaultLines : [{ itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: false }]);
+  const [notes, setNotes] = useState("");
+  const customer = customers.find(c => c.id === customerId);
+  const typeLabel = type === "part" ? "parts" : type === "equipment" ? "equipment" : "service";
+
+  function submit(e) {
+    e.preventDefault();
+    if (!customerId) return;
+    const validLines = lines.filter(l => (l.itemId || l.desc) && Number(l.qty) > 0);
+    if (!validLines.length) return;
+    const q = {
+      id: uid("QT", quotations, 4), type, customerId, country: customer ? customer.country : "",
+      lines: validLines.map(l => ({ itemId: l.itemId || "", desc: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""), qty: Number(l.qty), unitPrice: Number(l.unitPrice) || 0, newPart: !!l.newPart })),
+      notes, status: "Quoted", date: todayISO(), createdBy: currentUser
+    };
+    setQuotations(qs => [q, ...qs]);
+    logAction(currentUser, `Created ${typeLabel} quotation ${q.id} for ${customer ? customer.name : "customer"}`, "Sales");
+    pushNotification("quote", `${q.id} created for ${customer ? customer.name : "customer"}`);
+    onClose();
+    onCreated && onCreated(q);
+  }
+
+  return <Modal title={`Create ${typeLabel} quotation`} wide onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> Create quotation</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="mis-grid-2">
+        <Field label="Customer" hint="Quotation & invoice details are drawn from this customer's saved record.">
+          <TSelect required value={customerId} onChange={e => setCustomerId(e.target.value)}>
+            <option value="">Select customer…</option>
+            {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
+          </TSelect>
+        </Field>
+        {customer && <div className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
+          <div>{customer.contactPerson} · {customer.email}</div>
+          <div>{customer.phone}</div>
+          <div>{customer.address}</div>
+        </div>}
+      </div>
+      <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} />
+      <Field label="Notes (optional)"><TArea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Delivery terms, validity period, etc." /></Field>
+    </form>
+  </Modal>;
+}
+
+function printDocument(doc, customer, kind) {
+  const w = window.open("", "_blank", "width=800,height=900");
+  if (!w) { window.alert("Please allow pop-ups to print or export this document."); return; }
+  const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+  const rowsHtml = doc.lines.map(l => `<tr><td>${l.desc}${l.newPart ? " (to be sourced)" : ""}</td><td>${l.qty}</td><td>${fmtGHS(l.unitPrice)}</td><td>${fmtGHS(l.qty * l.unitPrice)}</td></tr>`).join("");
+  w.document.write(`<html><head><title>${doc.id}</title><style>
+    body{font-family:Arial,sans-serif;padding:32px;color:#1a1c1e;}
+    h1{font-size:20px;margin-bottom:4px;}
+    table{width:100%;border-collapse:collapse;margin-top:16px;}
+    th,td{border:1px solid #ccc;padding:8px;font-size:13px;text-align:left;}
+    .tot{text-align:right;font-weight:bold;margin-top:12px;}
+    .muted{color:#666;font-size:12px;}
+  </style></head><body>
+    <h1>SETVACO Holding Limited</h1>
+    <div class="muted">${kind === "invoice" ? "Invoice" : "Quotation"} ${doc.id} · ${doc.date}</div>
+    <hr/>
+    <p><b>${customer ? customer.name : ""}</b><br/>${customer ? customer.address : ""}<br/>${customer ? customer.email : ""} · ${customer ? customer.phone : ""}</p>
+    <table><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+    <div class="tot">Total: ${fmtGHS(total)}</div>
+    ${doc.notes ? `<p class="muted">${doc.notes}</p>` : ""}
+  </body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, onClose, onSent }) {
+  const officials = users.filter(u => ["admin", "finance"].includes(u.role)).map(u => u.email);
+  const [ccSelected, setCcSelected] = useState(officials);
+  const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
+  const subject = `${kind === "invoice" ? "Invoice" : "Quotation"} ${doc.id} from SETVACO Holding Ltd`;
+  const body = `Dear ${customer ? customer.contactPerson : "Customer"},\n\nPlease find below ${kind === "invoice" ? "invoice" : "quotation"} ${doc.id} dated ${doc.date}, total ${fmtGHS(total)}.\n\n`
+    + doc.lines.map(l => `- ${l.desc} x${l.qty} @ ${fmtGHS(l.unitPrice)}`).join("\n")
+    + `\n\nKind regards,\n${currentUser}\nSETVACO Holding Limited`;
+  const cc = ccSelected.join(",");
+  const href = customer ? buildMailto(customer.email, cc, subject, body) : undefined;
+  function toggle(email) { setCcSelected(s => s.includes(email) ? s.filter(x => x !== email) : [...s, email]); }
+  function handleSend() {
+    logAction(currentUser, `Sent ${doc.id} to ${customer ? customer.email : "customer"} (cc: ${cc || "none"})`, "Communications");
+    onSent && onSent();
+  }
+  return <Modal title={`Send ${kind === "invoice" ? "invoice" : "quotation"} to customer`} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Close</button>
+    {customer ? <a className="mis-btn-primary mis-focus" href={href} onClick={handleSend}><Mail size={14} /> Open email client</a>
+      : <button type="button" className="mis-btn-primary mis-focus" disabled><Mail size={14} /> No customer email on file</button>}
+  </React.Fragment>}>
+    <div className="mis-kv"><span>To</span><b>{customer ? `${customer.name} <${customer.email}>` : "—"}</b></div>
+    <Field label="CC company officials">
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {users.map(u => <label key={u.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+          <input type="checkbox" checked={ccSelected.includes(u.email)} onChange={() => toggle(u.email)} /> {u.name} <span style={{ color: "var(--text-tertiary)" }}>({ROLES[u.role].label})</span>
+        </label>)}
+      </div>
+    </Field>
+    <Field label="Subject"><TInput value={subject} readOnly /></Field>
+    <Field label="Message preview"><TArea value={body} readOnly rows={8} /></Field>
+    <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app.</p>
+  </Modal>;
+}
+
+function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint }) {
+  function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+  function total(doc) { return doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
+  return <DataTable
+    columns={[
+      { header: kind === "invoice" ? "Invoice" : "Quotation", render: d => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.id}</span> },
+      { header: "Customer", render: d => <span style={{ color: "var(--text-primary)" }}>{custName(d.customerId)}</span> },
+      { header: "Lines", render: d => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.lines.length} item(s){d.lines.some(l => l.newPart) ? " · incl. to-source" : ""}</span> },
+      { header: "Total", render: d => <span className="mis-mono">{fmtGHS(total(d))}</span> },
+      { header: "Date", render: d => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{d.date}</span> },
+      { header: "Status", render: d => { const cs = statusColor(d.status); return <Badge color={cs[0]} soft={cs[1]}>{d.status}</Badge>; } },
+      { header: "Actions", render: d => <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" className="mis-link-btn" onClick={() => onPrint(d)}>Print</button>
+        <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>Send</button>
+        {kind === "quotation" && d.status !== "Invoiced" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>Convert to invoice</button>}
+      </div> }
+    ]}
+    rows={docs}
+    rowKey={d => d.id}
+    empty={`No ${kind === "invoice" ? "invoices" : "quotations"} yet.`}
+  />;
+}
+
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, role, currentUser, logAction, openQuoteFor }) {
+  const canManage = ["admin", "service"].includes(role);
+  const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "" });
+  function submit(e) {
+    e.preventDefault();
+    const customer = customers.find(c => c.id === form.customerId);
+    if (!customer || !form.jobType) return;
+    const jobNumber = uid("SJ", serviceJobs, 3);
+    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, status: "Open", date: todayISO() };
+    setServiceJobs(js => [job, ...js]);
+    logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
+    setForm({ customerId: "", jobType: "", country: "", description: "" });
+  }
+  function complete(id) {
+    setServiceJobs(js => js.map(j => j.id === id ? { ...j, status: "Completed" } : j));
+    logAction(currentUser, `Completed service job ${id}`, "Service");
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <Field label="Customer name"><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value }))} style={{ minWidth: 200 }}>
+        <option value="">Select customer…</option>{customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+      </TSelect></Field>
+      <Field label="Job type"><TInput required value={form.jobType} onChange={e => setForm(f => ({ ...f, jobType: e.target.value }))} placeholder="e.g. Crusher Reline" style={{ minWidth: 180 }} /></Field>
+      <Field label="Country"><TInput value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} placeholder="Defaults to customer country" style={{ width: 170 }} /></Field>
+      <Field label="Description"><TInput value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Scope of work" style={{ minWidth: 240 }} /></Field>
+      <button type="submit" className="mis-btn-primary mis-focus"><Plus size={14} /> Log service job</button>
+    </form>}
+    <DataTable
+      columns={[
+        { header: "Job #", render: j => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{j.jobNumber}</span> },
+        { header: "Customer", render: j => <span style={{ color: "var(--text-primary)" }}>{j.customer}</span> },
+        { header: "Job Type", render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.type}</span> },
+        { header: "Country", render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.country}</span> },
+        { header: "Description", render: j => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{j.description}</span> },
+        { header: "Status", render: j => { const cs = statusColor(j.status); return <Badge color={cs[0]} soft={cs[1]}>{j.status}</Badge>; } },
+        { header: "Actions", render: j => <div style={{ display: "flex", gap: 6 }}>
+          <button type="button" className="mis-link-btn" onClick={() => openQuoteFor(j)}>Create quotation</button>
+          {j.status !== "Completed" && canManage && <button type="button" className="mis-link-btn" onClick={() => complete(j.id)}>Mark completed</button>}
+        </div> }
+      ]}
+      rows={serviceJobs}
+      rowKey={j => j.id}
+      empty="No service jobs logged yet."
+    />
+  </div>;
+}
+
+function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, typeFilter }) {
+  const canSeeSupplyChain = ["admin", "procurement", "warehouse"].includes(role);
+  const rows = [];
+  [...quotations, ...invoices].forEach(d => {
+    if (typeFilter !== "all" && d.type !== typeFilter) return;
+    d.lines.forEach(l => {
+      if (!l.itemId) return;
+      const item = items.find(i => i.id === l.itemId);
+      if (!item || item.qty >= l.qty) return;
+      const relatedPOs = purchaseOrders.filter(po => po.lines.some(pl => pl.itemId === l.itemId) && po.status !== "Received");
+      rows.push({ key: d.id + l.itemId, docId: d.id, itemName: item.name, needed: l.qty, onHand: item.qty, shortfall: l.qty - item.qty, pos: relatedPOs });
+    });
+  });
+  const columns = [
+    { header: "Order", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.docId}</span> },
+    { header: "Item", render: r => <span>{r.itemName}</span> },
+    { header: "Needed", render: r => <span className="mis-mono">{r.needed}</span> },
+    { header: "On Hand", render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.onHand}</span> },
+    { header: "Shortfall", render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.shortfall}</span> }
+  ];
+  if (canSeeSupplyChain) columns.push({ header: "Supply status", render: r => r.pos.length
+    ? r.pos.map(po => { const cs = statusColor(po.status); return <div key={po.id} style={{ fontSize: 11, marginBottom: 2 }}><Badge color={cs[0]} soft={cs[1]}>{po.status}</Badge> {po.id}{po.expected ? ` · ETA ${po.expected}` : ""}</div>; })
+    : <span style={{ fontSize: 12, color: "var(--vital)" }}>Not yet ordered</span> });
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Lines where the quoted or invoiced quantity exceeds what's currently on hand, cross-referenced against open purchase orders.{!canSeeSupplyChain ? " Full transit/vendor detail is limited to procurement, warehouse and admin access." : ""}</p>
+    <DataTable columns={columns} rows={rows} rowKey={r => r.key} empty="No back-ordered lines — all quoted/invoiced quantities are covered by stock." />
+  </div>;
+}
+
+function SalesOverview({ quotations, invoices, serviceJobs, customers, items }) {
+  const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
+  const invoicedTotal = invoices.reduce((s, i) => s + i.lines.reduce((ss, l) => ss + l.qty * l.unitPrice, 0), 0);
+  const backOrderLines = [...quotations, ...invoices].reduce((n, d) => n + d.lines.filter(l => { if (!l.itemId) return true; const it = items.find(i => i.id === l.itemId); return it && it.qty < l.qty; }).length, 0);
+  const openJobs = serviceJobs.filter(j => j.status !== "Completed").length;
+  const recent = quotations.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+  function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" />
+      <StatCard label="Invoiced Value" value={fmtGHS(invoicedTotal)} sub="All recorded invoices" icon={FileText} tint="var(--safe)" />
+      <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" />
+      <StatCard label="Open Service Jobs" value={openJobs} sub="In progress or unassigned" icon={Wrench} tint="var(--info)" />
+    </div>
+    <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent quotations</h3>
+      {recent.length === 0 && <div className="mis-empty">No quotations yet.</div>}
+      {recent.map(q => { const cs = statusColor(q.status); return <div key={q.id} className="mis-row" style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px", borderBottom: "1px solid var(--border-soft)" }}>
+        <span style={{ fontSize: 13 }}>{q.id} · {custName(q.customerId)} <span style={{ color: "var(--text-tertiary)" }}>({q.type})</span></span>
+        <Badge color={cs[0]} soft={cs[1]}>{q.status}</Badge>
+      </div>; })}
+    </div>
+  </div>;
+}
+
+function SalesQuotations({ role, currentUser, customers, items, setItems, quotations, setQuotations, invoices, setInvoices, serviceJobs, setServiceJobs, purchaseOrders, users, logAction, pushNotification }) {
+  const subTabsAll = [
+    { key: "overview", label: "Overview" },
+    { key: "parts", label: "Parts" },
+    { key: "equipment", label: "Equipment" },
+    { key: "servicejobs", label: "Service Jobs" },
+    { key: "backorders", label: "Back-Order Report" }
+  ];
+  const visibleKeys = role === "service" ? ["overview", "servicejobs"] : role === "warehouse" ? ["overview", "backorders"] : subTabsAll.map(t => t.key);
+  const subTabs = subTabsAll.filter(t => visibleKeys.includes(t.key));
+  const [sub, setSub] = useState(subTabs[0].key);
+  useEffect(() => { if (!visibleKeys.includes(sub)) setSub(subTabs[0] ? subTabs[0].key : "overview"); /* eslint-disable-next-line */ }, [role]);
+
+  const [showCreate, setShowCreate] = useState(null);
+  const [sendDoc, setSendDoc] = useState(null);
+  const [showProducts, setShowProducts] = useState(false);
+
+  function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+
+  function convertQuotationToInvoice(q) {
+    const inv = { id: uid("INV", invoices, 4), quotationId: q.id, type: q.type, customerId: q.customerId, lines: q.lines, status: "Issued", date: todayISO(), createdBy: currentUser };
+    setInvoices(is => [inv, ...is]);
+    setQuotations(qs => qs.map(x => x.id === q.id ? { ...x, status: "Invoiced" } : x));
+    setItems(its => its.map(it => {
+      const line = q.lines.find(l => l.itemId === it.id);
+      return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
+    }));
+    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated`, "Sales");
+    pushNotification("invoice", `${inv.id} issued to ${custName(q.customerId)}`);
+  }
+
+  function openQuoteForJob(job) {
+    setShowCreate({ type: "service", defaultCustomerId: job.customerId, defaultLines: [{ itemId: "", desc: `${job.type} — ${job.description || "service job"}`, qty: 1, unitPrice: 0, newPart: true }] });
+  }
+
+  const partsList = items.filter(i => i.type === "part");
+  const equipmentList = items.filter(i => i.type === "equipment");
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Tabs tabs={subTabs} active={sub} onChange={setSub} />
+    {sub === "overview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} />}
+    {sub === "parts" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate({ type: "part" })}><Plus size={14} /> Create quotation</button>}
+      </div>
+      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Quotations</h4>
+      <DocumentsTable docs={quotations.filter(q => q.type === "part")} customers={customers} kind="quotation" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
+      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
+      <DocumentsTable docs={invoices.filter(i => i.type === "part")} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
+    </div>}
+    {sub === "equipment" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowProducts(true)}><Boxes size={14} /> See products</button>
+        {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate({ type: "equipment" })}><Plus size={14} /> Create quotation</button>}
+      </div>
+      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Quotations</h4>
+      <DocumentsTable docs={quotations.filter(q => q.type === "equipment")} customers={customers} kind="quotation" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
+      <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
+      <DocumentsTable docs={invoices.filter(i => i.type === "equipment")} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
+    </div>}
+    {sub === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} role={role} currentUser={currentUser} logAction={logAction} openQuoteFor={openQuoteForJob} />}
+    {sub === "backorders" && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" />}
+
+    {showCreate && <CreateQuotationModal
+      type={showCreate.type}
+      customers={customers}
+      inventoryItems={showCreate.type === "part" ? partsList : showCreate.type === "equipment" ? equipmentList : items}
+      quotations={quotations} setQuotations={setQuotations}
+      currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
+      onClose={() => setShowCreate(null)}
+      defaultCustomerId={showCreate.defaultCustomerId}
+      defaultLines={showCreate.defaultLines}
+      onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
+    />}
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} onSent={() => {
+      if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
+      setSendDoc(null);
+    }} />}
+    {showProducts && <Modal title="Equipment products" wide onClose={() => setShowProducts(false)}>
+      <DataTable columns={[
+        { header: "Product", render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
+        { header: "Brand", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
+        { header: "Category", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.category}</span> },
+        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.branch}</span> },
+        { header: "Available", render: it => <span className="mis-mono" style={{ color: it.qty <= 0 ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
+        { header: "Price", render: it => <span className="mis-mono">{fmtGHS(it.sell)}</span> }
+      ]} rows={equipmentList} rowKey={it => it.id} empty="No equipment products yet." />
+    </Modal>}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// PURCHASING (internal POs, vendors, industry-code PO matching)
+// ---------------------------------------------------------------------------
+function POLineItemsEditor({ lines, setLines, items }) {
+  function updateLine(idx, patch) { setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l)); }
+  function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
+  function addLine() { setLines(ls => [...ls, { itemId: "", itemName: "", qty: 1 }]); }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <Field label="Item"><TSelect value={line.itemId} onChange={e => { const it = items.find(x => x.id === e.target.value); updateLine(idx, { itemId: e.target.value, itemName: it ? it.name : "" }); }} style={{ minWidth: 220 }}>
+        <option value="">Select item…</option>
+        {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id})</option>)}
+      </TSelect></Field>
+      <Field label="Qty"><TInput type="number" min="1" value={line.qty} onChange={e => updateLine(idx, { qty: e.target.value })} style={{ width: 90 }} /></Field>
+      <button type="button" className="mis-btn-danger" onClick={() => removeLine(idx)}><Trash2 size={12} /></button>
+    </div>)}
+    <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={addLine}><Plus size={14} /> Add line item</button>
+  </div>;
+}
+
+function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers, items, setItems, role, currentUser, logAction, pushNotification }) {
+  const canManage = ["admin", "procurement"].includes(role);
+  const [form, setForm] = useState({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
+  function setFormLines(updater) { setForm(f => ({ ...f, lines: typeof updater === "function" ? updater(f.lines) : updater })); }
+  function submit(e) {
+    e.preventDefault();
+    const vendor = vendors.find(v => v.id === form.vendorId);
+    const validLines = form.lines.filter(l => l.itemId && Number(l.qty) > 0).map(l => ({ itemId: l.itemId, itemName: l.itemName, qty: Number(l.qty) }));
+    if (!vendor || !validLines.length) return;
+    const po = { id: uid("PO", purchaseOrders, 4), vendorId: vendor.id, lines: validLines, status: "Ordered", date: todayISO(), expected: form.expected, source: "manual" };
+    setPurchaseOrders(ps => [po, ...ps]);
+    logAction(currentUser, `Raised ${po.id} to ${vendor.name} for ${validLines.map(l => l.itemName).join(", ")}`, "Purchasing");
+    pushNotification("po", `${po.id} raised to ${vendor.name}`);
+    setForm({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
+  }
+  function advance(po) {
+    const next = po.status === "Ordered" ? "In Transit" : po.status === "In Transit" ? "Received" : po.status;
+    if (next === po.status) return;
+    setPurchaseOrders(ps => ps.map(p => p.id === po.id ? { ...p, status: next } : p));
+    if (next === "Received") {
+      setItems(its => its.map(it => { const line = po.lines.find(l => l.itemId === it.id); return line ? { ...it, qty: it.qty + line.qty } : it; }));
+      logAction(currentUser, `Received ${po.id} — stock updated for ${po.lines.map(l => l.itemName).join(", ") || "matched order"}`, "Purchasing");
+    } else {
+      logAction(currentUser, `Marked ${po.id} as ${next}`, "Purchasing");
+    }
+  }
+  function poParty(p) {
+    if (p.vendorNameRaw) return p.vendorNameRaw;
+    if (p.vendorId) { const v = vendors.find(x => x.id === p.vendorId); if (v) return v.name; }
+    if (p.customerId) { const c = customers.find(x => x.id === p.customerId); if (c) return `${c.name} (customer order)`; }
+    return "Unspecified vendor";
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="mis-grid-2">
+        <Field label="Vendor"><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
+          <option value="">Select vendor…</option>{vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+        </TSelect></Field>
+        <Field label="Expected delivery date"><TInput type="date" value={form.expected} onChange={e => setForm(f => ({ ...f, expected: e.target.value }))} /></Field>
+      </div>
+      <POLineItemsEditor lines={form.lines} setLines={setFormLines} items={items} />
+      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> Raise purchase order</button>
+    </form>}
+    <DataTable columns={[
+      { header: "PO", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.id}</span> },
+      { header: "Vendor / Party", render: p => <span style={{ color: "var(--text-primary)" }}>{poParty(p)}</span> },
+      { header: "Lines", render: p => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.lines.length ? p.lines.map(l => `${l.itemName || l.itemId} x${l.qty}`).join(", ") : (p.externalPoNumber ? `External PO ${p.externalPoNumber} — pending detail` : "—")}</span> },
+      { header: "Expected", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.expected || "—"}</span> },
+      { header: "Status", render: p => { const cs = statusColor(p.status); return <Badge color={cs[0]} soft={cs[1]}>{p.status}</Badge>; } },
+      { header: "Actions", render: p => canManage && p.status !== "Received" ? <button type="button" className="mis-link-btn" onClick={() => advance(p)}>Mark {p.status === "Ordered" ? "in transit" : "received"}</button> : null }
+    ]} rows={purchaseOrders} rowKey={p => p.id} empty="No purchase orders yet." />
+  </div>;
+}
+
+function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
+  const canManage = ["admin", "procurement"].includes(role);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", categories: "" });
+  const [preview, setPreview] = useState(null);
+  function submit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    const vendor = { id: uid("V", vendors, 2), ...form };
+    setVendors(vs => [...vs, vendor]);
+    logAction(currentUser, `Added vendor ${vendor.name} (code ${vendor.code || "—"})`, "Purchasing");
+    setForm({ name: "", code: "", contact: "", email: "", phone: "", categories: "" });
+    setShowAdd(false);
+  }
+  function handleUpload(file) {
+    parseExcelFile(file).then(rows => {
+      const parsed = rows.map(r => ({ name: String(r.Name || r.Vendor || "").trim(), code: String(r.Code || r["Industry Code"] || "").trim(), contact: String(r.Contact || "").trim(), email: String(r.Email || "").trim(), phone: String(r.Phone || "").trim(), categories: String(r.Categories || "").trim() })).filter(v => v.name);
+      setPreview({ rows: parsed, fileName: file.name });
+    }).catch(err => window.alert("Could not read file: " + err.message));
+  }
+  function confirmUpload() {
+    if (!preview) return;
+    let list = vendors.slice();
+    preview.rows.forEach(v => {
+      const existingIdx = list.findIndex(x => v.code && x.code === v.code);
+      if (existingIdx >= 0) list[existingIdx] = { ...list[existingIdx], ...v };
+      else list = [...list, { id: uid("V", list, 2), ...v }];
+    });
+    setVendors(list);
+    logAction(currentUser, `Uploaded vendor list "${preview.fileName}" (${preview.rows.length} records)`, "Purchasing");
+    setPreview(null);
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {canManage && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add vendor</button>
+    </div>}
+    {canManage && <FileDrop label="Click or drop an Excel/CSV vendor list to bulk-upload" accept=".xlsx,.xls,.csv" onFile={handleUpload} hint="Expected columns: Name, Code, Contact, Email, Phone, Categories" />}
+    {preview && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <p style={{ fontSize: 13 }}>{preview.fileName}: {preview.rows.length} vendor record(s) ready to import.</p>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>Cancel</button>
+        <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> Import</button>
+      </div>
+    </div>}
+    <DataTable columns={[
+      { header: "Vendor", render: v => <span style={{ color: "var(--text-primary)" }}>{v.name}</span> },
+      { header: "Industry Code", render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.code || "—"}</span> },
+      { header: "Contact", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.contact}</span> },
+      { header: "Email", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.email}</span> },
+      { header: "Phone", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.phone}</span> },
+      { header: "Supplies", render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.categories}</span> }
+    ]} rows={vendors} rowKey={v => v.id} empty="No vendors yet." />
+    {showAdd && <Modal title="Add vendor" onClose={() => setShowAdd(false)} footer={<React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(false)}>Cancel</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={submit}>Add vendor</button>
+    </React.Fragment>}>
+      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <Field label="Vendor name"><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
+        <Field label="Industry standard code" hint="Unique code agreed between SETVACO and this vendor"><TInput value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} /></Field>
+        <div className="mis-grid-2">
+          <Field label="Contact person"><TInput value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></Field>
+          <Field label="Phone"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
+        </div>
+        <Field label="Email"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+        <Field label="Categories supplied"><TInput value={form.categories} onChange={e => setForm(f => ({ ...f, categories: e.target.value }))} placeholder="e.g. Wear parts, bearings" /></Field>
+      </form>
+    </Modal>}
+  </div>;
+}
+
+function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders, role, currentUser, logAction, pushNotification }) {
+  const canManage = ["admin", "procurement"].includes(role);
+  const [code, setCode] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [match, setMatch] = useState(null);
+  function search(e) {
+    e.preventDefault();
+    const needle = code.trim().toUpperCase();
+    if (!needle) { setMatch(null); return; }
+    const customer = customers.find(c => c.poCode && c.poCode.toUpperCase() === needle);
+    if (customer) { setMatch({ kind: "customer", record: customer }); return; }
+    const vendor = vendors.find(v => v.code && v.code.toUpperCase() === needle);
+    if (vendor) { setMatch({ kind: "vendor", record: vendor }); return; }
+    setMatch({ kind: "none" });
+  }
+  function submitOrder() {
+    if (!match || match.kind !== "customer") return;
+    const po = { id: uid("PO", purchaseOrders, 4), vendorId: null, customerId: match.record.id, externalPoNumber: poNumber || code, lines: [], status: "Ordered", date: todayISO(), expected: "", source: "matched" };
+    setPurchaseOrders(ps => [po, ...ps]);
+    logAction(currentUser, `Matched industry code ${code} to ${match.record.name} and submitted order ${po.id} (external PO ${poNumber || "n/a"})`, "Purchasing");
+    pushNotification("po", `Order ${po.id} submitted for ${match.record.name} from matched PO code ${code}`);
+    setCode(""); setPoNumber(""); setMatch(null);
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>External customers issue purchase orders bearing an industry-standard code unique between SETVACO and that client. Enter the code from the incoming PO to identify the client (or vendor) it belongs to, then submit the order.</p>
+    <form onSubmit={search} className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <Field label="Industry standard code"><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CHK-001" style={{ width: 200 }} /></Field>
+      <Field label="External PO number (optional)"><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder="Customer's own PO #" style={{ width: 200 }} /></Field>
+      <button type="submit" className="mis-btn-primary mis-focus"><Search size={14} /> Match code</button>
+    </form>
+    {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>Matched customer: {match.record.name}</b></div>
+      <div className="mis-kv"><span>Country</span><b>{match.record.country}</b></div>
+      <div className="mis-kv"><span>Contact</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
+      {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> Submit order for this customer</button>}
+    </div>}
+    {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>This code belongs to vendor: {match.record.name}</b></div>
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Raise an internal purchase order to this vendor from the Internal Purchase Orders tab.</p>
+    </div>}
+    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>No customer or vendor found with that code.</span></div>}
+  </div>;
+}
+
+function Purchasing({ role, currentUser, purchaseOrders, setPurchaseOrders, vendors, setVendors, items, setItems, customers, logAction, pushNotification }) {
+  const subTabsAll = [
+    { key: "pos", label: "Internal Purchase Orders" },
+    { key: "vendors", label: "Vendors" },
+    { key: "match", label: "Match PO Code" }
+  ];
+  const [sub, setSub] = useState("pos");
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Tabs tabs={subTabsAll} active={sub} onChange={setSub} />
+    {sub === "pos" && <InternalPOsTab purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} customers={customers} items={items} setItems={setItems} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
+    {sub === "vendors" && <VendorsTab vendors={vendors} setVendors={setVendors} role={role} currentUser={currentUser} logAction={logAction} />}
+    {sub === "match" && <MatchPOCodeTab customers={customers} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// CUSTOMERS
+// ---------------------------------------------------------------------------
+function ContactsEditor({ contacts, setContacts }) {
+  function update(idx, patch) { setContacts(cs => cs.map((c, i) => i === idx ? { ...c, ...patch } : c)); }
+  function remove(idx) { setContacts(cs => cs.filter((_, i) => i !== idx)); }
+  function add() { setContacts(cs => [...cs, { name: "", role: "", email: "", phone: "" }]); }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    {contacts.map((c, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 6, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <Field label="Name"><TInput value={c.name} onChange={e => update(idx, { name: e.target.value })} style={{ minWidth: 150 }} /></Field>
+      <Field label="Role"><TInput value={c.role} onChange={e => update(idx, { role: e.target.value })} style={{ minWidth: 130 }} /></Field>
+      <Field label="Email"><TInput type="email" value={c.email} onChange={e => update(idx, { email: e.target.value })} style={{ minWidth: 170 }} /></Field>
+      <Field label="Phone"><TInput value={c.phone} onChange={e => update(idx, { phone: e.target.value })} style={{ minWidth: 140 }} /></Field>
+      <button type="button" className="mis-btn-danger" onClick={() => remove(idx)}><Trash2 size={12} /></button>
+    </div>)}
+    <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={add}><Plus size={14} /> Add another contact</button>
+  </div>;
+}
+
+function CreateCustomerModal({ customers, setCustomers, currentUser, logAction, onClose }) {
+  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0 });
+  const [contacts, setContacts] = useState([]);
+  function submit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    const customer = { id: uid("C", customers, 2), ...form, creditLimit: Number(form.creditLimit) || 0, outstanding: 0, contacts };
+    setCustomers(cs => [...cs, customer]);
+    logAction(currentUser, `Created customer record for ${customer.name}`, "Customers");
+    onClose();
+  }
+  return <Modal title="Create customer" wide onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><UserPlus size={14} /> Create customer</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="mis-grid-2">
+        <Field label="Customer / company name"><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
+        <Field label="Country"><TInput required value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} /></Field>
+      </div>
+      <Field label="Address"><TInput value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></Field>
+      <div className="mis-grid-2">
+        <Field label="Company email"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+        <Field label="Phone number"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Primary contact person" hint="Individual representing the customer"><TInput value={form.contactPerson} onChange={e => setForm(f => ({ ...f, contactPerson: e.target.value }))} /></Field>
+        <Field label="Contact address"><TInput value={form.contactAddress} onChange={e => setForm(f => ({ ...f, contactAddress: e.target.value }))} /></Field>
+      </div>
+      <Field label="Company details" hint="Registration / TIN, business type, etc."><TArea value={form.companyDetails} onChange={e => setForm(f => ({ ...f, companyDetails: e.target.value }))} /></Field>
+      <div className="mis-grid-2">
+        <Field label="Industry PO code" hint="Unique code used to identify this client's purchase orders"><TInput value={form.poCode} onChange={e => setForm(f => ({ ...f, poCode: e.target.value }))} /></Field>
+        <Field label="Credit limit (GH₵)"><TInput type="number" min="0" value={form.creditLimit} onChange={e => setForm(f => ({ ...f, creditLimit: e.target.value }))} /></Field>
+      </div>
+      <Field label="Tier"><TSelect value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}><option>Standard</option><option>Silver</option><option>Gold</option></TSelect></Field>
+      <div className="mis-divider" />
+      <Field label="Additional contacts" hint="Add more people from the client's company as needed"><ContactsEditor contacts={contacts} setContacts={setContacts} /></Field>
+    </form>
+  </Modal>;
+}
+
+function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClose }) {
+  const related = [...quotations, ...invoices].filter(d => d.customerId === customer.id).sort((a, b) => b.date.localeCompare(a.date));
+  const history = auditLog.filter(a => a.action.includes(customer.name));
+  return <Drawer title={customer.name} onClose={onClose}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+      <div className="mis-kv"><span>Country</span><b>{customer.country}</b></div>
+      <div className="mis-kv"><span>Address</span><b>{customer.address}</b></div>
+      <div className="mis-kv"><span>Email</span><b>{customer.email}</b></div>
+      <div className="mis-kv"><span>Phone</span><b>{customer.phone}</b></div>
+      <div className="mis-kv"><span>Contact person</span><b>{customer.contactPerson}</b></div>
+      <div className="mis-kv"><span>PO code</span><b className="mis-mono">{customer.poCode || "—"}</b></div>
+      <div className="mis-kv"><span>Company details</span><b>{customer.companyDetails}</b></div>
+    </div>
+    {customer.contacts && customer.contacts.length > 0 && <React.Fragment>
+      <div className="mis-divider" />
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Additional contacts</div>
+      {customer.contacts.map((c, i) => <div key={i} style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6 }}>{c.name} — {c.role}<br />{c.email} · {c.phone}</div>)}
+    </React.Fragment>}
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Quotations & invoices</div>
+    {related.length === 0 && <div className="mis-empty">No quotations or invoices yet.</div>}
+    {related.map(d => { const cs = statusColor(d.status); return <div key={d.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <span>{d.id}</span><Badge color={cs[0]} soft={cs[1]}>{d.status}</Badge>
+    </div>; })}
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>Activity</div>
+    {history.length === 0 && <div className="mis-empty">No recorded activity yet.</div>}
+    {history.map(a => <div key={a.id} style={{ padding: "6px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{a.action}</div>
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{a.user} · {fmtDateTime(a.ts)}</div>
+    </div>)}
+  </Drawer>;
+}
+
+function Customers({ role, currentUser, customers, setCustomers, quotations, invoices, auditLog, logAction }) {
+  const canCreate = ["admin", "sales"].includes(role);
+  const [showCreate, setShowCreate] = useState(false);
+  const [detail, setDetail] = useState(null);
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {canCreate && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><UserPlus size={14} /> Create customer</button>}
+    </div>
+    <DataTable columns={[
+      { header: "Customer", render: c => <button type="button" className="mis-link-btn" style={{ color: "var(--text-primary)", textDecoration: "none", fontSize: 13 }} onClick={() => setDetail(c)}>{c.name}</button> },
+      { header: "Country", render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.country}</span> },
+      { header: "Contact", render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.contactPerson}</span> },
+      { header: "Email", render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.email}</span> },
+      { header: "Tier", render: c => <Badge color={c.tier === "Gold" ? "var(--ore)" : c.tier === "Silver" ? "var(--info)" : "var(--text-secondary)"} soft={c.tier === "Gold" ? "var(--ore-soft)" : c.tier === "Silver" ? "var(--info-soft)" : "var(--panel-alt)"}>{c.tier}</Badge> },
+      { header: "Credit Limit", render: c => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(c.creditLimit)}</span> },
+      { header: "Outstanding", render: c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <span className="mis-mono" style={{ fontSize: 12, color: risky ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(c.outstanding)} ({pct}%)</span>; } }
+    ]} rows={customers} rowKey={c => c.id} empty="No customers yet." />
+    {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} />}
+    {detail && <CustomerDetailDrawer customer={detail} quotations={quotations} invoices={invoices} auditLog={auditLog} onClose={() => setDetail(null)} />}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// USERS & ACCESS
+// ---------------------------------------------------------------------------
+function CreateUserModal({ users, setUsers, currentUser, logAction, onClose }) {
+  const [form, setForm] = useState({ name: "", email: "", username: "", password: "", role: "sales" });
+  function submit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.username.trim()) return;
+    const user = { id: uid("U", users, 2), name: form.name, email: form.email, username: form.username, role: form.role, status: "Active" };
+    setUsers(us => [...us, user]);
+    logAction(currentUser, `Created user account for ${user.name} (${ROLES[user.role].label})`, "Users & Access");
+    onClose();
+  }
+  return <Modal title="Create user account" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><UserPlus size={14} /> Create account</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <Field label="Full name"><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
+      <div className="mis-grid-2">
+        <Field label="Company email"><TInput type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="name@setvaco.com" /></Field>
+        <Field label="Username"><TInput required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Temporary password" hint="Demo only — no real authentication is implemented in this prototype"><TInput type="password" required value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></Field>
+        <Field label="Access level / role"><TSelect value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>{Object.entries(ROLES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</TSelect></Field>
+      </div>
+    </form>
+  </Modal>;
+}
+
+function UsersAccess({ role, currentUser, users, setUsers, logAction }) {
+  const isSuperUser = role === "admin";
+  const [showCreate, setShowCreate] = useState(false);
+  function setUserRole(id, newRole) {
+    const u = users.find(x => x.id === id);
+    setUsers(us => us.map(x => x.id === id ? { ...x, role: newRole } : x));
+    logAction(currentUser, `Changed access level for ${u ? u.name : id} to ${ROLES[newRole].label}`, "Users & Access");
+  }
+  function toggleStatus(id) {
+    const u = users.find(x => x.id === id);
+    const wasActive = u && u.status === "Active";
+    setUsers(us => us.map(x => x.id === id ? { ...x, status: x.status === "Active" ? "Suspended" : "Active" } : x));
+    logAction(currentUser, `${wasActive ? "Suspended" : "Reactivated"} account for ${u ? u.name : id}`, "Users & Access");
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>User accounts</h3>
+        {isSuperUser && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><UserPlus size={14} /> Create user</button>}
+      </div>
+      <DataTable columns={[
+        { header: "Name", render: u => <span style={{ color: "var(--text-primary)" }}>{u.name}</span> },
+        { header: "Company email", render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.email}</span> },
+        { header: "Username", render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.username}</span> },
+        { header: "Access level", render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.entries(ROLES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}</TSelect> : <span style={{ fontSize: 12 }}>{ROLES[u.role].label}</span> },
+        { header: "Status", render: u => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; } },
+        { header: "Actions", render: u => isSuperUser ? <button type="button" className="mis-link-btn" onClick={() => toggleStatus(u.id)}>{u.status === "Active" ? "Suspend" : "Reactivate"}</button> : null }
+      ]} rows={users} rowKey={u => u.id} empty="No users yet." />
+    </div>
+    <div>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Module access by role</h3>
+      <div className="mis-panel mis-table-wrap" style={{ borderRadius: 8, overflow: "hidden" }}>
+        <table className="mis-table">
+          <thead><tr><th>Role</th>{NAV.map(n => <th key={n.key} style={{ textAlign: "center" }}>{n.label}</th>)}</tr></thead>
+          <tbody>{Object.entries(ROLES).map(([key, r]) => <tr key={key} className="mis-row">
+            <td style={{ color: "var(--text-primary)" }}>{r.label}</td>
+            {NAV.map(n => <td key={n.key} style={{ textAlign: "center" }}>{n.roles.includes(key) ? <Check size={14} style={{ color: "var(--safe)", margin: "0 auto" }} /> : <span style={{ color: "var(--text-tertiary)" }}>—</span>}</td>)}
+          </tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+    {showCreate && <CreateUserModal users={users} setUsers={setUsers} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} />}
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
+// VARIANCE & AUDIT
+// ---------------------------------------------------------------------------
+function VarianceAudit({ auditLog }) {
+  const [sub, setSub] = useState("variance");
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Tabs tabs={[{ key: "variance", label: "Stock Variance" }, { key: "audit", label: "Audit Log" }]} active={sub} onChange={setSub} />
+    {sub === "variance" && <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 8, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
+        <TrendingDown size={18} style={{ color: "var(--vital)" }} />
+        <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.</p>
+      </div>
+      <DataTable columns={[
+        { header: "ID", render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.id}</span> },
+        { header: "Part", render: v => <span style={{ color: "var(--text-primary)" }}>{v.item}</span> },
+        { header: "Branch", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.branch}</span> },
+        { header: "Expected", render: v => <span className="mis-mono">{v.expected}</span> },
+        { header: "Counted", render: v => <span className="mis-mono">{v.counted}</span> },
+        { header: "Delta", render: v => <span className="mis-mono" style={{ color: "var(--vital)", display: "flex", alignItems: "center", gap: 4 }}><ArrowDownRight size={12} />{v.delta}</span> },
+        { header: "Severity", render: v => <Badge color={v.severity === "High" ? "var(--vital)" : v.severity === "Medium" ? "var(--caution)" : "var(--info)"} soft={v.severity === "High" ? "var(--vital-soft)" : v.severity === "Medium" ? "var(--caution-soft)" : "var(--info-soft)"}>{v.severity}</Badge> },
+        { header: "Note", render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.note}</span> }
+      ]} rows={varianceLog} rowKey={v => v.id} empty="No variance flags." />
+    </div>}
+    {sub === "audit" && <DataTable columns={[
+      { header: "When", render: a => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span> },
+      { header: "User", render: a => <span style={{ color: "var(--text-primary)" }}>{a.user}</span> },
+      { header: "Module", render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.module}</span> },
+      { header: "Action", render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.action}</span> }
+    ]} rows={auditLog} rowKey={a => a.id} empty="No activity recorded yet." />}
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
+// NOTIFICATIONS
+// ---------------------------------------------------------------------------
+function NotificationBell({ notifications, setNotifications }) {
+  const [open, setOpen] = useState(false);
+  const unread = notifications.filter(n => !n.read).length;
+  function toggle() {
+    setOpen(o => { const next = !o; if (next) setNotifications(ns => ns.map(n => ({ ...n, read: true }))); return next; });
+  }
+  return <div style={{ position: "relative" }}>
+    <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: 8, position: "relative" }} onClick={toggle}>
+      <Bell size={16} />
+      {unread > 0 && <span className="mis-bell-dot" />}
+    </button>
+    {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 8, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
+      <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase" }}>Notifications</div>
+      {notifications.length === 0 && <div className="mis-empty">Nothing yet.</div>}
+      {notifications.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
+        <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{n.message}</div>
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{fmtDateTime(n.ts)}</div>
+      </div>)}
+    </div>}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// DASHBOARD
+// ---------------------------------------------------------------------------
+function Dashboard({ items, quotations, invoices, purchaseOrders, customers, auditLog, role }) {
+  const stockValue = items.reduce((s, i) => s + i.qty * i.cost, 0);
+  const lowStock = items.filter(i => i.qty < i.reorder);
+  const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
+  const inTransitPOs = purchaseOrders.filter(p => p.status === "Ordered" || p.status === "In Transit").length;
+  const recentActivity = auditLog.slice(0, 8);
+  return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <StatCard label="Total Stock Value" value={fmtGHS(stockValue)} sub="Parts & equipment, all branches" icon={Package} tint="var(--ore)" />
+      <StatCard label="Below Reorder Point" value={lowStock.length} sub="Items needing replenishment" icon={AlertTriangle} tint="var(--vital)" />
+      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" />
+      <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" />
+    </div>
+    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Items nearest depletion</h3>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <CoreSample layers={stockLayers(it)} size={30} />
+              <div><div style={{ fontSize: 13, color: "var(--text-primary)" }}>{it.name}</div><div className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{it.brand} · {it.branch}</div></div>
+            </div>
+            <div style={{ textAlign: "right" }}><div className="mis-mono" style={{ fontSize: 13, color: "var(--vital)" }}>{it.qty} / {it.reorder}</div><div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>on hand / reorder</div></div>
+          </div>)}
+          {lowStock.length === 0 && <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>All items above reorder level.</p>}
+        </div>
+      </div>
+      <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Customer credit risk</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {customers.map(c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <div key={c.id}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4, color: risky ? "var(--vital)" : "var(--text-secondary)" }}><span>{c.name}</span><span className="mis-mono">{pct}%</span></div>
+            <div style={{ width: "100%", borderRadius: 999, height: 6, background: "var(--panel-alt)" }}><div style={{ height: 6, borderRadius: 999, width: `${Math.min(pct, 100)}%`, background: risky ? "var(--vital)" : "var(--ore)" }} /></div>
+          </div>; })}
+        </div>
+      </div>
+    </div>
+    {["admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 8, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent activity</h3>
+      {recentActivity.length === 0 && <div className="mis-empty">No activity recorded yet.</div>}
+      {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
+        <span style={{ color: "var(--text-secondary)" }}>{a.action}</span>
+        <span style={{ color: "var(--text-tertiary)", whiteSpace: "nowrap" }}>{a.user} · {fmtDateTime(a.ts)}</span>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
+// MAIN APP
+// ---------------------------------------------------------------------------
+function SetvacoBusinessSystem() {
+  const persisted = loadPersisted();
+  const [role, setRole] = useState("admin");
+  const [nav, setNav] = useState("dashboard");
+  const [stockRooms, setStockRooms] = useState(() => (persisted && persisted.stockRooms) || initialStockRooms);
+  const [items, setItems] = useState(() => (persisted && persisted.items) || [...initialParts, ...initialEquipment]);
+  const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
+  const [customers, setCustomers] = useState(() => (persisted && persisted.customers) || initialCustomers);
+  const [quotations, setQuotations] = useState(() => (persisted && persisted.quotations) || initialQuotations);
+  const [invoices, setInvoices] = useState(() => (persisted && persisted.invoices) || initialInvoices);
+  const [purchaseOrders, setPurchaseOrders] = useState(() => (persisted && persisted.purchaseOrders) || initialPurchaseOrders);
+  const [serviceJobs, setServiceJobs] = useState(() => (persisted && persisted.serviceJobs) || initialServiceJobs);
+  const [users, setUsers] = useState(() => (persisted && persisted.users) || initialUsers);
+  const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
+  const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
+  const [toast, setToast] = useState(null);
+
+  const currentUser = (CURRENT_USERS[role] || {}).name || "Unknown user";
+  const allowedNav = NAV.filter(n => n.roles.includes(role));
+
+  useEffect(() => { if (!allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
+  useEffect(() => {
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications]);
+
+  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2600); }
+  function logAction(user, action, mod) {
+    setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod }, ...al]);
+    showToast(action);
+  }
+  function pushNotification(type, message) {
+    setNotifications(ns => [{ id: uid("N", ns, 3), ts: nowISO(), type, message, read: false }, ...ns]);
+  }
+  function resetDemoData() {
+    if (!window.confirm("Reset all data back to the original demo dataset? This clears anything added in this browser.")) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
+    window.location.reload();
+  }
+
+  return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex" }}>
+    <Style />
+    <aside className="mis-panel" style={{ width: 230, flexShrink: 0, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "20px 16px", borderBottom: "1px solid var(--border-soft)" }}>
+        <CoreSample layers={["var(--ore)", "var(--caution)", "var(--info)", "var(--safe)"]} size={34} />
+        <div>
+          <div className="mis-display" style={{ fontSize: 14, color: "var(--text-primary)" }}>SETVACO</div>
+          <div className="mis-mono" style={{ fontSize: 10, color: "var(--text-tertiary)" }}>BUSINESS SYSTEM</div>
+        </div>
+      </div>
+      <nav style={{ flex: 1, padding: "8px 0" }}>
+        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} type="button" className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", fontSize: 13, color: active ? "var(--ore)" : "var(--text-secondary)", borderLeft: active ? undefined : "2px solid transparent" }}>
+          <Ic size={16} />{n.label}
+        </button>; })}
+      </nav>
+      <div className="mis-mono" style={{ padding: "14px 16px", fontSize: 10, color: "var(--text-tertiary)", borderTop: "1px solid var(--border-soft)" }}>
+        SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA
+        <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" onClick={resetDemoData}>Reset demo data</button></div>
+      </div>
+    </aside>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border-soft)", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 className="mis-display" style={{ fontSize: 18, color: "var(--text-primary)" }}>{(allowedNav.find(n => n.key === nav) || {}).label || "Dashboard"}</h1>
+          <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Signed in as {currentUser} · {ROLES[role].label}</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <NotificationBell notifications={notifications} setNotifications={setNotifications} />
+          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Role:</span>
+          <div style={{ position: "relative" }}>
+            <select value={role} onChange={e => setRole(e.target.value)} className="mis-panel-alt mis-focus" style={{ fontSize: 13, borderRadius: 6, padding: "7px 26px 7px 12px", appearance: "none", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
+              {Object.entries(ROLES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
+            </select>
+            <ChevronDown size={14} style={{ position: "absolute", right: 8, top: 9, color: "var(--text-tertiary)", pointerEvents: "none" }} />
+          </div>
+        </div>
+      </header>
+      <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
+        {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} />}
+        {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
+        {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
+        {nav === "sales" && <SalesQuotations role={role} currentUser={currentUser} customers={customers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} purchaseOrders={purchaseOrders} users={users} logAction={logAction} pushNotification={pushNotification} />}
+        {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
+        {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
+        {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
+        {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} logAction={logAction} />}
+      </main>
+    </div>
+    {toast && <div className="mis-panel-alt mis-focus" style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 16px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 10px 15px -3px rgba(0,0,0,.3)", color: "var(--text-primary)", border: "1px solid var(--border)", maxWidth: 380, zIndex: 90 }}>
+      <Check size={14} style={{ color: "var(--safe)", flexShrink: 0 }} /> <span>{toast}</span>
+    </div>}
+  </div>;
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(/*#__PURE__*/React.createElement(SetvacoInventorySystem, null));
+root.render(<SetvacoBusinessSystem />);
 </script>
 </body>
 </html>
