@@ -897,6 +897,7 @@ const TRANSLATIONS = {
     "dt.print": "Print",
     "dt.send": "Send",
     "dt.convertToInvoice": "Convert to invoice",
+    "dt.markPaid": "Mark paid",
     "dt.inclToSource": " · incl. to-source",
     "dt.itemsCount": "{n} item(s)",
     "dt.noInvoicesYet": "No invoices yet.",
@@ -1381,6 +1382,7 @@ const TRANSLATIONS = {
     "dt.print": "Imprimer",
     "dt.send": "Envoyer",
     "dt.convertToInvoice": "Convertir en facture",
+    "dt.markPaid": "Marquer payée",
     "dt.inclToSource": " · dont à approvisionner",
     "dt.itemsCount": "{n} article(s)",
     "dt.noInvoicesYet": "Aucune facture pour le moment.",
@@ -2175,7 +2177,7 @@ function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction,
   </Modal>;
 }
 
-function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, lang }) {
+function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, onMarkPaid, lang }) {
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   function total(doc) { return typeof doc.total === "number" ? doc.total : doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
   return <DataTable
@@ -2192,6 +2194,7 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
         <button type="button" className="mis-link-btn" onClick={() => onPrint(d)}>{t(lang, "dt.print")}</button>
         {d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>{t(lang, "dt.send")}</button>}
         {kind === "quotation" && d.status !== "Invoiced" && d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>{t(lang, "dt.convertToInvoice")}</button>}
+        {kind === "invoice" && d.status === "Issued" && onMarkPaid && <button type="button" className="mis-link-btn" onClick={() => onMarkPaid(d)}>{t(lang, "dt.markPaid")}</button>}
       </div> }
     ]}
     rows={docs}
@@ -2514,8 +2517,14 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       const line = q.lines.find(l => l.itemId === it.id);
       return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
     }));
-    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated`, "Sales");
+    setCustomers(cs => cs.map(c => c.id === q.customerId ? { ...c, outstanding: (c.outstanding || 0) + inv.total } : c));
+    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated, added ${fmtGHS(inv.total)} to outstanding balance`, "Sales");
     pushNotification("invoice", `${inv.id} issued to ${custName(q.customerId)}`);
+  }
+  function markInvoicePaid(inv) {
+    setInvoices(is => is.map(x => x.id === inv.id ? { ...x, status: "Paid" } : x));
+    setCustomers(cs => cs.map(c => c.id === inv.customerId ? { ...c, outstanding: Math.max(0, (c.outstanding || 0) - inv.total) } : c));
+    logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)} — removed ${fmtGHS(inv.total)} from outstanding balance`, "Sales");
   }
 
   const partsList = items.filter(i => i.type === "part");
@@ -2532,7 +2541,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.transactionHistory")}</h4>
     <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} lang={lang} />
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.invoicesHeading")}</h4>
-    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} lang={lang} />
+    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} onMarkPaid={["director", "admin", "finance"].includes(role) ? markInvoicePaid : undefined} lang={lang} />
 
     {showCreate && <CreateQuotationModal
       type={type}
