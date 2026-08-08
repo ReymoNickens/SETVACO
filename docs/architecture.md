@@ -40,7 +40,27 @@ See `supabase/migrations/` for the authoritative DDL, applied in order:
    `variance_log`.
 5. `20260807000500_rls_policies.sql` — `has_role()` and every table's RLS
    policy.
-6. `20260807000600_rpc_functions.sql` — every transactional RPC.
+6. `20260807000550_countries_currency_tax.sql` — `countries`, `currencies`,
+   `tax_profiles`, `fx_rates`, plus `country_code`/`currency_code` columns on
+   `branches`, `vendors`, `customers`, `profiles.locale`, and every
+   money-bearing document table. Sits before `rpc_functions.sql` because
+   `create_quotation` depends on it (see below).
+7. `20260807000600_rpc_functions.sql` — every transactional RPC.
+
+**Multi-country foundation:** SETVACO's client base already spans Ghana,
+Mali, and Côte d'Ivoire, and branches are expanding into other African
+countries. `countries`/`currencies`/`tax_profiles` model this as data (new
+rows), not new code — a new country is an `insert`, not a migration.
+`create_quotation` derives `tax_rate` and `currency_code` authoritatively
+from the customer's `country_code` (via `tax_profiles`/`countries`) rather
+than trusting the client-supplied `p_tax_rate` parameter it used to accept
+uncritically; that parameter is now only a fallback for customers with no
+mapped country yet. This is deliberately *not* the full multi-entity /
+tri-currency-FX-ledger / offline-sync architecture a mine-operator-scale ERP
+would need — SETVACO supplies and services mines, it doesn't run them, so
+that scope was cut in favor of the smaller foundation above. See the
+"Deferred scope" note near the bottom of this document for what was
+considered and explicitly not built.
 
 Key departures from a literal 1:1 field mirror of `index.html`, and why:
 
@@ -138,3 +158,29 @@ gets a hook like `useItems()` that starts as today's `useState(initialX)` and
 gets swapped to `useQuery`/`supabase-js` when its phase lands), and shrink the
 `savePersisted`/`loadPersisted` localStorage blob one module at a time as
 each goes live server-side.
+
+## Deferred scope: what a mine-operator ERP would need that this doesn't build
+
+SETVACO supplies equipment/parts and provides maintenance, training, and
+construction *services* to mines and quarries — it doesn't operate mines. A
+proposal was raised to architect this as a full Pan-African mining-operator
+ERP (multi-entity `Group → Country Subsidiary → Mine Site → Warehouse → Bin`
+hierarchy, HSE incident/PPE logs, hazmat and local-content compliance
+tracking, CMMS work orders, customs/bonded-warehouse transit corridors,
+offline-first IndexedDB sync with idempotent replay, an automated
+tri-currency FX gain/loss ledger, inter-company transfer pricing). That's
+the right scope for a company that *runs* mine sites; it's not what SETVACO
+is or does today, and building it speculatively — before an actual client
+need — would mean months of unused schema and modules to maintain.
+
+What was built instead (`20260807000550_countries_currency_tax.sql`) covers
+the same underlying ambition — ready to serve a client in another country
+without a rewrite — at the scale SETVACO actually operates at: `branches`
+gained a `country_code` instead of a full entity hierarchy (a new
+branch in Mali is a row, not a new level of nesting); money-bearing
+documents carry a `currency_code` and rates are entered manually into
+`fx_rates` instead of an automated FX-variance ledger; tax is a per-country
+rate + label in `tax_profiles` instead of a pluggable strategy-pattern
+engine. If a genuine mine-operator-scale client or in-house mining
+operation materializes, revisit this section — the foundation here doesn't
+block building any of the deferred pieces, it just doesn't pre-build them.

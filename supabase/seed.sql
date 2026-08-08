@@ -93,30 +93,30 @@ begin
     ('Voltline Electrical Supplies', 'VLT-GH-077', 'Nana Yeboah', 'info@voltline.com.gh', '+233 20 334 8899', '', 'Electrical, VFD drives', false, null) returning id into v_v04;
 
   -- ---- Customers + contacts ----
-  insert into customers (name, tier, country, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
-    ('Chorkor Mines Ltd', 'Gold', 'Ghana', 'Plot 12, Tarkwa Industrial Area, Tarkwa', 'procurement@chorkormines.com', '+233 24 111 2233', 'Samuel Aidoo', 'Plot 12, Tarkwa Industrial Area, Tarkwa', 'Registered mining operator · TIN GH-0091827', 'CHK-001', 150000, 42000, false) returning id into v_c01;
+  insert into customers (name, tier, country, country_code, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
+    ('Chorkor Mines Ltd', 'Gold', 'Ghana', 'GH', 'Plot 12, Tarkwa Industrial Area, Tarkwa', 'procurement@chorkormines.com', '+233 24 111 2233', 'Samuel Aidoo', 'Plot 12, Tarkwa Industrial Area, Tarkwa', 'Registered mining operator · TIN GH-0091827', 'CHK-001', 150000, 42000, false) returning id into v_c01;
   insert into customer_contacts (customer_id, name, role, email, phone) values
     (v_c01, 'Samuel Aidoo', 'Procurement Manager', 's.aidoo@chorkormines.com', '+233 24 111 2233'),
     (v_c01, 'Linda Owusu', 'Finance Officer', 'l.owusu@chorkormines.com', '+233 24 111 9090');
 
-  insert into customers (name, tier, country, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
-    ('Akwatia Gold Ltd', 'Gold', 'Ghana', 'Km 4 Akwatia-Kade Rd, Akwatia', 'buying@akwatiagold.com', '+233 24 220 6611', 'Grace Antwi', 'Km 4 Akwatia-Kade Rd, Akwatia', 'Registered mining operator · TIN GH-0075512', 'AWG-002', 100000, 88000, false) returning id into v_c02;
+  insert into customers (name, tier, country, country_code, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
+    ('Akwatia Gold Ltd', 'Gold', 'Ghana', 'GH', 'Km 4 Akwatia-Kade Rd, Akwatia', 'buying@akwatiagold.com', '+233 24 220 6611', 'Grace Antwi', 'Km 4 Akwatia-Kade Rd, Akwatia', 'Registered mining operator · TIN GH-0075512', 'AWG-002', 100000, 88000, false) returning id into v_c02;
   insert into customer_contacts (customer_id, name, role, email, phone) values
     (v_c02, 'Grace Antwi', 'Purchasing Lead', 'g.antwi@akwatiagold.com', '+233 24 220 6611');
   insert into approval_flagged_customers (customer_id) values (v_c02);
 
-  insert into customers (name, tier, country, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
-    ('Ghana Gold Processing', 'Silver', 'Ghana', 'Industrial Area, Obuasi', 'orders@ghanagoldproc.com', '+233 20 445 1290', 'Isaac Boadu', 'Industrial Area, Obuasi', 'Processing plant operator · TIN GH-0062341', 'GGP-003', 60000, 15000, true) returning id into v_c03;
+  insert into customers (name, tier, country, country_code, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
+    ('Ghana Gold Processing', 'Silver', 'Ghana', 'GH', 'Industrial Area, Obuasi', 'orders@ghanagoldproc.com', '+233 20 445 1290', 'Isaac Boadu', 'Industrial Area, Obuasi', 'Processing plant operator · TIN GH-0062341', 'GGP-003', 60000, 15000, true) returning id into v_c03;
   insert into customer_contacts (customer_id, name, role, email, phone) values
     (v_c03, 'Isaac Boadu', 'Plant Manager', 'i.boadu@ghanagoldproc.com', '+233 20 445 1290');
 
-  insert into customers (name, tier, country, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
-    ('Bamako Quarry Co.', 'Standard', 'Mali', 'Zone Industrielle, Bamako', 'achats@bamakoquarry.ml', '+223 76 334 220', 'Moussa Traoré', 'Zone Industrielle, Bamako', 'Quarry operator · RCCM ML-BKO-2014', 'BMQ-004', 30000, 5000, false) returning id into v_c04;
+  insert into customers (name, tier, country, country_code, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
+    ('Bamako Quarry Co.', 'Standard', 'Mali', 'ML', 'Zone Industrielle, Bamako', 'achats@bamakoquarry.ml', '+223 76 334 220', 'Moussa Traoré', 'Zone Industrielle, Bamako', 'Quarry operator · RCCM ML-BKO-2014', 'BMQ-004', 30000, 5000, false) returning id into v_c04;
   insert into customer_contacts (customer_id, name, role, email, phone) values
     (v_c04, 'Moussa Traoré', 'Site Manager', 'm.traore@bamakoquarry.ml', '+223 76 334 220');
 
-  insert into customers (name, tier, country, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
-    ('Ivorian Aggregates SARL', 'Silver', 'Côte d''Ivoire', 'Zone Industrielle Yopougon, Abidjan', 'contact@ivorianagg.ci', '+225 07 08 556 213', 'Aya Kouassi', 'Zone Industrielle Yopougon, Abidjan', 'Aggregates producer · RCCM CI-ABJ-2011', 'IVA-005', 50000, 20000, false) returning id into v_c05;
+  insert into customers (name, tier, country, country_code, address, email, phone, contact_person, contact_address, company_details, po_code, credit_limit, outstanding, tax_exempt) values
+    ('Ivorian Aggregates SARL', 'Silver', 'Côte d''Ivoire', 'CI', 'Zone Industrielle Yopougon, Abidjan', 'contact@ivorianagg.ci', '+225 07 08 556 213', 'Aya Kouassi', 'Zone Industrielle Yopougon, Abidjan', 'Aggregates producer · RCCM CI-ABJ-2011', 'IVA-005', 50000, 20000, false) returning id into v_c05;
   insert into customer_contacts (customer_id, name, role, email, phone) values
     (v_c05, 'Aya Kouassi', 'Buyer', 'a.kouassi@ivorianagg.ci', '+225 07 08 556 213');
 

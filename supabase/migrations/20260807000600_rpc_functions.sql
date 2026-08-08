@@ -24,7 +24,8 @@ create or replace function create_quotation(
   p_eta date default null,
   p_prepared_by_id uuid default null,
   p_apply_tax boolean default true,
-  p_tax_rate numeric default 15
+  p_tax_rate numeric default 15    -- fallback only; ignored once the customer's
+                                    -- country maps to a tax_profiles row (see below)
 ) returns quotations
 language plpgsql security definer set search_path = public as $$
 declare
@@ -36,6 +37,8 @@ declare
   v_tax_amount numeric := 0;
   v_total numeric := 0;
   v_effective_apply_tax boolean;
+  v_effective_tax_rate numeric;
+  v_currency_code text;
   v_needs_approval boolean;
   v_status quote_status;
   v_quotation quotations;
@@ -49,8 +52,9 @@ begin
     if p_new_customer_name is null or btrim(p_new_customer_name) = '' then
       raise exception 'Customer name required';
     end if;
-    insert into customers (name, country, tier, is_walk_in)
-    values (btrim(p_new_customer_name), coalesce(nullif(btrim(p_new_customer_country), ''), '—'), 'Standard', true)
+    insert into customers (name, country, country_code, tier, is_walk_in)
+    values (btrim(p_new_customer_name), coalesce(nullif(btrim(p_new_customer_country), ''), '—'),
+      (select code from countries where lower(name) = lower(btrim(p_new_customer_country))), 'Standard', true)
     returning * into v_customer;
     insert into audit_log (actor_id, actor_name, action, module, entity_type, entity_id)
     values (v_actor, v_actor_name, format('Created walk-in customer record for %s', v_customer.name), 'Customers', 'customer', v_customer.id);
@@ -66,17 +70,26 @@ begin
     end if;
   end loop;
 
+  -- Tax rate and currency are authoritative from the customer's country when
+  -- known — never trust a client-supplied rate for the number that
+  -- determines what the customer owes. Only falls back to the caller's
+  -- p_tax_rate/GHS when the customer has no mapped country_code yet.
+  select rate_pct into v_effective_tax_rate from tax_profiles where country_code = v_customer.country_code;
+  v_effective_tax_rate := coalesce(v_effective_tax_rate, p_tax_rate, 0);
+  select default_currency_code into v_currency_code from countries where code = v_customer.country_code;
+  v_currency_code := coalesce(v_currency_code, 'GHS');
+
   v_effective_apply_tax := p_apply_tax and not v_customer.tax_exempt;
-  v_tax_amount := case when v_effective_apply_tax then round(v_line_subtotal * coalesce(p_tax_rate, 0) / 100) else 0 end;
+  v_tax_amount := case when v_effective_apply_tax then round(v_line_subtotal * v_effective_tax_rate / 100) else 0 end;
   v_total := v_line_subtotal + v_tax_amount;
   v_needs_approval := v_total > (select value_threshold from approval_settings where id = true)
     or exists (select 1 from approval_flagged_customers where customer_id = v_customer.id);
   v_status := case when v_needs_approval then 'Pending Approval'::quote_status else 'Quoted'::quote_status end;
 
   insert into quotations (type, customer_id, country, notes, subtotal, apply_tax, tax_rate, tax_amount, total,
-      lead_time_days, eta, prepared_by_id, status, created_by)
+      currency_code, lead_time_days, eta, prepared_by_id, status, created_by)
     values (p_type, v_customer.id, v_customer.country, p_notes, v_line_subtotal, v_effective_apply_tax,
-      coalesce(p_tax_rate, 0), v_tax_amount, v_total, p_lead_time_days, p_eta,
+      v_effective_tax_rate, v_tax_amount, v_total, v_currency_code, p_lead_time_days, p_eta,
       coalesce(p_prepared_by_id, v_actor), v_status, v_actor)
     returning * into v_quotation;
 
@@ -188,9 +201,9 @@ begin
   if v_quotation.id is null then raise exception 'Quotation not found or not in a convertible status'; end if;
   select name into v_customer_name from customers where id = v_quotation.customer_id;
 
-  insert into invoices (quotation_id, type, customer_id, subtotal, apply_tax, tax_rate, tax_amount, total, status, created_by)
+  insert into invoices (quotation_id, type, customer_id, subtotal, apply_tax, tax_rate, tax_amount, total, currency_code, status, created_by)
   values (v_quotation.id, v_quotation.type, v_quotation.customer_id, v_quotation.subtotal, v_quotation.apply_tax,
-    v_quotation.tax_rate, v_quotation.tax_amount, v_quotation.total, 'Issued', v_actor)
+    v_quotation.tax_rate, v_quotation.tax_amount, v_quotation.total, v_quotation.currency_code, 'Issued', v_actor)
   returning * into v_invoice;
 
   for v_line in select * from quotation_lines where quotation_id = v_quotation.id loop
@@ -239,8 +252,9 @@ begin
   select * into v_vendor from vendors where id = p_vendor_id;
   if v_vendor.id is null then raise exception 'Vendor not found'; end if;
 
-  insert into purchase_orders (vendor_id, status, expected, source, created_by)
-  values (v_vendor.id, 'Ordered', p_expected, 'manual', v_actor)
+  insert into purchase_orders (vendor_id, status, expected, source, currency_code, created_by)
+  values (v_vendor.id, 'Ordered', p_expected, 'manual',
+    coalesce((select default_currency_code from countries where code = v_vendor.country_code), 'GHS'), v_actor)
   returning * into v_po;
 
   for v_line in select * from jsonb_array_elements(p_lines) loop
