@@ -328,3 +328,82 @@ real Supabase Auth yet (see "Frontend login gate" above), but add
 `director` to both when Phase 1 auth cutover happens, or a director-role
 account will pass the frontend's login screen and then fail every RLS
 check.
+
+## Second Salesforce-inspired pass: Assets, Contracts, escalation, Reports, Price Books
+
+A follow-up review asked specifically "what's in Salesforce that isn't in
+this system and is actually relevant to SETVACO's operations" — a broader,
+unprompted-by-a-reference-file pass than the first round above. Five
+features landed, all judged genuinely relevant to a parts/equipment
+sales-and-service business, not just present-in-Salesforce:
+
+- **Installed Base / Assets** (`assets` state, `AssetsTab`, new nav page):
+  Salesforce's Asset object — a specific serialized unit at a customer
+  site, with warranty dates and service history. This was the one gap that
+  was missing *data*, not just a screen: service jobs previously referenced
+  a customer and a generic item, never "this specific Cone Crusher CH430,
+  serial X, installed Y, under warranty until Z." Service jobs now
+  optionally link an `assetId`; the asset detail drawer shows its full
+  service history.
+- **Service Contracts / renewals** (`serviceContracts` state,
+  `ContractsTab`, new nav page): Salesforce's Contract object with a
+  renewal cadence. Status is derived, not stored, from the contract's
+  dates (`contractDisplayStatus`: Active / Expiring Soon within 60 days /
+  Expired / Cancelled) so it can never drift out of sync with today's
+  date. Expiring contracts surface as a Dashboard alert to
+  director/admin/service/finance.
+- **Two-stage approval escalation** (`approvalSettings.directorThreshold`,
+  `quotation.approvalStage`): the existing single-step approve/reject
+  (added in the first Salesforce pass) now escalates to a second,
+  director-only sign-off when a quotation's total exceeds a configurable
+  higher threshold — mirroring Salesforce's multi-step approval processes,
+  scaled down to a fixed two-tier escalation rather than a full rule
+  builder (which would be real over-engineering at this app's size).
+  `PathStepper` — already built for status progression — is reused here to
+  visualize "Manager Review → Director Sign-off."
+- **Reports** (`ReportsTab`, new nav page, `savedReports` state): a
+  deliberately lightweight alternative to Salesforce's Report Builder —
+  pick a data source, a group-by field that already lives on that record
+  (no cross-object joins), and count/sum; save/reload named report
+  definitions. This is explicitly **not** an attempt at report-builder
+  parity; see "Deliberately not adopted" below for where the line was
+  drawn.
+- **Price Books** (`priceBooks` / `priceBookEntries` state,
+  `PriceBooksPanel` inside Users & Access, `resolveUnitPrice`): mirrors
+  Salesforce's Standard Price Book (always equal to each item's own sell
+  price, no entries to manage) plus custom price books holding per-item
+  overrides. A customer is assigned a price book (defaulting to Standard);
+  `CreateQuotationModal`'s line-item editor now resolves the starting unit
+  price through the customer's book instead of always defaulting to
+  `item.sell`. Deliberately folded into the existing Users & Access
+  "admin settings" page rather than given its own top-level nav entry, to
+  avoid unbounded sidebar growth — matches how Salesforce itself treats
+  Price Books as a Setup-level object, not a workspace tab.
+
+**Nav additions**: two new top-level pages (`assets` "Installed Base",
+`reports` "Reports") plus one nested under Service (`contracts` "Service
+Contracts"); Price Books stayed inside Users & Access rather than adding a
+fourth. Total sidebar count for `director`/`admin` is now 15–16 items —
+watch this on any future addition; the next one probably belongs inside an
+existing page rather than the sidebar.
+
+**Deliberately not adopted this round**: a real drag-and-drop Report
+Builder with matrix reports, chart types, and shared report folders
+(built the minimum useful slice instead — count/sum grouped by an
+existing field); Price Book *tiers per country/currency* beyond a flat
+per-customer assignment (the `countries`/`currencies`/`tax_profiles`
+Supabase tables already exist for a future region-aware pass, but wiring
+them into pricing wasn't asked for and would be speculative); automatic,
+time-based contract-renewal notifications (the Dashboard widget is
+computed fresh on every render from `contract.endDate`, which is
+sufficient for a system with no background job runner — a real "notify 60
+days before renewal" push would need one).
+
+**Known gap:** none of `assets`, `serviceContracts`, `savedReports`,
+`priceBooks`/`priceBookEntries`, or `quotation.approvalStage` exist yet in
+the Supabase Phase-0 schema (`supabase/migrations/`) or seed data — same
+situation as the `director` role gap above, and for the same reason (the
+frontend isn't cut over to Supabase yet). All five need migrations,
+RLS policies, and seed rows mirroring `initialAssets` /
+`initialServiceContracts` / `initialPriceBooks` / `initialPriceBookEntries`
+in `index.html` before Phase 1 auth cutover.

@@ -300,6 +300,10 @@ const Globe2 = p => <Icon {...p} paths={<><circle cx="12" cy="12" r="9"/><path d
 const Printer = p => <Icon {...p} paths={<><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></>} />;
 const MessageSquare = p => <Icon {...p} paths={<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>} />;
 const BarChart3 = p => <Icon {...p} paths={<><line x1="6" y1="20" x2="6" y2="15"/><line x1="12" y1="20" x2="12" y2="9"/><line x1="18" y1="20" x2="18" y2="4"/></>} />;
+const Tag = p => <Icon {...p} paths={<><path d="M20.6 12.6L12.7 20.5a2 2 0 0 1-2.8 0l-6.4-6.4a2 2 0 0 1 0-2.8L11.4 3.3 20.6 4l.6 8.6z"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/></>} />;
+const FileSignature = p => <Icon {...p} paths={<><path d="M6 3h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M8 15c1-1.5 2-1.5 3 0s2 1.5 3 0"/></>} />;
+const Sliders = p => <Icon {...p} paths={<><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="var(--panel)" stroke="currentColor"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="var(--panel)" stroke="currentColor"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="11" cy="18" r="2" fill="var(--panel)" stroke="currentColor"/></>} />;
+const Tags = p => <Icon {...p} paths={<><path d="M14 3h5v5L9 18l-6-6L14 3z"/><circle cx="16" cy="6" r="1" fill="currentColor" stroke="none"/></>} />;
 
 // Core-sample mark: drill-core cylinder with layered strata, recolored per item.
 function CoreSample({ layers, size = 40 }) {
@@ -427,9 +431,12 @@ const NAV = [
   { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"] },
   { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"] },
   { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"] },
+  { key: "assets", label: "Installed Base", icon: Tag, roles: ["director", "admin", "sales", "service", "finance"] },
   { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"] },
+  { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"] },
   { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"] },
   { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
+  { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
   { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
   { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["director", "admin", "finance"] },
   { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
@@ -441,6 +448,7 @@ const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
 // PathStepper is only shown when the record's status is actually on it.
 const QUOTE_FLOW_STAGES = ["Quoted", "Sent", "Invoiced"];
 const JOB_FLOW_STAGES = ["Open", "In Progress", "Completed"];
+const APPROVAL_STAGES = ["Manager Review", "Director Sign-off"];
 // Customers at or above this outstanding/creditLimit ratio are treated as a
 // credit risk: flagged red in the Customers table and Dashboard widget, and
 // held for approval automatically when a new quotation is created for them.
@@ -468,9 +476,12 @@ const TRANSLATIONS = {
     "nav.salesoverview": "Sales Overview",
     "nav.partsales": "Parts Sales",
     "nav.equipmentsales": "Equipment Sales",
+    "nav.assets": "Installed Base",
     "nav.servicejobs": "Service",
+    "nav.contracts": "Service Contracts",
     "nav.purchasing": "Purchasing",
     "nav.customers": "Customers",
+    "nav.reports": "Reports",
     "nav.variance": "Variance & Audit",
     "nav.staffActivity": "Staff Activity",
     "nav.financials": "Company Financials",
@@ -723,6 +734,8 @@ const TRANSLATIONS = {
     "ua.approvalRules": "Approval Rules",
     "ua.approvalRulesDesc": "Quotations above this value, or from a flagged customer, require management sign-off before they can be sent.",
     "ua.valueThreshold": "Value threshold (GH₵)",
+    "ua.directorThreshold": "Director sign-off threshold (GH₵)",
+    "ua.directorThresholdHint": "Quotations above this amount need a second, director-level approval after the first sign-off.",
     "ua.flaggedCustomers": "Always-flagged customers (comma-separated)",
     "ua.flaggedPlaceholder": "e.g. Akwatia Gold Ltd",
     "ua.saveApprovalRules": "Save approval rules",
@@ -772,6 +785,71 @@ const TRANSLATIONS = {
     "fin.marginPerUnitCol": "Margin/unit",
     "fin.onHandCol": "On Hand",
     "fin.totalMarginCol": "Total Margin",
+    "asset.registerAsset": "Register asset",
+    "asset.selectEquipment": "Select equipment…",
+    "asset.equipmentCol": "Equipment",
+    "asset.serialNumber": "Serial Number",
+    "asset.installDate": "Install Date",
+    "asset.warrantyExpiry": "Warranty Expiry",
+    "asset.warrantyCol": "Warranty",
+    "asset.underWarranty": "Under Warranty",
+    "asset.outOfWarranty": "Out of Warranty",
+    "asset.serviceHistory": "Service History",
+    "asset.noServiceHistory": "No service jobs logged against this asset yet.",
+    "asset.noAssetsYet": "No assets registered yet.",
+    "asset.notes": "Notes",
+    "contract.createContract": "New service contract",
+    "contract.type": "Contract Type",
+    "contract.typePlaceholder": "e.g. Annual Maintenance",
+    "contract.startDate": "Start Date",
+    "contract.endDate": "End Date",
+    "contract.value": "Value",
+    "contract.coverageNotes": "Coverage notes",
+    "contract.noContractsYet": "No service contracts yet.",
+    "contract.cancelContract": "Cancel contract",
+    "report.builder": "Report builder",
+    "report.source": "Data source",
+    "report.groupBy": "Group by",
+    "report.metric": "Metric",
+    "report.namePlaceholder": "Name this report to save it…",
+    "report.saveReport": "Save report",
+    "report.savedReports": "Saved reports",
+    "report.resultsFor": "Results — grouped by {groupBy}",
+    "report.noData": "No records for this source yet.",
+    "report.source.quotations": "Quotations",
+    "report.source.invoices": "Invoices",
+    "report.source.serviceJobs": "Service Jobs",
+    "report.source.purchaseOrders": "Purchase Orders",
+    "report.source.items": "Inventory Items",
+    "report.source.customers": "Customers",
+    "report.field.status": "Status",
+    "report.field.type": "Type",
+    "report.field.source": "Source",
+    "report.field.category": "Category",
+    "report.field.branch": "Branch",
+    "report.field.tier": "Tier",
+    "report.field.country": "Country",
+    "report.metric.count": "Count",
+    "report.metric.sum_total": "Sum of total value",
+    "report.metric.sum_qty": "Sum of quantity",
+    "report.metric.sum_stockvalue": "Sum of stock value",
+    "report.metric.sum_outstanding": "Sum of outstanding balance",
+    "report.metric.sum_creditLimit": "Sum of credit limit",
+    "pb.priceBooks": "Price books",
+    "pb.priceBooksDesc": "The Standard book uses each item's default sell price. Custom books hold per-item price overrides — assign a customer to one on their customer record.",
+    "pb.standard": "Standard",
+    "pb.standardHint": "The Standard price book always uses each item's default sell price — there's nothing to override here.",
+    "pb.newBookPlaceholder": "New price book name…",
+    "pb.createBook": "Create book",
+    "pb.item": "Item",
+    "pb.standardPrice": "Standard Price",
+    "pb.overridePrice": "Override Price",
+    "pb.setPrice": "Set price",
+    "pb.noOverridesYet": "No price overrides in this book yet.",
+    "pb.remove": "Remove",
+    "pb.priceBook": "Price Book",
+    "dash.contractsExpiring": "Contracts Expiring Soon",
+    "dash.within60Days": "Renewal due within 60 days",
     "va.varianceDesc": "Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.",
     "va.idCol": "ID",
     "va.countedCol": "Counted",
@@ -825,6 +903,9 @@ const TRANSLATIONS = {
     "sj.jobDetailsTitle": "{id} — details",
     "sj.customerId": "Customer ID",
     "sj.jobType": "Job type",
+    "sj.relatedAsset": "Related Asset",
+    "sj.relatedAssetOptional": "Related asset (optional)",
+    "sj.noAssetSelected": "No specific asset",
     "sj.dateRaised": "Date raised",
     "sj.description": "Description",
     "sj.markCompleted": "Mark completed",
@@ -850,6 +931,8 @@ const TRANSLATIONS = {
     "qd.approveBtn": "Approve",
     "qd.rejectBtn": "Reject",
     "qd.onlyAdminFinance": "Only admin or finance can approve or reject this quotation.",
+    "qd.signOffBtn": "Sign off",
+    "qd.onlyDirectorAdmin": "This quotation is above the director sign-off threshold — only the Director or an Administrator can give final approval.",
     "sq.seeProducts": "See products",
     "sq.transactionHistory": "Transaction History",
     "sq.invoicesHeading": "Invoices",
@@ -877,9 +960,12 @@ const TRANSLATIONS = {
     "nav.salesoverview": "Aperçu des ventes",
     "nav.partsales": "Ventes de pièces",
     "nav.equipmentsales": "Ventes d'équipements",
+    "nav.assets": "Parc installé",
     "nav.servicejobs": "Service",
+    "nav.contracts": "Contrats de service",
     "nav.purchasing": "Achats",
     "nav.customers": "Clients",
+    "nav.reports": "Rapports",
     "nav.variance": "Écarts et audit",
     "nav.staffActivity": "Activité du personnel",
     "nav.financials": "Finances de l'entreprise",
@@ -1132,6 +1218,8 @@ const TRANSLATIONS = {
     "ua.approvalRules": "Règles d'approbation",
     "ua.approvalRulesDesc": "Les devis dépassant cette valeur, ou provenant d'un client signalé, nécessitent une validation de la direction avant envoi.",
     "ua.valueThreshold": "Seuil de valeur (GH₵)",
+    "ua.directorThreshold": "Seuil de validation par la direction (GH₵)",
+    "ua.directorThresholdHint": "Les devis au-dessus de ce montant nécessitent une seconde approbation, au niveau de la direction, après la première validation.",
     "ua.flaggedCustomers": "Clients toujours signalés (séparés par des virgules)",
     "ua.flaggedPlaceholder": "ex. Akwatia Gold Ltd",
     "ua.saveApprovalRules": "Enregistrer les règles d'approbation",
@@ -1181,6 +1269,71 @@ const TRANSLATIONS = {
     "fin.marginPerUnitCol": "Marge/unité",
     "fin.onHandCol": "En stock",
     "fin.totalMarginCol": "Marge totale",
+    "asset.registerAsset": "Enregistrer un actif",
+    "asset.selectEquipment": "Sélectionner un équipement…",
+    "asset.equipmentCol": "Équipement",
+    "asset.serialNumber": "Numéro de série",
+    "asset.installDate": "Date d'installation",
+    "asset.warrantyExpiry": "Fin de garantie",
+    "asset.warrantyCol": "Garantie",
+    "asset.underWarranty": "Sous garantie",
+    "asset.outOfWarranty": "Hors garantie",
+    "asset.serviceHistory": "Historique d'interventions",
+    "asset.noServiceHistory": "Aucune intervention enregistrée pour cet actif.",
+    "asset.noAssetsYet": "Aucun actif enregistré.",
+    "asset.notes": "Remarques",
+    "contract.createContract": "Nouveau contrat de service",
+    "contract.type": "Type de contrat",
+    "contract.typePlaceholder": "p. ex. Maintenance annuelle",
+    "contract.startDate": "Date de début",
+    "contract.endDate": "Date de fin",
+    "contract.value": "Valeur",
+    "contract.coverageNotes": "Remarques sur la couverture",
+    "contract.noContractsYet": "Aucun contrat de service pour le moment.",
+    "contract.cancelContract": "Annuler le contrat",
+    "report.builder": "Générateur de rapports",
+    "report.source": "Source de données",
+    "report.groupBy": "Regrouper par",
+    "report.metric": "Mesure",
+    "report.namePlaceholder": "Nommez ce rapport pour l'enregistrer…",
+    "report.saveReport": "Enregistrer le rapport",
+    "report.savedReports": "Rapports enregistrés",
+    "report.resultsFor": "Résultats — regroupés par {groupBy}",
+    "report.noData": "Aucune donnée pour cette source pour le moment.",
+    "report.source.quotations": "Devis",
+    "report.source.invoices": "Factures",
+    "report.source.serviceJobs": "Interventions",
+    "report.source.purchaseOrders": "Bons de commande",
+    "report.source.items": "Articles en stock",
+    "report.source.customers": "Clients",
+    "report.field.status": "Statut",
+    "report.field.type": "Type",
+    "report.field.source": "Origine",
+    "report.field.category": "Catégorie",
+    "report.field.branch": "Succursale",
+    "report.field.tier": "Niveau",
+    "report.field.country": "Pays",
+    "report.metric.count": "Nombre",
+    "report.metric.sum_total": "Somme de la valeur totale",
+    "report.metric.sum_qty": "Somme des quantités",
+    "report.metric.sum_stockvalue": "Somme de la valeur du stock",
+    "report.metric.sum_outstanding": "Somme du solde dû",
+    "report.metric.sum_creditLimit": "Somme des limites de crédit",
+    "pb.priceBooks": "Grilles tarifaires",
+    "pb.priceBooksDesc": "La grille Standard utilise le prix de vente par défaut de chaque article. Les grilles personnalisées contiennent des prix spécifiques par article — assignez-en une à un client depuis sa fiche client.",
+    "pb.standard": "Standard",
+    "pb.standardHint": "La grille tarifaire Standard utilise toujours le prix de vente par défaut de chaque article — il n'y a rien à modifier ici.",
+    "pb.newBookPlaceholder": "Nom de la nouvelle grille tarifaire…",
+    "pb.createBook": "Créer la grille",
+    "pb.item": "Article",
+    "pb.standardPrice": "Prix standard",
+    "pb.overridePrice": "Prix personnalisé",
+    "pb.setPrice": "Définir le prix",
+    "pb.noOverridesYet": "Aucun prix personnalisé dans cette grille pour le moment.",
+    "pb.remove": "Supprimer",
+    "pb.priceBook": "Grille tarifaire",
+    "dash.contractsExpiring": "Contrats arrivant à échéance",
+    "dash.within60Days": "Renouvellement dû sous 60 jours",
     "va.varianceDesc": "Les écarts sont signalés lorsqu'un comptage de stock en succursale ne concorde pas avec les transactions de ventes, d'achats et d'interventions de service pour cette pièce.",
     "va.idCol": "ID",
     "va.countedCol": "Compté",
@@ -1234,6 +1387,9 @@ const TRANSLATIONS = {
     "sj.jobDetailsTitle": "{id} — détails",
     "sj.customerId": "ID client",
     "sj.jobType": "Type d'intervention",
+    "sj.relatedAsset": "Actif concerné",
+    "sj.relatedAssetOptional": "Actif concerné (facultatif)",
+    "sj.noAssetSelected": "Aucun actif spécifique",
     "sj.dateRaised": "Date de création",
     "sj.description": "Description",
     "sj.markCompleted": "Marquer terminé",
@@ -1259,6 +1415,8 @@ const TRANSLATIONS = {
     "qd.approveBtn": "Approuver",
     "qd.rejectBtn": "Rejeter",
     "qd.onlyAdminFinance": "Seuls les rôles Administration ou Finance peuvent approuver ou rejeter ce devis.",
+    "qd.signOffBtn": "Valider",
+    "qd.onlyDirectorAdmin": "Ce devis dépasse le seuil de validation par la direction — seul le Directeur ou un Administrateur peut donner l'approbation finale.",
     "sq.seeProducts": "Voir les produits",
     "sq.transactionHistory": "Historique des transactions",
     "sq.invoicesHeading": "Factures",
@@ -1327,7 +1485,7 @@ const initialVendors = [
   { id: "V-04", name: "Voltline Electrical Supplies", code: "VLT-GH-077", contact: "Nana Yeboah", email: "info@voltline.com.gh", phone: "+233 20 334 8899", altContact: "", categories: "Electrical, VFD drives", taxExempt: false, certificateFile: null }
 ];
 const initialCustomers = [
-  { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, taxExempt: false, contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
+  { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, taxExempt: false, priceBookId: "PB-1001", contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
   { id: "C-02", name: "Akwatia Gold Ltd", tier: "Gold", country: "Ghana", address: "Km 4 Akwatia-Kade Rd, Akwatia", email: "buying@akwatiagold.com", phone: "+233 24 220 6611", contactPerson: "Grace Antwi", contactAddress: "Km 4 Akwatia-Kade Rd, Akwatia", companyDetails: "Registered mining operator · TIN GH-0075512", poCode: "AWG-002", creditLimit: 100000, outstanding: 88000, taxExempt: false, contacts: [{ name: "Grace Antwi", role: "Purchasing Lead", email: "g.antwi@akwatiagold.com", phone: "+233 24 220 6611" }] },
   { id: "C-03", name: "Ghana Gold Processing", tier: "Silver", country: "Ghana", address: "Industrial Area, Obuasi", email: "orders@ghanagoldproc.com", phone: "+233 20 445 1290", contactPerson: "Isaac Boadu", contactAddress: "Industrial Area, Obuasi", companyDetails: "Processing plant operator · TIN GH-0062341", poCode: "GGP-003", creditLimit: 60000, outstanding: 15000, taxExempt: true, contacts: [{ name: "Isaac Boadu", role: "Plant Manager", email: "i.boadu@ghanagoldproc.com", phone: "+233 20 445 1290" }] },
   { id: "C-04", name: "Bamako Quarry Co.", tier: "Standard", country: "Mali", address: "Zone Industrielle, Bamako", email: "achats@bamakoquarry.ml", phone: "+223 76 334 220", contactPerson: "Moussa Traoré", contactAddress: "Zone Industrielle, Bamako", companyDetails: "Quarry operator · RCCM ML-BKO-2014", poCode: "BMQ-004", creditLimit: 30000, outstanding: 5000, taxExempt: false, contacts: [{ name: "Moussa Traoré", role: "Site Manager", email: "m.traore@bamakoquarry.ml", phone: "+223 76 334 220" }] },
@@ -1347,10 +1505,36 @@ const initialPurchaseOrders = [
   { id: "PO-7698", vendorId: "V-02", lines: [{ itemId: "CN-3311", itemName: "Hydraulic Filter", qty: 30 }], status: "Received", date: "2026-07-25", expected: "2026-08-01", source: "manual" }
 ];
 const initialServiceJobs = [
-  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, eta: "2026-08-12", preparedBy: "K. Boateng", feedbackLog: [], status: "In Progress", date: "2026-08-05" },
-  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, eta: "2026-08-06", preparedBy: "E. Adonoo", feedbackLog: [], status: "Completed", date: "2026-08-03" }
+  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, eta: "2026-08-12", preparedBy: "K. Boateng", feedbackLog: [], status: "In Progress", date: "2026-08-05", assetId: "AS-1001" },
+  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, eta: "2026-08-06", preparedBy: "E. Adonoo", feedbackLog: [], status: "Completed", date: "2026-08-03", assetId: "" }
 ];
-const initialApprovalSettings = { valueThreshold: 20000, flaggedCustomers: ["Akwatia Gold Ltd"] };
+const initialAssets = [
+  { id: "AS-1001", itemId: "EQ-5001", itemName: "Mobile Jaw Crusher MJ-42", customerId: "C-01", serialNumber: "MJ42-2024-0113", installDate: "2024-03-10", warrantyExpiry: "2026-03-10", status: "Active", notes: "Primary crushing unit, Tarkwa site." },
+  { id: "AS-1002", itemId: "EQ-5002", itemName: "Cone Crusher CH430", customerId: "C-02", serialNumber: "CH430-2025-0087", installDate: "2025-11-02", warrantyExpiry: "2027-11-02", status: "Active", notes: "Secondary-stage crusher." }
+];
+const initialPriceBooks = [
+  { id: "PB-STD", name: "Standard", isStandard: true },
+  { id: "PB-1001", name: "Gold Tier", isStandard: false }
+];
+const initialPriceBookEntries = [
+  { id: "PBE-0001", priceBookId: "PB-1001", itemId: "WP-1001", price: 4900 }
+];
+function resolveUnitPrice(item, customer, priceBooks, priceBookEntries) {
+  if (!item) return 0;
+  const standard = priceBooks.find(b => b.isStandard);
+  const bookId = (customer && customer.priceBookId) || (standard && standard.id);
+  if (bookId) {
+    const entry = priceBookEntries.find(e => e.priceBookId === bookId && e.itemId === item.id);
+    if (entry) return entry.price;
+  }
+  return item.sell;
+}
+const initialServiceContracts = [
+  { id: "SC-1001", customerId: "C-01", assetId: "AS-1001", type: "Annual Maintenance", startDate: "2025-09-01", endDate: "2026-08-31", value: 36000, status: "Active", coverageNotes: "Two scheduled preventive visits + priority call-out response." },
+  { id: "SC-1002", customerId: "C-02", assetId: "AS-1002", type: "Extended Warranty", startDate: "2025-01-15", endDate: "2026-01-15", value: 18000, status: "Active", coverageNotes: "Parts-only extended cover on the cone crusher's wear components." },
+  { id: "SC-1003", customerId: "C-03", assetId: "", type: "Support Plan", startDate: "2026-02-01", endDate: "2027-06-30", value: 9000, status: "Active", coverageNotes: "Phone/email technical support, no on-site visits included." }
+];
+const initialApprovalSettings = { valueThreshold: 20000, directorThreshold: 500000, flaggedCustomers: ["Akwatia Gold Ltd"] };
 const initialEmailTemplates = {
   quotation: { subject: "Quotation {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your quotation {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" },
   invoice: { subject: "Invoice {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your invoice {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" }
@@ -1390,6 +1574,15 @@ const fmtGHS = n => `GH₵ ${Number(n || 0).toLocaleString(undefined, { maximumF
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const nowISO = () => new Date().toISOString();
 const fmtDateTime = iso => { try { return new Date(iso).toLocaleString(); } catch (e) { return iso; } };
+function isUnderWarranty(asset) { return !!asset.warrantyExpiry && asset.warrantyExpiry >= todayISO(); }
+function isContractExpiringSoon(contract) { const days = (new Date(contract.endDate) - new Date(todayISO())) / 86400000; return days >= 0 && days <= 60; }
+function isContractExpired(contract) { return contract.endDate < todayISO(); }
+function contractDisplayStatus(contract) {
+  if (contract.status === "Cancelled") return "Cancelled";
+  if (isContractExpired(contract)) return "Expired";
+  if (isContractExpiringSoon(contract)) return "Expiring Soon";
+  return "Active";
+}
 
 const STORAGE_KEY = "setvaco_system_state_v1";
 function loadPersisted() {
@@ -1451,7 +1644,9 @@ function statusColor(status) {
     Open: ["var(--info)", "var(--info-soft)"],
     Issued: ["var(--info)", "var(--info-soft)"],
     "Pending Approval": ["var(--caution)", "var(--caution-soft)"],
-    Rejected: ["var(--vital)", "var(--vital-soft)"]
+    Rejected: ["var(--vital)", "var(--vital-soft)"],
+    "Expiring Soon": ["var(--caution)", "var(--caution-soft)"],
+    Expired: ["var(--vital)", "var(--vital-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
@@ -1777,7 +1972,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
 // ---------------------------------------------------------------------------
 // SALES & QUOTATIONS (parts + equipment + service jobs)
 // ---------------------------------------------------------------------------
-function LineItemsEditor({ lines, setLines, inventoryItems, lang }) {
+function LineItemsEditor({ lines, setLines, inventoryItems, resolvePrice, lang }) {
   function updateLine(idx, patch) { setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l)); }
   function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
   function addInventoryLine() { setLines(ls => [...ls, { itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: false }]); }
@@ -1787,7 +1982,7 @@ function LineItemsEditor({ lines, setLines, inventoryItems, lang }) {
     {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       {!line.newPart ? <Field label={t(lang, "po.itemLabel")}><TSelect value={line.itemId} onChange={e => {
         const it = inventoryItems.find(x => x.id === e.target.value);
-        updateLine(idx, { itemId: e.target.value, desc: it ? it.name : "", unitPrice: it ? it.sell : 0 });
+        updateLine(idx, { itemId: e.target.value, desc: it ? it.name : "", unitPrice: it ? (resolvePrice ? resolvePrice(it) : it.sell) : 0 });
       }} style={{ minWidth: 220 }}>
         <option value="">{t(lang, "lq.selectFromInventory")}</option>
         {inventoryItems.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id}) — {it.qty} in stock</option>)}
@@ -1831,7 +2026,7 @@ function resolveOrCreateCustomer({ isNew, newFields, customerId, customers, setC
   return customer;
 }
 
-function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, approvalSettings, onClose, onCreated, defaultCustomerId, defaultLines, lang }) {
+function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, approvalSettings, priceBooks, priceBookEntries, onClose, onCreated, defaultCustomerId, defaultLines, lang }) {
   const [customerId, setCustomerId] = useState(defaultCustomerId || "");
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
@@ -1864,7 +2059,7 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
       lines: validLines.map(l => ({ itemId: l.itemId || "", desc: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""), qty: Number(l.qty), unitPrice: Number(l.unitPrice) || 0, newPart: !!l.newPart })),
       notes, subtotal: lineSubtotal, applyTax: effectiveApplyTax, taxRate: Number(taxRate) || 0, taxAmount, total,
       leadTimeDays: Number(leadTimeDays) || 0, eta, preparedBy: preparedBy || currentUser, feedbackLog: [],
-      status: needsApproval ? "Pending Approval" : "Quoted", date: todayISO(), createdBy: currentUser
+      status: needsApproval ? "Pending Approval" : "Quoted", approvalStage: needsApproval ? 1 : 0, date: todayISO(), createdBy: currentUser
     };
     setQuotations(qs => [q, ...qs]);
     logAction(currentUser, `Created ${typeLabel} quotation ${q.id} for ${customer.name}${needsApproval ? " — held for management approval" : ""}`, "Sales");
@@ -1888,7 +2083,7 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
           {existingCustomer.taxExempt && <Badge color="var(--safe)" soft="var(--safe-soft)">{t(lang, "cq.taxExemptBadge")}</Badge>}
         </div>}
       </div>
-      <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} lang={lang} />
+      <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} resolvePrice={it => resolveUnitPrice(it, existingCustomer, priceBooks, priceBookEntries)} lang={lang} />
       <div className="mis-grid-3">
         <Field label={t(lang, "cq.leadTimeDays")}><TInput type="number" min="0" value={leadTimeDays} onChange={e => setLeadTimeDays(e.target.value)} /></Field>
         <Field label={t(lang, "cq.eta")}><TInput type="date" value={eta} onChange={e => setEta(e.target.value)} /></Field>
@@ -2005,9 +2200,10 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
   />;
 }
 
-function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose, lang }) {
+function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose, lang }) {
   const canManage = ["director", "admin", "service"].includes(role);
   const draft = feedbackDraft[job.id] || "";
+  const asset = job.assetId ? (assets || []).find(a => a.id === job.assetId) : null;
   return <Drawer title={tf(lang, "sj.jobDetailsTitle", { id: job.jobNumber })} onClose={onClose}>
     {JOB_FLOW_STAGES.includes(job.status) && <div style={{ marginBottom: 16 }}><PathStepper stages={JOB_FLOW_STAGES} current={job.status} /></div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
@@ -2018,6 +2214,7 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
       <div className="mis-kv"><span>{t(lang, "sj.dateRaised")}</span><b>{job.date}</b></div>
       <div className="mis-kv"><span>{t(lang, "cq.eta")}</span><b>{job.eta || "—"}</b></div>
       <div className="mis-kv"><span>{t(lang, "cq.preparedBy")}</span><b>{job.preparedBy || "—"}</b></div>
+      {asset && <div className="mis-kv"><span>{t(lang, "sj.relatedAsset")}</span><b>{asset.itemName} · <span className="mis-mono">{asset.serialNumber}</span> · <span style={{ color: isUnderWarranty(asset) ? "var(--safe)" : "var(--vital)" }}>{isUnderWarranty(asset) ? t(lang, "asset.underWarranty") : t(lang, "asset.outOfWarranty")}</span></b></div>}
       <div className="mis-divider" />
       <div className="mis-kv" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}><span>{t(lang, "sj.description")}</span><span style={{ color: "var(--text-primary)" }}>{job.description || "—"}</span></div>
     </div>
@@ -2040,9 +2237,9 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
   </Drawer>;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, priceBooks, priceBookEntries, users, assets, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
   const canManage = ["director", "admin", "service"].includes(role);
-  const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
+  const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
   const [managerDraft, setManagerDraft] = useState({});
@@ -2057,10 +2254,10 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
     const customer = resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId: form.customerId, customers, setCustomers, logAction, currentUser });
     if (!customer) return;
     const jobNumber = uid("SJ", serviceJobs, 3);
-    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO() };
+    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO(), assetId: form.assetId || "" };
     setServiceJobs(js => [job, ...js]);
     logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
-    setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
+    setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
     setIsNewCustomer(false);
     setNewCustomerFields({ name: "", country: "" });
   }
@@ -2084,6 +2281,12 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
         <Field label={t(lang, "cq.preparedBy")}><TInput value={form.preparedBy} onChange={e => setForm(f => ({ ...f, preparedBy: e.target.value }))} placeholder={currentUser} /></Field>
       </div>
       <Field label={t(lang, "sj.description")}><TArea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder={t(lang, "sj.scopeOfWork")} /></Field>
+      {!isNewCustomer && form.customerId && assets.some(a => a.customerId === form.customerId) && <Field label={t(lang, "sj.relatedAssetOptional")}>
+        <TSelect value={form.assetId} onChange={e => setForm(f => ({ ...f, assetId: e.target.value }))}>
+          <option value="">{t(lang, "sj.noAssetSelected")}</option>
+          {assets.filter(a => a.customerId === form.customerId).map(a => <option key={a.id} value={a.id}>{a.itemName} — {a.serialNumber}</option>)}
+        </TSelect>
+      </Field>}
       <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {t(lang, "sj.logServiceJobBtn")}</button>
     </form>}
     <DataTable
@@ -2101,14 +2304,14 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
       rowKey={j => j.id}
       empty={t(lang, "sj.noServiceJobsYet")}
     />
-    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} lang={lang} />}
+    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} assets={assets} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} lang={lang} />}
     {showCreate && <CreateQuotationModal
       type="part"
       customers={customers} setCustomers={setCustomers}
       inventoryItems={items.filter(i => i.type === "part")}
       quotations={quotations} setQuotations={setQuotations}
       currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
-      approvalSettings={approvalSettings}
+      approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries}
       onClose={() => setShowCreate(null)}
       defaultCustomerId={showCreate.defaultCustomerId}
       defaultLines={showCreate.defaultLines}
@@ -2205,12 +2408,18 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
     </div>}
   </div>;
 }
-function approveOrder(setter, id, currentUser, logAction) {
-  setter(list => list.map(x => x.id === id ? { ...x, status: "Quoted" } : x));
-  logAction(currentUser, `${id} approved by ${currentUser}`, "Sales");
+// Two-stage approval: stage 1 (manager/finance) clears routine holds; stage 2
+// (director/admin only) is reached automatically when a stage-1 approval is
+// given on a quotation whose total is above approvalSettings.directorThreshold.
+function approveOrder(setter, doc, currentUser, logAction, approvalSettings) {
+  const stage = doc.approvalStage || 1;
+  const total = doc.total ?? doc.subtotal ?? 0;
+  const escalate = stage === 1 && total > approvalSettings.directorThreshold;
+  setter(list => list.map(x => x.id === doc.id ? (escalate ? { ...x, approvalStage: 2 } : { ...x, status: "Quoted", approvalStage: 0 }) : x));
+  logAction(currentUser, escalate ? `${doc.id} cleared manager review — escalated to director for final sign-off` : `${doc.id} approved by ${currentUser}`, "Sales");
 }
 function rejectOrder(setter, id, currentUser, logAction) {
-  setter(list => list.map(x => x.id === id ? { ...x, status: "Rejected" } : x));
+  setter(list => list.map(x => x.id === id ? { ...x, status: "Rejected", approvalStage: 0 } : x));
   logAction(currentUser, `${id} rejected by ${currentUser}`, "Sales");
 }
 function appendFeedback(setter, id, note, currentUser, logAction) {
@@ -2243,11 +2452,15 @@ function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, dr
     </div>}
   </React.Fragment>;
 }
-function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onClose, lang }) {
-  const canApprove = ["director", "admin", "finance"].includes(role) && doc.status === "Pending Approval";
+function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, approvalSettings, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onClose, lang }) {
+  const stage = doc.approvalStage || 1;
+  const total = doc.total ?? doc.subtotal ?? 0;
+  const isTwoStage = doc.status === "Pending Approval" && total > approvalSettings.directorThreshold;
+  const canApprove = doc.status === "Pending Approval" && (stage === 2 ? ["director", "admin"].includes(role) : ["director", "admin", "finance"].includes(role));
   const draft = feedbackDraft[doc.id] || "";
   return <Drawer title={tf(lang, "common.detailsTitle", { id: doc.id })} onClose={onClose}>
     {QUOTE_FLOW_STAGES.includes(doc.status) && <div style={{ marginBottom: 16 }}><PathStepper stages={QUOTE_FLOW_STAGES} current={doc.status} /></div>}
+    {isTwoStage && <div style={{ marginBottom: 16 }}><PathStepper stages={APPROVAL_STAGES} current={APPROVAL_STAGES[stage - 1]} /></div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
       <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{customer ? customer.name : "—"}</b></div>
       <div className="mis-kv"><span>{t(lang, "sj.customerId")}</span><b className="mis-mono">{doc.customerId}</b></div>
@@ -2263,9 +2476,9 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
     {doc.status === "Pending Approval" && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, marginBottom: 14 }}>
       <div style={{ fontSize: 12, color: "var(--caution)", marginBottom: 8 }}>{t(lang, "qd.heldForApproval")}</div>
       {canApprove ? <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" className="mis-btn-primary mis-focus" onClick={() => { approveOrder(setQuotations, doc.id, currentUser, logAction); onClose(); }}><Check size={14} /> {t(lang, "qd.approveBtn")}</button>
+        <button type="button" className="mis-btn-primary mis-focus" onClick={() => { approveOrder(setQuotations, doc, currentUser, logAction, approvalSettings); onClose(); }}><Check size={14} /> {stage === 2 ? t(lang, "qd.signOffBtn") : t(lang, "qd.approveBtn")}</button>
         <button type="button" className="mis-btn-danger" onClick={() => { rejectOrder(setQuotations, doc.id, currentUser, logAction); onClose(); }}>{t(lang, "qd.rejectBtn")}</button>
-      </div> : <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "qd.onlyAdminFinance")}</p>}
+      </div> : <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{stage === 2 ? t(lang, "qd.onlyDirectorAdmin") : t(lang, "qd.onlyAdminFinance")}</p>}
     </div>}
     <div className="mis-divider" />
     <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>{t(lang, "sj.clientFeedback")}</div>
@@ -2282,7 +2495,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
   </Drawer>;
 }
 
-function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification, emailTemplates, lang }) {
+function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, priceBooks, priceBookEntries, users, logAction, pushNotification, emailTemplates, lang }) {
   const type = page === "equipmentsales" ? "equipment" : "part";
   const [showCreate, setShowCreate] = useState(false);
   const [sendDoc, setSendDoc] = useState(null);
@@ -2327,7 +2540,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       inventoryItems={inventoryItems}
       quotations={quotations} setQuotations={setQuotations}
       currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
-      approvalSettings={approvalSettings}
+      approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries}
       onClose={() => setShowCreate(false)}
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
       lang={lang}
@@ -2336,7 +2549,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
-    {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onClose={() => setDetailDoc(null)} lang={lang} />}
+    {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} approvalSettings={approvalSettings} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onClose={() => setDetailDoc(null)} lang={lang} />}
     {showProducts && <Modal title={t(lang, "sq.equipmentProductsTitle")} wide onClose={() => setShowProducts(false)}>
       <DataTable columns={[
         { header: t(lang, "sq.product"), render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
@@ -2578,8 +2791,9 @@ function ContactsEditor({ contacts, setContacts, lang }) {
   </div>;
 }
 
-function CreateCustomerModal({ customers, setCustomers, currentUser, logAction, onClose, lang }) {
-  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0, taxExempt: false });
+function CreateCustomerModal({ customers, setCustomers, priceBooks, currentUser, logAction, onClose, lang }) {
+  const standardBook = priceBooks.find(b => b.isStandard);
+  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0, taxExempt: false, priceBookId: standardBook ? standardBook.id : "" });
   const [contacts, setContacts] = useState([]);
   function submit(e) {
     e.preventDefault();
@@ -2614,8 +2828,9 @@ function CreateCustomerModal({ customers, setCustomers, currentUser, logAction, 
       </div>
       <div className="mis-grid-2">
         <Field label={t(lang, "cust.tier")}><TSelect value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}><option value="Standard">{t(lang, "cust.tierStandard")}</option><option value="Silver">{t(lang, "cust.tierSilver")}</option><option value="Gold">{t(lang, "cust.tierGold")}</option></TSelect></Field>
-        <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 8 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> {t(lang, "cust.taxExemptCustomer")}</label></Field>
+        <Field label={t(lang, "pb.priceBook")}><TSelect value={form.priceBookId} onChange={e => setForm(f => ({ ...f, priceBookId: e.target.value }))}>{priceBooks.map(b => <option key={b.id} value={b.id}>{b.name}{b.isStandard ? ` (${t(lang, "pb.standard")})` : ""}</option>)}</TSelect></Field>
       </div>
+      <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> {t(lang, "cust.taxExemptCustomer")}</label></Field>
       <div className="mis-divider" />
       <Field label={t(lang, "cust.additionalContacts")} hint={t(lang, "cust.additionalContactsHint")}><ContactsEditor contacts={contacts} setContacts={setContacts} lang={lang} /></Field>
     </form>
@@ -2660,7 +2875,7 @@ function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClos
   </Drawer>;
 }
 
-function Customers({ role, currentUser, customers, setCustomers, quotations, invoices, auditLog, logAction, lang }) {
+function Customers({ role, currentUser, customers, setCustomers, quotations, invoices, auditLog, priceBooks, logAction, lang }) {
   const canCreate = ["director", "admin", "sales"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState(null);
@@ -2677,8 +2892,292 @@ function Customers({ role, currentUser, customers, setCustomers, quotations, inv
       { header: t(lang, "cust.creditLimitCol"), render: c => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(c.creditLimit)}</span> },
       { header: t(lang, "cust.outstandingCol"), render: c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <span className="mis-mono" style={{ fontSize: 12, color: risky ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(c.outstanding)} ({pct}%)</span>; } }
     ]} rows={customers} rowKey={c => c.id} empty={t(lang, "cust.noCustomersYet")} />
-    {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} priceBooks={priceBooks} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
     {detail && <CustomerDetailDrawer customer={detail} quotations={quotations} invoices={invoices} auditLog={auditLog} onClose={() => setDetail(null)} lang={lang} />}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// INSTALLED BASE (ASSETS)
+// ---------------------------------------------------------------------------
+function CreateAssetModal({ customers, items, assets, setAssets, currentUser, logAction, onClose, lang }) {
+  const equipmentItems = items.filter(i => i.type === "equipment");
+  const [form, setForm] = useState({ itemId: "", customerId: "", serialNumber: "", installDate: todayISO(), warrantyExpiry: "", notes: "" });
+  function submit(e) {
+    e.preventDefault();
+    const item = equipmentItems.find(i => i.id === form.itemId);
+    const customer = customers.find(c => c.id === form.customerId);
+    if (!item || !customer || !form.serialNumber.trim()) return;
+    const asset = { id: uid("AS", assets, 4), itemId: item.id, itemName: item.name, customerId: customer.id, serialNumber: form.serialNumber.trim(), installDate: form.installDate, warrantyExpiry: form.warrantyExpiry, status: "Active", notes: form.notes };
+    setAssets(as => [asset, ...as]);
+    logAction(currentUser, `Registered asset ${asset.id} (${item.name}, S/N ${asset.serialNumber}) for ${customer.name}`, "Installed Base");
+    onClose();
+  }
+  return <Modal title={t(lang, "asset.registerAsset")} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
+    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {t(lang, "asset.registerAsset")}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="mis-grid-2">
+        <Field label={t(lang, "asset.equipmentCol")}><TSelect required value={form.itemId} onChange={e => setForm(f => ({ ...f, itemId: e.target.value }))}>
+          <option value="">{t(lang, "asset.selectEquipment")}</option>
+          {equipmentItems.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+        </TSelect></Field>
+        <Field label={t(lang, "cust.customerCol")}><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value }))}>
+          <option value="">{t(lang, "cq.selectCustomer")}</option>
+          {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </TSelect></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label={t(lang, "asset.serialNumber")}><TInput required value={form.serialNumber} onChange={e => setForm(f => ({ ...f, serialNumber: e.target.value }))} /></Field>
+        <Field label={t(lang, "asset.installDate")}><TInput type="date" value={form.installDate} onChange={e => setForm(f => ({ ...f, installDate: e.target.value }))} /></Field>
+      </div>
+      <Field label={t(lang, "asset.warrantyExpiry")}><TInput type="date" value={form.warrantyExpiry} onChange={e => setForm(f => ({ ...f, warrantyExpiry: e.target.value }))} /></Field>
+      <Field label={t(lang, "asset.notes")}><TArea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+function AssetDetailDrawer({ asset, customer, serviceJobs, onClose, lang }) {
+  const history = serviceJobs.filter(j => j.assetId === asset.id).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const underWarranty = isUnderWarranty(asset);
+  return <Drawer title={asset.itemName} onClose={onClose}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+      <div className="mis-kv"><span>{t(lang, "asset.serialNumber")}</span><b className="mis-mono">{asset.serialNumber}</b></div>
+      <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{customer ? customer.name : "—"}</b></div>
+      <div className="mis-kv"><span>{t(lang, "asset.installDate")}</span><b>{asset.installDate || "—"}</b></div>
+      <div className="mis-kv"><span>{t(lang, "asset.warrantyExpiry")}</span><b style={{ color: underWarranty ? "var(--safe)" : "var(--vital)" }}>{asset.warrantyExpiry || "—"} · {underWarranty ? t(lang, "asset.underWarranty") : t(lang, "asset.outOfWarranty")}</b></div>
+      {asset.notes && <div className="mis-kv" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}><span>{t(lang, "asset.notes")}</span><span style={{ color: "var(--text-primary)" }}>{asset.notes}</span></div>}
+    </div>
+    <div className="mis-divider" />
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>{t(lang, "asset.serviceHistory")}</div>
+    {history.length === 0 && <div className="mis-empty">{t(lang, "asset.noServiceHistory")}</div>}
+    {history.map(j => { const cs = statusColor(j.status); return <div key={j.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <span>{j.jobNumber} · {j.type}</span><Badge color={cs[0]} soft={cs[1]}>{j.status}</Badge>
+    </div>; })}
+  </Drawer>;
+}
+function AssetsTab({ role, currentUser, assets, setAssets, customers, items, serviceJobs, logAction, lang }) {
+  const canCreate = ["director", "admin", "sales", "service"].includes(role);
+  const [showCreate, setShowCreate] = useState(false);
+  const [detail, setDetail] = useState(null);
+  function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {canCreate && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "asset.registerAsset")}</button>}
+    </div>
+    <DataTable columns={[
+      { header: t(lang, "asset.serialNumber"), render: a => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{a.serialNumber}</span> },
+      { header: t(lang, "asset.equipmentCol"), render: a => <button type="button" className="mis-link-btn" style={{ color: "var(--text-primary)", textDecoration: "none", fontSize: 13 }} onClick={() => setDetail(a)}>{a.itemName}</button> },
+      { header: t(lang, "cust.customerCol"), render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{custName(a.customerId)}</span> },
+      { header: t(lang, "asset.installDate"), render: a => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{a.installDate || "—"}</span> },
+      { header: t(lang, "asset.warrantyCol"), render: a => { const ok = isUnderWarranty(a); return <Badge color={ok ? "var(--safe)" : "var(--vital)"} soft={ok ? "var(--safe-soft)" : "var(--vital-soft)"}>{ok ? t(lang, "asset.underWarranty") : t(lang, "asset.outOfWarranty")}</Badge>; } },
+      { header: t(lang, "asset.serviceHistory"), render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{serviceJobs.filter(j => j.assetId === a.id).length}</span> },
+      { header: t(lang, "common.actions"), render: a => <button type="button" className="mis-link-btn" onClick={() => setDetail(a)}>{t(lang, "dt.details")}</button> }
+    ]} rows={assets} rowKey={a => a.id} empty={t(lang, "asset.noAssetsYet")} />
+    {showCreate && <CreateAssetModal customers={customers} items={items} assets={assets} setAssets={setAssets} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {detail && <AssetDetailDrawer asset={detail} customer={customers.find(c => c.id === detail.customerId)} serviceJobs={serviceJobs} onClose={() => setDetail(null)} lang={lang} />}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// SERVICE CONTRACTS
+// ---------------------------------------------------------------------------
+function CreateContractModal({ customers, assets, contracts, setContracts, currentUser, logAction, onClose, lang }) {
+  const [form, setForm] = useState({ customerId: "", assetId: "", type: "", startDate: todayISO(), endDate: "", value: 0, coverageNotes: "" });
+  const customerAssets = assets.filter(a => a.customerId === form.customerId);
+  function submit(e) {
+    e.preventDefault();
+    const customer = customers.find(c => c.id === form.customerId);
+    if (!customer || !form.type.trim() || !form.endDate) return;
+    const contract = { id: uid("SC", contracts, 4), customerId: customer.id, assetId: form.assetId || "", type: form.type.trim(), startDate: form.startDate, endDate: form.endDate, value: Number(form.value) || 0, status: "Active", coverageNotes: form.coverageNotes };
+    setContracts(cs => [contract, ...cs]);
+    logAction(currentUser, `Created service contract ${contract.id} (${contract.type}) for ${customer.name}`, "Service Contracts");
+    onClose();
+  }
+  return <Modal title={t(lang, "contract.createContract")} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
+    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {t(lang, "contract.createContract")}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="mis-grid-2">
+        <Field label={t(lang, "cust.customerCol")}><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value, assetId: "" }))}>
+          <option value="">{t(lang, "cq.selectCustomer")}</option>
+          {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </TSelect></Field>
+        <Field label={t(lang, "contract.type")}><TInput required value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} placeholder={t(lang, "contract.typePlaceholder")} /></Field>
+      </div>
+      {customerAssets.length > 0 && <Field label={t(lang, "sj.relatedAssetOptional")}>
+        <TSelect value={form.assetId} onChange={e => setForm(f => ({ ...f, assetId: e.target.value }))}>
+          <option value="">{t(lang, "sj.noAssetSelected")}</option>
+          {customerAssets.map(a => <option key={a.id} value={a.id}>{a.itemName} — {a.serialNumber}</option>)}
+        </TSelect>
+      </Field>}
+      <div className="mis-grid-3">
+        <Field label={t(lang, "contract.startDate")}><TInput type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} /></Field>
+        <Field label={t(lang, "contract.endDate")}><TInput required type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} /></Field>
+        <Field label={t(lang, "contract.value")}><TInput type="number" min="0" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} /></Field>
+      </div>
+      <Field label={t(lang, "contract.coverageNotes")}><TArea value={form.coverageNotes} onChange={e => setForm(f => ({ ...f, coverageNotes: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+function ContractDetailDrawer({ contract, customer, asset, role, currentUser, logAction, setContracts, onClose, lang }) {
+  const canCancel = ["director", "admin", "finance"].includes(role) && contract.status !== "Cancelled";
+  const display = contractDisplayStatus(contract);
+  const cs = statusColor(display);
+  function cancelContract() {
+    setContracts(list => list.map(c => c.id === contract.id ? { ...c, status: "Cancelled" } : c));
+    logAction(currentUser, `Cancelled service contract ${contract.id}`, "Service Contracts");
+    onClose();
+  }
+  return <Drawer title={contract.id} onClose={onClose}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+      <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{customer ? customer.name : "—"}</b></div>
+      <div className="mis-kv"><span>{t(lang, "contract.type")}</span><b>{contract.type}</b></div>
+      {asset && <div className="mis-kv"><span>{t(lang, "sj.relatedAsset")}</span><b>{asset.itemName} · <span className="mis-mono">{asset.serialNumber}</span></b></div>}
+      <div className="mis-kv"><span>{t(lang, "contract.startDate")}</span><b>{contract.startDate}</b></div>
+      <div className="mis-kv"><span>{t(lang, "contract.endDate")}</span><b>{contract.endDate}</b></div>
+      <div className="mis-kv"><span>{t(lang, "contract.value")}</span><b>{fmtGHS(contract.value)}</b></div>
+      <div className="mis-kv"><span>{t(lang, "common.status")}</span><b><Badge color={cs[0]} soft={cs[1]}>{display}</Badge></b></div>
+      <div className="mis-divider" />
+      <div className="mis-kv" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}><span>{t(lang, "contract.coverageNotes")}</span><span style={{ color: "var(--text-primary)" }}>{contract.coverageNotes || "—"}</span></div>
+    </div>
+    {canCancel && <button type="button" className="mis-btn-danger" onClick={cancelContract}>{t(lang, "contract.cancelContract")}</button>}
+  </Drawer>;
+}
+function ContractsTab({ role, currentUser, contracts, setContracts, customers, assets, logAction, lang }) {
+  const canCreate = ["director", "admin", "service", "finance"].includes(role);
+  const [showCreate, setShowCreate] = useState(false);
+  const [detail, setDetail] = useState(null);
+  function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {canCreate && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "contract.createContract")}</button>}
+    </div>
+    <DataTable columns={[
+      { header: t(lang, "common.status"), render: c => { const d = contractDisplayStatus(c); const cs = statusColor(d); return <Badge color={cs[0]} soft={cs[1]}>{d}</Badge>; } },
+      { header: t(lang, "cust.customerCol"), render: c => <button type="button" className="mis-link-btn" style={{ color: "var(--text-primary)", textDecoration: "none", fontSize: 13 }} onClick={() => setDetail(c)}>{custName(c.customerId)}</button> },
+      { header: t(lang, "contract.type"), render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.type}</span> },
+      { header: t(lang, "contract.endDate"), render: c => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{c.endDate}</span> },
+      { header: t(lang, "contract.value"), render: c => <span className="mis-mono">{fmtGHS(c.value)}</span> },
+      { header: t(lang, "common.actions"), render: c => <button type="button" className="mis-link-btn" onClick={() => setDetail(c)}>{t(lang, "dt.details")}</button> }
+    ]} rows={contracts} rowKey={c => c.id} empty={t(lang, "contract.noContractsYet")} />
+    {showCreate && <CreateContractModal customers={customers} assets={assets} contracts={contracts} setContracts={setContracts} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {detail && <ContractDetailDrawer contract={detail} customer={customers.find(c => c.id === detail.customerId)} asset={assets.find(a => a.id === detail.assetId)} role={role} currentUser={currentUser} logAction={logAction} setContracts={setContracts} onClose={() => setDetail(null)} lang={lang} />}
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// REPORTS — a lightweight, user-buildable alternative to a fixed dashboard:
+// pick a source + group-by field already present on that record type +
+// count/sum, no cross-object joins. Deliberately not a full report/BI
+// engine — see docs/architecture.md.
+// ---------------------------------------------------------------------------
+const REPORT_GROUP_FIELDS = {
+  quotations: ["status", "type"],
+  invoices: ["status", "type"],
+  serviceJobs: ["status", "type"],
+  purchaseOrders: ["status", "source"],
+  items: ["type", "category", "branch"],
+  customers: ["tier", "country"]
+};
+const REPORT_METRICS = {
+  quotations: ["count", "sum_total"],
+  invoices: ["count", "sum_total"],
+  serviceJobs: ["count"],
+  purchaseOrders: ["count"],
+  items: ["count", "sum_qty", "sum_stockvalue"],
+  customers: ["count", "sum_outstanding", "sum_creditLimit"]
+};
+const REPORT_CURRENCY_METRICS = ["sum_total", "sum_stockvalue", "sum_outstanding", "sum_creditLimit"];
+function computeReport(rows, groupBy, metric) {
+  const buckets = {};
+  rows.forEach(r => {
+    const raw = r[groupBy];
+    const key = (raw === undefined || raw === null || raw === "") ? "—" : String(raw);
+    if (buckets[key] == null) buckets[key] = 0;
+    if (metric === "count") buckets[key] += 1;
+    else if (metric === "sum_total") buckets[key] += (r.total ?? r.subtotal ?? 0);
+    else if (metric === "sum_qty") buckets[key] += (r.qty ?? 0);
+    else if (metric === "sum_stockvalue") buckets[key] += (r.qty ?? 0) * (r.cost ?? 0);
+    else if (metric === "sum_outstanding") buckets[key] += (r.outstanding ?? 0);
+    else if (metric === "sum_creditLimit") buckets[key] += (r.creditLimit ?? 0);
+  });
+  return Object.entries(buckets).map(([key, value]) => ({ key, value })).sort((a, b) => b.value - a.value);
+}
+function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, customers, savedReports, setSavedReports, currentUser, logAction, lang }) {
+  const DATA = { quotations, invoices, serviceJobs, purchaseOrders, items, customers };
+  const [source, setSource] = useState("quotations");
+  const [groupBy, setGroupBy] = useState(REPORT_GROUP_FIELDS.quotations[0]);
+  const [metric, setMetric] = useState(REPORT_METRICS.quotations[0]);
+  const [reportName, setReportName] = useState("");
+
+  function changeSource(next) {
+    setSource(next);
+    setGroupBy(REPORT_GROUP_FIELDS[next][0]);
+    setMetric(REPORT_METRICS[next][0]);
+  }
+  const rows = DATA[source] || [];
+  const results = useMemo(() => computeReport(rows, groupBy, metric), [rows, groupBy, metric]);
+  const isCurrency = REPORT_CURRENCY_METRICS.includes(metric);
+  const maxValue = Math.max(1, ...results.map(r => r.value));
+
+  function saveReport() {
+    if (!reportName.trim()) return;
+    const report = { id: uid("RPT", savedReports, 3), name: reportName.trim(), source, groupBy, metric };
+    setSavedReports(rs => [report, ...rs]);
+    logAction(currentUser, `Saved report "${report.name}"`, "Reports");
+    setReportName("");
+  }
+  function loadReport(r) { setSource(r.source); setGroupBy(r.groupBy); setMetric(r.metric); }
+  function deleteReport(id) { setSavedReports(rs => rs.filter(r => r.id !== id)); }
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "report.builder")}</h3>
+      <div className="mis-grid-3">
+        <Field label={t(lang, "report.source")}>
+          <TSelect value={source} onChange={e => changeSource(e.target.value)}>
+            {Object.keys(REPORT_GROUP_FIELDS).map(s => <option key={s} value={s}>{t(lang, "report.source." + s)}</option>)}
+          </TSelect>
+        </Field>
+        <Field label={t(lang, "report.groupBy")}>
+          <TSelect value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+            {REPORT_GROUP_FIELDS[source].map(f => <option key={f} value={f}>{t(lang, "report.field." + f)}</option>)}
+          </TSelect>
+        </Field>
+        <Field label={t(lang, "report.metric")}>
+          <TSelect value={metric} onChange={e => setMetric(e.target.value)}>
+            {REPORT_METRICS[source].map(m => <option key={m} value={m}>{t(lang, "report.metric." + m)}</option>)}
+          </TSelect>
+        </Field>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <TInput value={reportName} onChange={e => setReportName(e.target.value)} placeholder={t(lang, "report.namePlaceholder")} />
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={saveReport}><Plus size={14} /> {t(lang, "report.saveReport")}</button>
+      </div>
+    </div>
+    {savedReports.length > 0 && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "report.savedReports")}</h3>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {savedReports.map(r => <div key={r.id} className="mis-panel-alt" style={{ borderRadius: 999, padding: "6px 6px 6px 12px", display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+          <button type="button" className="mis-link-btn" onClick={() => loadReport(r)}>{r.name}</button>
+          <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: "2px 6px" }} onClick={() => deleteReport(r.id)}><X size={11} /></button>
+        </div>)}
+      </div>
+    </div>}
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{tf(lang, "report.resultsFor", { groupBy: t(lang, "report.field." + groupBy) })}</h3>
+      {results.length === 0 && <div className="mis-empty">{t(lang, "report.noData")}</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {results.map(r => <div key={r.key}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+            <span style={{ color: "var(--text-primary)" }}>{r.key}</span>
+            <span className="mis-mono" style={{ color: "var(--text-secondary)" }}>{isCurrency ? fmtGHS(r.value) : r.value}</span>
+          </div>
+          <div style={{ width: "100%", borderRadius: 999, height: 8, background: "var(--panel-alt)" }}>
+            <div style={{ height: 8, borderRadius: 999, width: `${Math.round((r.value / maxValue) * 100)}%`, background: "var(--ore)" }} />
+          </div>
+        </div>)}
+      </div>
+    </div>
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -2711,8 +3210,68 @@ function CreateUserModal({ users, setUsers, currentUser, logAction, onClose, lan
     </form>
   </Modal>;
 }
+// Price books: the Standard book is a pass-through to each item's own sell
+// price (no entries to manage). Custom books hold per-item price overrides;
+// a customer assigned to a custom book gets that book's price when present,
+// falling back to Standard (i.e. item.sell) for any item without an entry.
+function PriceBooksPanel({ priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, currentUser, logAction, lang }) {
+  const [selectedBookId, setSelectedBookId] = useState((priceBooks.find(b => !b.isStandard) || priceBooks[0] || {}).id || "");
+  const [newBookName, setNewBookName] = useState("");
+  const [entryForm, setEntryForm] = useState({ itemId: "", price: "" });
+  const selectedBook = priceBooks.find(b => b.id === selectedBookId);
+  const entries = priceBookEntries.filter(e => e.priceBookId === selectedBookId);
+  function createBook() {
+    if (!newBookName.trim()) return;
+    const book = { id: uid("PB", priceBooks, 4), name: newBookName.trim(), isStandard: false };
+    setPriceBooks(bs => [...bs, book]);
+    logAction(currentUser, `Created price book "${book.name}"`, "Price Books");
+    setNewBookName("");
+    setSelectedBookId(book.id);
+  }
+  function setEntry() {
+    const item = items.find(i => i.id === entryForm.itemId);
+    if (!item || !entryForm.price) return;
+    setPriceBookEntries(es => {
+      const existing = es.find(e => e.priceBookId === selectedBookId && e.itemId === item.id);
+      if (existing) return es.map(e => e === existing ? { ...e, price: Number(entryForm.price) } : e);
+      return [{ id: uid("PBE", es, 4), priceBookId: selectedBookId, itemId: item.id, price: Number(entryForm.price) }, ...es];
+    });
+    logAction(currentUser, `Set ${item.name} to ${fmtGHS(entryForm.price)} in price book "${selectedBook.name}"`, "Price Books");
+    setEntryForm({ itemId: "", price: "" });
+  }
+  function removeEntry(id) { setPriceBookEntries(es => es.filter(e => e.id !== id)); }
+  return <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+    <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "pb.priceBooks")}</h3>
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "pb.priceBooksDesc")}</p>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {priceBooks.map(b => <button key={b.id} type="button" className={b.id === selectedBookId ? "mis-btn-primary mis-focus" : "mis-btn-ghost mis-focus"} onClick={() => setSelectedBookId(b.id)}>{b.name}{b.isStandard ? ` (${t(lang, "pb.standard")})` : ""}</button>)}
+    </div>
+    <div style={{ display: "flex", gap: 8 }}>
+      <TInput value={newBookName} onChange={e => setNewBookName(e.target.value)} placeholder={t(lang, "pb.newBookPlaceholder")} />
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={createBook}><Plus size={14} /> {t(lang, "pb.createBook")}</button>
+    </div>
+    {selectedBook && (selectedBook.isStandard ? <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "pb.standardHint")}</p> : <React.Fragment>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <Field label={t(lang, "pb.item")}>
+          <TSelect value={entryForm.itemId} onChange={e => setEntryForm(f => ({ ...f, itemId: e.target.value }))} style={{ minWidth: 220 }}>
+            <option value="">{t(lang, "lq.selectFromInventory")}</option>
+            {items.map(it => <option key={it.id} value={it.id}>{it.name} — {t(lang, "pb.standardPrice")}: {fmtGHS(it.sell)}</option>)}
+          </TSelect>
+        </Field>
+        <Field label={t(lang, "pb.overridePrice")}><TInput type="number" min="0" step="0.01" value={entryForm.price} onChange={e => setEntryForm(f => ({ ...f, price: e.target.value }))} style={{ width: 140 }} /></Field>
+        <button type="button" className="mis-btn-primary mis-focus" onClick={setEntry}><Plus size={14} /> {t(lang, "pb.setPrice")}</button>
+      </div>
+      <DataTable columns={[
+        { header: t(lang, "pb.item"), render: e => { const it = items.find(i => i.id === e.itemId); return <span style={{ color: "var(--text-primary)" }}>{it ? it.name : e.itemId}</span>; } },
+        { header: t(lang, "pb.standardPrice"), render: e => { const it = items.find(i => i.id === e.itemId); return <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(it ? it.sell : 0)}</span>; } },
+        { header: t(lang, "pb.overridePrice"), render: e => <span className="mis-mono" style={{ color: "var(--safe)" }}>{fmtGHS(e.price)}</span> },
+        { header: t(lang, "common.actions"), render: e => <button type="button" className="mis-link-btn" onClick={() => removeEntry(e.id)}>{t(lang, "pb.remove")}</button> }
+      ]} rows={entries} rowKey={e => e.id} empty={t(lang, "pb.noOverridesYet")} />
+    </React.Fragment>)}
+  </div>;
+}
 
-function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, logAction, lang }) {
+function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, logAction, lang }) {
   const isSuperUser = ["admin", "director"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
@@ -2738,10 +3297,13 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
   function updateThreshold(v) {
     setApprovalSettings(s => ({ ...s, valueThreshold: Number(v) || 0 }));
   }
+  function updateDirectorThreshold(v) {
+    setApprovalSettings(s => ({ ...s, directorThreshold: Number(v) || 0 }));
+  }
   function commitFlagged() {
     const list = flaggedText.split(",").map(s => s.trim()).filter(Boolean);
     setApprovalSettings(s => ({ ...s, flaggedCustomers: list }));
-    logAction(currentUser, `Updated approval rules — threshold ${fmtGHS(approvalSettings.valueThreshold)}, flagged: ${list.join(", ") || "none"}`, "Users & Access");
+    logAction(currentUser, `Updated approval rules — threshold ${fmtGHS(approvalSettings.valueThreshold)}, director sign-off above ${fmtGHS(approvalSettings.directorThreshold)}, flagged: ${list.join(", ") || "none"}`, "Users & Access");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
     {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -2751,6 +3313,7 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
         <Field label={t(lang, "ua.valueThreshold")}><TInput type="number" min="0" value={approvalSettings.valueThreshold} onChange={e => updateThreshold(e.target.value)} onBlur={commitFlagged} /></Field>
         <Field label={t(lang, "ua.flaggedCustomers")}><TInput value={flaggedText} onChange={e => setFlaggedText(e.target.value)} onBlur={commitFlagged} placeholder={t(lang, "ua.flaggedPlaceholder")} /></Field>
       </div>
+      <Field label={t(lang, "ua.directorThreshold")} hint={t(lang, "ua.directorThresholdHint")}><TInput type="number" min="0" value={approvalSettings.directorThreshold} onChange={e => updateDirectorThreshold(e.target.value)} onBlur={commitFlagged} /></Field>
       <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={commitFlagged}>{t(lang, "ua.saveApprovalRules")}</button>
     </div>}
     {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -2768,6 +3331,7 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
         </div> : <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{tpl.subject}</div>}
       </div>)}
     </div>}
+    {isSuperUser && <PriceBooksPanel priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} currentUser={currentUser} logAction={logAction} lang={lang} />}
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.userAccounts")}</h3>
@@ -2984,7 +3548,7 @@ function CommandPalette({ open, onClose, allowedNav, setNav, customers, items, q
 // ---------------------------------------------------------------------------
 // DASHBOARD
 // ---------------------------------------------------------------------------
-function Dashboard({ items, quotations, invoices, purchaseOrders, customers, auditLog, role, lang }) {
+function Dashboard({ items, quotations, invoices, purchaseOrders, customers, serviceContracts, auditLog, role, lang }) {
   const [dashboardBranchFilter, setDashboardBranchFilter] = useState("All");
   const dashboardItems = dashboardBranchFilter === "All" ? items : items.filter(i => i.branch === dashboardBranchFilter);
   const stockValue = dashboardItems.reduce((s, i) => s + i.qty * i.cost, 0);
@@ -2992,6 +3556,8 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
   const openQuotes = quotations.filter(q => q.status !== "Invoiced").length;
   const inTransitPOs = purchaseOrders.filter(p => p.status === "Ordered" || p.status === "In Transit").length;
   const recentActivity = auditLog.slice(0, 8);
+  const canSeeContracts = ["director", "admin", "service", "finance"].includes(role);
+  const expiringContracts = canSeeContracts ? (serviceContracts || []).filter(c => c.status !== "Cancelled" && isContractExpiringSoon(c)) : [];
   const fulfilledPct = Math.round(quotations.filter(q => q.status === "Invoiced").length / Math.max(quotations.length, 1) * 100);
   const healthyPct = Math.round((dashboardItems.length - lowStock.length) / Math.max(dashboardItems.length, 1) * 100);
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -3037,6 +3603,14 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
         </div>
       </div>
     </div>
+    {canSeeContracts && expiringContracts.length > 0 && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, borderLeft: "3px solid var(--caution)" }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 4 }}>{t(lang, "dash.contractsExpiring")}</h3>
+      <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 12 }}>{t(lang, "dash.within60Days")}</p>
+      {expiringContracts.map(c => { const cust = customers.find(x => x.id === c.customerId); return <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12 }}>
+        <span style={{ color: "var(--text-primary)" }}>{c.id} · {cust ? cust.name : "—"} <span style={{ color: "var(--text-tertiary)" }}>({c.type})</span></span>
+        <span className="mis-mono" style={{ color: "var(--caution)" }}>{c.endDate}</span>
+      </div>; })}
+    </div>}
     {["director", "admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.recentActivity")}</h3>
       {recentActivity.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
@@ -3129,6 +3703,11 @@ function SetvacoBusinessSystem() {
   const [invoices, setInvoices] = useState(() => (persisted && persisted.invoices) || initialInvoices);
   const [purchaseOrders, setPurchaseOrders] = useState(() => (persisted && persisted.purchaseOrders) || initialPurchaseOrders);
   const [serviceJobs, setServiceJobs] = useState(() => (persisted && persisted.serviceJobs) || initialServiceJobs);
+  const [assets, setAssets] = useState(() => (persisted && persisted.assets) || initialAssets);
+  const [serviceContracts, setServiceContracts] = useState(() => (persisted && persisted.serviceContracts) || initialServiceContracts);
+  const [savedReports, setSavedReports] = useState(() => (persisted && persisted.savedReports) || []);
+  const [priceBooks, setPriceBooks] = useState(() => (persisted && persisted.priceBooks) || initialPriceBooks);
+  const [priceBookEntries, setPriceBookEntries] = useState(() => (persisted && persisted.priceBookEntries) || initialPriceBookEntries);
   const [users, setUsers] = useState(() => (persisted && persisted.users) || initialUsers);
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
@@ -3147,8 +3726,8 @@ function SetvacoBusinessSystem() {
 
   useEffect(() => { if (loggedInUser && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -3248,17 +3827,20 @@ function SetvacoBusinessSystem() {
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
         <div key={nav} className="mis-view-enter">
-          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} lang={lang} />}
+          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} serviceContracts={serviceContracts} auditLog={auditLog} role={role} lang={lang} />}
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
-          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
-          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
+          {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} setContracts={setServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
+          {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
-          {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} lang={lang} />}
+          {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
-          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} logAction={logAction} lang={lang} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
         </div>
       </main>
