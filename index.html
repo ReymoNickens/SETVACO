@@ -16,9 +16,53 @@ table{border-collapse:collapse;}
 img,video{max-width:100%;height:auto;}
 button,input,select,textarea{font:inherit;color:inherit;}
 button{cursor:pointer;}
+/* Access-code gate — sits outside the React tree so it blocks the view
+   before React/Babel even finish loading, not just after mount. This is a
+   deterrent against casually stumbling on a public link, not real access
+   control — the code is plainly visible in page source to anyone who looks;
+   real per-user authorization is enforced by the login screen and (once
+   wired) the backend, not this. See docs/architecture.md. */
+#gate-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #131B4A;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Sans', Arial, sans-serif;
+}
+#gate-box {
+  background: #FFFFFF; border-radius: 16px; padding: 32px 28px;
+  width: 320px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  text-align: center;
+}
+#gate-box h1 { font-size: 18px; margin: 0 0 4px; color: #0F1330; }
+#gate-box p { font-size: 12px; color: #565E85; margin: 0 0 20px; }
+#gate-box input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #DBE1F5; font-size: 14px; margin-bottom: 12px;
+}
+#gate-box button {
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: none;
+  background: #2A3B94; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+#gate-error { color: #DC3E4C; font-size: 12px; margin-top: 10px; min-height: 14px; }
+#gate-lang { position: absolute; top: 16px; right: 16px; display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #DBE1F5; }
+#gate-lang button { width: auto; padding: 5px 9px; border-radius: 0; background: transparent; color: #565E85; font-size: 11px; font-weight: 600; }
+#gate-lang button.active { background: #2A3B94; color: #fff; }
 </style>
 </head>
 <body>
+<div id="gate-overlay">
+  <div id="gate-lang">
+    <button type="button" id="gate-lang-en">EN</button>
+    <button type="button" id="gate-lang-fr">FR</button>
+  </div>
+  <div id="gate-box">
+    <h1 id="gate-title">SETVACO Business System</h1>
+    <p id="gate-subtitle">This is a private client demo. Enter the access code to continue.</p>
+    <input id="gate-input" type="password" placeholder="Access code" autofocus />
+    <button type="button" id="gate-submit">Enter</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
 "use strict";
@@ -2241,6 +2285,68 @@ function SetvacoBusinessSystem() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<SetvacoBusinessSystem />);
+</script>
+<script>
+(function() {
+  // Change this before sharing a demo link. Visible in page source to
+  // anyone who looks — a deterrent against casual stumbling, not real
+  // access control. Real per-user auth is the login screen above this.
+  var ACCESS_CODE = "Setvaco2026";
+  var GATE_STRINGS = {
+    en: { title: "SETVACO Business System", subtitle: "This is a private client demo. Enter the access code to continue.", placeholder: "Access code", enter: "Enter", error: "Incorrect access code." },
+    fr: { title: "Système d'entreprise SETVACO", subtitle: "Ceci est une démonstration client privée. Entrez le code d'accès pour continuer.", placeholder: "Code d'accès", enter: "Entrer", error: "Code d'accès incorrect." }
+  };
+
+  var overlay = document.getElementById("gate-overlay");
+  var input = document.getElementById("gate-input");
+  var submitBtn = document.getElementById("gate-submit");
+  var errorEl = document.getElementById("gate-error");
+  var titleEl = document.getElementById("gate-title");
+  var subtitleEl = document.getElementById("gate-subtitle");
+  var langEnBtn = document.getElementById("gate-lang-en");
+  var langFrBtn = document.getElementById("gate-lang-fr");
+
+  function detectLang() {
+    try {
+      var raw = localStorage.getItem("setvaco_system_state_v1");
+      var parsed = raw ? JSON.parse(raw) : null;
+      return (parsed && parsed.lang === "fr") ? "fr" : "en";
+    } catch (e) { return "en"; }
+  }
+
+  function applyLang(lang) {
+    var s = GATE_STRINGS[lang] || GATE_STRINGS.en;
+    titleEl.textContent = s.title;
+    subtitleEl.textContent = s.subtitle;
+    input.placeholder = s.placeholder;
+    submitBtn.textContent = s.enter;
+    errorEl.textContent = "";
+    langEnBtn.className = lang === "en" ? "active" : "";
+    langFrBtn.className = lang === "fr" ? "active" : "";
+    overlay.dataset.lang = lang;
+  }
+
+  function tryUnlock() {
+    if (input.value === ACCESS_CODE) {
+      sessionStorage.setItem("setvaco_demo_ok", "1");
+      overlay.style.display = "none";
+    } else {
+      errorEl.textContent = (GATE_STRINGS[overlay.dataset.lang] || GATE_STRINGS.en).error;
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  applyLang(detectLang());
+  if (sessionStorage.getItem("setvaco_demo_ok") === "1") {
+    overlay.style.display = "none";
+  }
+
+  submitBtn.addEventListener("click", tryUnlock);
+  input.addEventListener("keydown", function(e) { if (e.key === "Enter") tryUnlock(); });
+  langEnBtn.addEventListener("click", function() { applyLang("en"); input.focus(); });
+  langFrBtn.addEventListener("click", function() { applyLang("fr"); input.focus(); });
+})();
 </script>
 </body>
 </html>

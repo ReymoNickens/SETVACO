@@ -236,3 +236,26 @@ field). If an admin suspends a logged-in user in Users & Access, that
 session naturally drops back to the login screen next render, since
 `loggedInUser` is looked up live by id + `status === 'Active'` on every
 render rather than cached at login time.
+
+## Access-code gate — deterrent, not access control
+
+`index.html` also has a single shared access code (`ACCESS_CODE` near the
+end of the file, default `"Setvaco2026"`) gating the entire page behind an
+overlay, independent of the per-user login above it. It's implemented as
+plain vanilla JS/HTML sitting outside the React tree — the overlay markup
+is in `<body>` before `#root`, and the unlock script is a separate `<script>`
+tag after the React app's — specifically so it blocks the view before
+React/Babel even finish loading, not just after mount. Unlocking sets a
+`sessionStorage` flag (`setvaco_demo_ok`), so it resets when the browser tab
+closes; the gate also reads the persisted language preference (if any) from
+the same `localStorage` key the app uses, so returning visitors see the
+gate in whichever language they'd last picked.
+
+**This is not real security and shouldn't be treated as one.** The code is
+plaintext in page source — `view-source:` or the browser devtools reveal it
+in seconds to anyone who looks, and there's no rate limiting or backend
+check at all. It exists purely to stop someone from casually landing on a
+shared demo link and poking around; it does not replace `LoginScreen`,
+doesn't replace making the GitHub repo private, and doesn't replace real
+backend authorization. Change `ACCESS_CODE` before sharing a link, and treat
+it as a doorbell, not a lock.
