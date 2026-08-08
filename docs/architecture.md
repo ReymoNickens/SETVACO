@@ -196,15 +196,24 @@ render before the main app), and the choice persists via the existing
 real auth lands).
 
 **Wired scope (complete):** every screen — navigation, header/sidebar
-chrome, Dashboard, Sales Overview, Stock Room/Equipment Inventory,
-Purchasing (all three sub-tabs), Customers, Users & Access, Variance &
-Audit, Service Jobs, Sales/Quotations (create-quotation flow, documents
-table, detail drawers, manager comments), the notification bell, the
-command palette, and the customer-facing quotation/invoice documents and
-emails. Business-logic data values that happen to be translated for display
-(customer tier, branch filter "All") keep their underlying canonical
-English value in state — only the label shown changes — so comparisons
-like `c.tier === "Gold"` keep working regardless of UI language.
+chrome, Dashboard, Sales Overview (including the Weighted Forecast Value
+KPI), Stock Room/Equipment Inventory, Purchasing (all three sub-tabs),
+Customers, Users & Access (including the email-templates editor), Variance
+& Audit, Staff Activity, Service Jobs, Sales/Quotations (create-quotation
+flow, documents table, detail drawers, manager comments), the notification
+bell, the command palette, and the customer-facing quotation/invoice
+documents and emails. Business-logic data values that happen to be
+translated for display (customer tier, branch filter "All") keep their
+underlying canonical English value in state — only the label shown changes
+— so comparisons like `c.tier === "Gold"` keep working regardless of UI
+language.
+
+Admin-authored free text is a separate, deliberate exception to the above:
+email template subject/body (`emailTemplates` state, editable in Users &
+Access) and staff-activity messages/comments are content admins write
+themselves, not UI labels — they are not run through `t()`/`tf()` and stay
+in whatever language the admin types them, the same way a customer's name
+or a manager's comment note already does.
 
 **Still not wired (deliberate, documented exception):** dynamically-built
 strings inside business-logic handlers — audit log entries, toast messages,

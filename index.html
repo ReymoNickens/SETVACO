@@ -298,6 +298,7 @@ const ClipboardList = p => <Icon {...p} paths={<><rect x="5" y="3" width="14" he
 const HistoryIcon = p => <Icon {...p} paths={<><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 8 12 12 15 14"/></>} />;
 const Globe2 = p => <Icon {...p} paths={<><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/></>} />;
 const Printer = p => <Icon {...p} paths={<><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></>} />;
+const MessageSquare = p => <Icon {...p} paths={<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>} />;
 
 // Core-sample mark: drill-core cylinder with layered strata, recolored per item.
 function CoreSample({ layers, size = 40 }) {
@@ -325,9 +326,9 @@ function Avatar({ name, role, size = 34 }) {
   const bg = ROLE_COLORS[role] || "var(--sky)";
   return <div style={{ width: size, height: size, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: bg, color: "#FFFFFF", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{initials(name)}</div>;
 }
-function RolePill({ role }) {
+function RolePill({ role, lang }) {
   const bg = ROLE_COLORS[role] || "var(--sky)";
-  return <span className="mis-badge" style={{ background: bg, color: "#FFFFFF" }}>{(ROLES[role] || {}).label || role}</span>;
+  return <span className="mis-badge" style={{ background: bg, color: "#FFFFFF" }}>{lang ? t(lang, "role." + role) : ((ROLES[role] || {}).label || role)}</span>;
 }
 function Toggle({ on, onChange }) {
   return <button type="button" onClick={onChange} className="mis-focus" style={{ width: 40, height: 22, borderRadius: 999, position: "relative", flexShrink: 0, background: on ? "var(--ore)" : "var(--border)", transition: "background 0.15s ease", border: "none", cursor: "pointer" }}>
@@ -428,16 +429,17 @@ const NAV = [
   { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["admin", "procurement", "finance"] },
   { key: "customers", label: "Customers", icon: Users, roles: ["admin", "sales", "finance"] },
   { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["admin", "finance"] },
+  { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["admin", "finance"] },
   { key: "access", label: "Users & Access", icon: KeyRound, roles: ["admin"] }
 ];
 const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
 
 // ---------------------------------------------------------------------------
-// i18n — EN/FR. Scope: navigation/app chrome and the customer-facing
-// quotation/invoice document + email templates (the two things a francophone
-// branch or customer actually needs day-to-day). Internal admin screens
-// (Inventory/Purchasing/Customers/Users & Access tables and forms, audit-log
-// and toast text) are not yet wired through this and stay English — see
+// i18n — EN/FR. Coverage is app-wide: every screen's static labels, form
+// fields, table headers, buttons, and status/role names are translated.
+// The one deliberate exception is dynamically-assembled free text (audit-log
+// action sentences, toast messages, activity descriptions) which is built
+// from live data at runtime rather than a fixed label — see
 // docs/architecture.md for that scoping decision.
 // ---------------------------------------------------------------------------
 const TRANSLATIONS = {
@@ -452,6 +454,7 @@ const TRANSLATIONS = {
     "nav.purchasing": "Purchasing",
     "nav.customers": "Customers",
     "nav.variance": "Variance & Audit",
+    "nav.staffActivity": "Staff Activity",
     "nav.access": "Users & Access",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -546,6 +549,12 @@ const TRANSLATIONS = {
     "salesov.qtyExceedsStock": "Qty exceeds on-hand stock",
     "salesov.recentQuotations": "Recent quotations",
     "salesov.noQuotationsYet": "No quotations yet.",
+    "salesov.forecastValue": "Weighted Forecast Value",
+    "salesov.forecastHint": "Weighted by stage: Pending Approval 20% · Quoted 30% · Sent 60% · Invoiced 100%",
+    "salesov.forecastPending": "Pending Approval",
+    "salesov.forecastQuoted": "Quoted",
+    "salesov.forecastSent": "Sent",
+    "salesov.forecastInvoiced": "Invoiced",
     "common.cancel": "Cancel",
     "common.branch": "Branch",
     "inv.part": "Part",
@@ -697,6 +706,11 @@ const TRANSLATIONS = {
     "ua.flaggedCustomers": "Always-flagged customers (comma-separated)",
     "ua.flaggedPlaceholder": "e.g. Akwatia Gold Ltd",
     "ua.saveApprovalRules": "Save approval rules",
+    "ua.emailTemplates": "Email templates",
+    "ua.emailTemplatesDesc": "Used whenever a quotation or invoice is sent to a customer. Use {{customer}}, {{orderId}} and {{total}} as placeholders.",
+    "ua.editBtn": "Edit",
+    "ua.hideBtn": "Hide",
+    "ua.saveTemplate": "Save template",
     "ua.userAccounts": "User accounts",
     "ua.createUserBtn": "Create user",
     "ua.createUserAccountTitle": "Create user account",
@@ -713,6 +727,16 @@ const TRANSLATIONS = {
     "ua.roleCol": "Role",
     "va.stockVariance": "Stock Variance",
     "va.auditLog": "Audit Log",
+    "sa.staffOverview": "Staff overview",
+    "sa.activityCount": "{n} activity entries",
+    "sa.messageBtn": "Message",
+    "sa.messagePlaceholder": "Write a message or instruction…",
+    "sa.sendBtn": "Send",
+    "sa.allActivity": "All staff activity",
+    "sa.activityFor": "Activity — {name}",
+    "sa.clearFilter": "Clear filter",
+    "sa.commentPlaceholder": "Add a comment…",
+    "sa.commentBtn": "Comment",
     "va.varianceDesc": "Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.",
     "va.idCol": "ID",
     "va.countedCol": "Counted",
@@ -821,6 +845,7 @@ const TRANSLATIONS = {
     "nav.purchasing": "Achats",
     "nav.customers": "Clients",
     "nav.variance": "Écarts et audit",
+    "nav.staffActivity": "Activité du personnel",
     "nav.access": "Utilisateurs et accès",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -915,6 +940,12 @@ const TRANSLATIONS = {
     "salesov.qtyExceedsStock": "Quantité supérieure au stock disponible",
     "salesov.recentQuotations": "Devis récents",
     "salesov.noQuotationsYet": "Aucun devis pour le moment.",
+    "salesov.forecastValue": "Valeur prévisionnelle pondérée",
+    "salesov.forecastHint": "Pondération par étape : En attente d'approbation 20 % · Devisé 30 % · Envoyé 60 % · Facturé 100 %",
+    "salesov.forecastPending": "En attente d'approbation",
+    "salesov.forecastQuoted": "Devisé",
+    "salesov.forecastSent": "Envoyé",
+    "salesov.forecastInvoiced": "Facturé",
     "common.cancel": "Annuler",
     "common.branch": "Succursale",
     "inv.part": "Pièce",
@@ -1066,6 +1097,11 @@ const TRANSLATIONS = {
     "ua.flaggedCustomers": "Clients toujours signalés (séparés par des virgules)",
     "ua.flaggedPlaceholder": "ex. Akwatia Gold Ltd",
     "ua.saveApprovalRules": "Enregistrer les règles d'approbation",
+    "ua.emailTemplates": "Modèles d'e-mail",
+    "ua.emailTemplatesDesc": "Utilisés à chaque envoi d'un devis ou d'une facture à un client. Utilisez {{customer}}, {{orderId}} et {{total}} comme variables.",
+    "ua.editBtn": "Modifier",
+    "ua.hideBtn": "Masquer",
+    "ua.saveTemplate": "Enregistrer le modèle",
     "ua.userAccounts": "Comptes utilisateurs",
     "ua.createUserBtn": "Créer un utilisateur",
     "ua.createUserAccountTitle": "Créer un compte utilisateur",
@@ -1082,6 +1118,16 @@ const TRANSLATIONS = {
     "ua.roleCol": "Rôle",
     "va.stockVariance": "Écarts de stock",
     "va.auditLog": "Journal d'audit",
+    "sa.staffOverview": "Aperçu du personnel",
+    "sa.activityCount": "{n} entrées d'activité",
+    "sa.messageBtn": "Message",
+    "sa.messagePlaceholder": "Rédiger un message ou une consigne…",
+    "sa.sendBtn": "Envoyer",
+    "sa.allActivity": "Activité de tout le personnel",
+    "sa.activityFor": "Activité — {name}",
+    "sa.clearFilter": "Effacer le filtre",
+    "sa.commentPlaceholder": "Ajouter un commentaire…",
+    "sa.commentBtn": "Commenter",
     "va.varianceDesc": "Les écarts sont signalés lorsqu'un comptage de stock en succursale ne concorde pas avec les transactions de ventes, d'achats et d'interventions de service pour cette pièce.",
     "va.idCol": "ID",
     "va.countedCol": "Compté",
@@ -1188,6 +1234,10 @@ function tf(lang, key, vars) {
   var s = t(lang, key);
   return s.replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] != null) ? vars[k] : m);
 }
+// Fills an admin-authored email template (not a translation key) with {{placeholder}} tokens.
+function fillEmailTemplate(str, vars) {
+  return (str || "").replace(/\{\{(\w+)\}\}/g, (m, k) => (vars && vars[k] != null) ? vars[k] : m);
+}
 
 const initialStockRooms = [
   { id: "SR-01", name: "Main Store", branch: "Accra HQ" },
@@ -1247,6 +1297,10 @@ const initialServiceJobs = [
   { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, eta: "2026-08-06", preparedBy: "E. Adonoo", feedbackLog: [], status: "Completed", date: "2026-08-03" }
 ];
 const initialApprovalSettings = { valueThreshold: 20000, flaggedCustomers: ["Akwatia Gold Ltd"] };
+const initialEmailTemplates = {
+  quotation: { subject: "Quotation {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your quotation {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" },
+  invoice: { subject: "Invoice {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your invoice {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" }
+};
 const initialUsers = [
   { id: "U-01", name: "Efua Mensah", email: "e.mensah@setvaco.com", username: "emensah", role: "admin", status: "Active" },
   { id: "U-02", name: "Kwabena Owusu", email: "k.owusu@setvaco.com", username: "kowusu", role: "sales", status: "Active" },
@@ -1256,12 +1310,12 @@ const initialUsers = [
   { id: "U-06", name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com", username: "aamponsah", role: "finance", status: "Active" }
 ];
 const initialAuditLog = [
-  { id: "AL-001", ts: "2026-08-05T09:12:00", user: "Kwabena Owusu", action: "Created quotation QT-9001 for Chorkor Mines Ltd", module: "Sales" },
-  { id: "AL-002", ts: "2026-08-05T10:40:00", user: "Abena Sarpong", action: "Raised PO-7705 to Sandvik Parts Distribution", module: "Purchasing" },
-  { id: "AL-003", ts: "2026-08-03T14:05:00", user: "Kojo Boateng", action: "Completed service job SJ-208 — parts consumed from stock", module: "Service" }
+  { id: "AL-001", ts: "2026-08-05T09:12:00", user: "Kwabena Owusu", action: "Created quotation QT-9001 for Chorkor Mines Ltd", module: "Sales", comments: [] },
+  { id: "AL-002", ts: "2026-08-05T10:40:00", user: "Abena Sarpong", action: "Raised PO-7705 to Sandvik Parts Distribution", module: "Purchasing", comments: [] },
+  { id: "AL-003", ts: "2026-08-03T14:05:00", user: "Kojo Boateng", action: "Completed service job SJ-208 — parts consumed from stock", module: "Service", comments: [] }
 ];
 const initialNotifications = [
-  { id: "N-001", ts: "2026-08-02T08:00:00", type: "po", message: "PO-7710 received from AUROX — 1 line item in transit", read: true }
+  { id: "N-001", ts: "2026-08-02T08:00:00", type: "po", message: "PO-7710 received from AUROX — 1 line item in transit", read: true, forUser: null }
 ];
 const varianceLog = [
   { id: "VAR-118", item: "Hydraulic Filter", branch: "Kumasi Branch", expected: 26, counted: 22, delta: -4, severity: "Low", note: "Within normal consumption drift" },
@@ -1814,15 +1868,21 @@ function printDocument(doc, customer, kind, lang) {
   w.print();
 }
 
-function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, onClose, onSent, lang }) {
+function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, emailTemplates, onClose, onSent, lang }) {
   const officials = users.filter(u => ["admin", "finance"].includes(u.role)).map(u => u.email);
   const [ccSelected, setCcSelected] = useState(officials);
   const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
   const kindLabel = kind === "invoice" ? t(lang, "doc.invoice") : t(lang, "doc.quotation");
-  const subject = `${kindLabel} ${doc.id} from SETVACO Holding Ltd`;
-  const body = `${t(lang, "email.dear")} ${customer ? customer.contactPerson : t(lang, "email.customer")},\n\n${t(lang, "email.pleaseFindBelow")} ${kindLabel.toLowerCase()} ${doc.id} ${t(lang, "email.dated")} ${doc.date}, ${t(lang, "doc.total").toLowerCase()} ${fmtGHS(total)}.\n\n`
-    + doc.lines.map(l => `- ${l.desc} x${l.qty} @ ${fmtGHS(l.unitPrice)}`).join("\n")
-    + `\n\n${t(lang, "email.kindRegards")},\n${currentUser}\nSETVACO Holding Limited`;
+  const tpl = (emailTemplates && emailTemplates[kind]) || initialEmailTemplates[kind] || initialEmailTemplates.quotation;
+  const vars = {
+    customer: customer ? customer.contactPerson : t(lang, "email.customer"),
+    orderId: doc.id,
+    total: fmtGHS(total),
+    lines: doc.lines.map(l => `- ${l.desc} x${l.qty} @ ${fmtGHS(l.unitPrice)}`).join("\n"),
+    sender: currentUser
+  };
+  const subject = fillEmailTemplate(tpl.subject, vars);
+  const body = fillEmailTemplate(tpl.body, vars);
   const cc = ccSelected.join(",");
   const href = customer ? buildMailto(customer.email, cc, subject, body) : undefined;
   function toggle(email) { setCcSelected(s => s.includes(email) ? s.filter(x => x !== email) : [...s, email]); }
@@ -1908,7 +1968,7 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
   </Drawer>;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification, lang }) {
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
   const canManage = ["admin", "service"].includes(role);
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
@@ -1983,7 +2043,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
       lang={lang}
     />}
-    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} emailTemplates={emailTemplates} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
       setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
@@ -2028,6 +2088,11 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
   const recent = quotations.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   const showStats = ["all", "parts", "equipment", "service"].includes(overviewFilter);
+  const showForecast = ["all", "parts", "equipment"].includes(overviewFilter);
+  const FORECAST_WEIGHTS = { "Pending Approval": 0.2, Quoted: 0.3, Sent: 0.6, Invoiced: 1 };
+  const forecastPool = quotations.filter(q => q.status !== "Rejected");
+  const forecastValue = forecastPool.reduce((sum, q) => sum + (q.total ?? q.subtotal ?? 0) * (FORECAST_WEIGHTS[q.status] ?? 0), 0);
+  function stageValue(status) { return forecastPool.filter(q => q.status === status).reduce((s, q) => s + (q.total ?? q.subtotal ?? 0), 0); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "salesov.show")}</span>
@@ -2039,6 +2104,19 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
         <option value="backorder">{t(lang, "salesov.backordersOnly")}</option>
       </TSelect>
     </div>
+    {showForecast && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+      <div>
+        <div className="mis-eyebrow">{t(lang, "salesov.forecastValue")}</div>
+        <div className="mis-display" style={{ fontSize: 30, color: "var(--ink)" }}>{fmtGHS(forecastValue)}</div>
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 4 }}>{t(lang, "salesov.forecastHint")}</div>
+      </div>
+      <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--text-secondary)", flexWrap: "wrap" }}>
+        <div><span style={{ color: "var(--caution)" }}>●</span> {t(lang, "salesov.forecastPending")}: {fmtGHS(stageValue("Pending Approval"))}</div>
+        <div><span style={{ color: "var(--info)" }}>●</span> {t(lang, "salesov.forecastQuoted")}: {fmtGHS(stageValue("Quoted"))}</div>
+        <div><span style={{ color: "var(--ore)" }}>●</span> {t(lang, "salesov.forecastSent")}: {fmtGHS(stageValue("Sent"))}</div>
+        <div><span style={{ color: "var(--safe)" }}>●</span> {t(lang, "salesov.forecastInvoiced")}: {fmtGHS(stageValue("Invoiced"))}</div>
+      </div>
+    </div>}
     {showStats && <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
       {(overviewFilter === "all" || overviewFilter === "parts") && <StatCard label={t(lang, "salesov.openPartQuotes")} value={openPartQuotes} sub={t(lang, "salesov.awaitingConfirmation")} icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />}
       {(overviewFilter === "all" || overviewFilter === "equipment") && <StatCard label={t(lang, "salesov.openEquipmentQuotes")} value={openEquipQuotes} sub={t(lang, "salesov.awaitingConfirmation")} icon={Truck} tint="var(--info)" soft="var(--info-soft)" />}
@@ -2132,7 +2210,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
   </Drawer>;
 }
 
-function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification, lang }) {
+function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification, emailTemplates, lang }) {
   const type = page === "equipmentsales" ? "equipment" : "part";
   const [showCreate, setShowCreate] = useState(false);
   const [sendDoc, setSendDoc] = useState(null);
@@ -2182,7 +2260,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
       lang={lang}
     />}
-    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} emailTemplates={emailTemplates} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
       if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
@@ -2559,10 +2637,18 @@ function CreateUserModal({ users, setUsers, currentUser, logAction, onClose, lan
   </Modal>;
 }
 
-function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, logAction, lang }) {
+function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, logAction, lang }) {
   const isSuperUser = role === "admin";
   const [showCreate, setShowCreate] = useState(false);
   const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  function updateTemplate(key, field, value) {
+    setEmailTemplates(et => ({ ...et, [key]: { ...et[key], [field]: value } }));
+  }
+  function saveTemplates() {
+    logAction(currentUser, "Updated email templates", "Users & Access");
+    setEditingTemplate(null);
+  }
   function setUserRole(id, newRole) {
     const u = users.find(x => x.id === id);
     setUsers(us => us.map(x => x.id === id ? { ...x, role: newRole } : x));
@@ -2592,6 +2678,21 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
       </div>
       <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={commitFlagged}>{t(lang, "ua.saveApprovalRules")}</button>
     </div>}
+    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.emailTemplates")}</h3>
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "ua.emailTemplatesDesc")}</p>
+      {Object.entries(emailTemplates).map(([key, tpl]) => <div key={key} className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)" }}>{t(lang, key === "invoice" ? "doc.invoice" : "doc.quotation")}</span>
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setEditingTemplate(editingTemplate === key ? null : key)}>{editingTemplate === key ? t(lang, "ua.hideBtn") : t(lang, "ua.editBtn")}</button>
+        </div>
+        {editingTemplate === key ? <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <Field label={t(lang, "email.subject")}><TInput value={tpl.subject} onChange={e => updateTemplate(key, "subject", e.target.value)} /></Field>
+          <Field label={t(lang, "email.messagePreview")}><TArea rows={4} value={tpl.body} onChange={e => updateTemplate(key, "body", e.target.value)} /></Field>
+          <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={saveTemplates}>{t(lang, "ua.saveTemplate")}</button>
+        </div> : <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{tpl.subject}</div>}
+      </div>)}
+    </div>}
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.userAccounts")}</h3>
@@ -2601,7 +2702,7 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
         { header: t(lang, "common.name"), render: u => <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar name={u.name} role={u.role} size={28} /><span style={{ color: "var(--text-primary)" }}>{u.name}</span></div> },
         { header: t(lang, "cust.companyEmail"), render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.email}</span> },
         { header: t(lang, "ua.username"), render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.username}</span> },
-        { header: t(lang, "ua.accessLevelCol"), render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.keys(ROLES).map(k => <option key={k} value={k}>{t(lang, "role." + k)}</option>)}</TSelect> : <RolePill role={u.role} /> },
+        { header: t(lang, "ua.accessLevelCol"), render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.keys(ROLES).map(k => <option key={k} value={k}>{t(lang, "role." + k)}</option>)}</TSelect> : <RolePill role={u.role} lang={lang} /> },
         { header: t(lang, "ua.activeCol"), render: u => isSuperUser ? <Toggle on={u.status === "Active"} onChange={() => toggleStatus(u.id)} /> : (() => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; })() }
       ]} rows={users} rowKey={u => u.id} empty={t(lang, "ua.noUsersYet")} />
     </div>
@@ -2652,15 +2753,70 @@ function VarianceAudit({ auditLog, lang }) {
     ]} rows={auditLog} rowKey={a => a.id} empty={t(lang, "dash.noActivityYet")} />}
   </div>;
 }
+function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessage, lang }) {
+  const [staffFilter, setStaffFilter] = useState("All");
+  const [composingFor, setComposingFor] = useState(null);
+  const [messageDraft, setMessageDraft] = useState({});
+  const [commentDraft, setCommentDraft] = useState({});
+  const staff = users.filter(u => u.status === "Active");
+  function countFor(name) { return auditLog.filter(a => a.user === name).length; }
+  const feed = staffFilter === "All" ? auditLog : auditLog.filter(a => a.user === staffFilter);
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.staffOverview")}</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+        {staff.map(u => { const active = staffFilter === u.name; return <div key={u.id} className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, cursor: "pointer", border: active ? "1px solid var(--ore)" : "1px solid transparent" }} onClick={() => setStaffFilter(f => f === u.name ? "All" : u.name)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <Avatar name={u.name} role={u.role} size={32} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name}</div>
+              <RolePill role={u.role} lang={lang} />
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>{tf(lang, "sa.activityCount", { n: countFor(u.name) })}</div>
+          <button type="button" className="mis-link-btn" onClick={e => { e.stopPropagation(); setComposingFor(c => c === u.id ? null : u.id); }}><MessageSquare size={12} /> {t(lang, "sa.messageBtn")}</button>
+          {composingFor === u.id && <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }} onClick={e => e.stopPropagation()}>
+            <TArea rows={2} value={messageDraft[u.id] || ""} onChange={e => setMessageDraft(d => ({ ...d, [u.id]: e.target.value }))} placeholder={t(lang, "sa.messagePlaceholder")} />
+            <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={() => { onSendMessage(u.name, messageDraft[u.id]); setMessageDraft(d => ({ ...d, [u.id]: "" })); setComposingFor(null); }}>{t(lang, "sa.sendBtn")}</button>
+          </div>}
+        </div>; })}
+        {staff.length === 0 && <div className="mis-empty">{t(lang, "ua.noUsersYet")}</div>}
+      </div>
+    </div>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{staffFilter === "All" ? t(lang, "sa.allActivity") : tf(lang, "sa.activityFor", { name: staffFilter })}</h3>
+        {staffFilter !== "All" && <button type="button" className="mis-link-btn" onClick={() => setStaffFilter("All")}>{t(lang, "sa.clearFilter")}</button>}
+      </div>
+      {feed.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
+      {feed.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "var(--text-primary)" }}><b>{a.user}</b> — {a.action}</span>
+          <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
+        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 8 }}>
+          <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
+          <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
+        </div>)}
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <TInput value={commentDraft[a.id] || ""} onChange={e => setCommentDraft(d => ({ ...d, [a.id]: e.target.value }))} placeholder={t(lang, "sa.commentPlaceholder")} />
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onComment(a.id, commentDraft[a.id]); setCommentDraft(d => ({ ...d, [a.id]: "" })); }}>{t(lang, "sa.commentBtn")}</button>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
 
 // ---------------------------------------------------------------------------
 // NOTIFICATIONS
 // ---------------------------------------------------------------------------
-function NotificationBell({ notifications, setNotifications, lang }) {
+function NotificationBell({ notifications, setNotifications, currentUser, lang }) {
   const [open, setOpen] = useState(false);
-  const unread = notifications.filter(n => !n.read).length;
+  const visible = notifications.filter(n => !n.forUser || n.forUser === currentUser);
+  const unread = visible.filter(n => !n.read).length;
   function toggle() {
-    setOpen(o => { const next = !o; if (next) setNotifications(ns => ns.map(n => ({ ...n, read: true }))); return next; });
+    setOpen(o => { const next = !o; if (next) setNotifications(ns => ns.map(n => (!n.forUser || n.forUser === currentUser) ? { ...n, read: true } : n)); return next; });
   }
   return <div style={{ position: "relative" }}>
     <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: 8, position: "relative" }} onClick={toggle}>
@@ -2669,8 +2825,8 @@ function NotificationBell({ notifications, setNotifications, lang }) {
     </button>
     {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 16, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
       <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase" }}>{t(lang, "nb.notifications")}</div>
-      {notifications.length === 0 && <div className="mis-empty">{t(lang, "nb.nothingYet")}</div>}
-      {notifications.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
+      {visible.length === 0 && <div className="mis-empty">{t(lang, "nb.nothingYet")}</div>}
+      {visible.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{n.message}</div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{fmtDateTime(n.ts)}</div>
       </div>)}
@@ -2870,6 +3026,7 @@ function SetvacoBusinessSystem() {
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
   const [approvalSettings, setApprovalSettings] = useState(() => (persisted && persisted.approvalSettings) || initialApprovalSettings);
+  const [emailTemplates, setEmailTemplates] = useState(() => (persisted && persisted.emailTemplates) || initialEmailTemplates);
   const [toast, setToast] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -2883,8 +3040,8 @@ function SetvacoBusinessSystem() {
 
   useEffect(() => { if (loggedInUser && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -2900,11 +3057,26 @@ function SetvacoBusinessSystem() {
 
   function showToast(msg) { setToast({ msg, id: Date.now() }); setTimeout(() => setToast(t => (t && t.msg === msg ? null : t)), 3200); }
   function logAction(user, action, mod) {
-    setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod }, ...al]);
+    setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod, comments: [] }, ...al]);
     showToast(action);
   }
-  function pushNotification(type, message) {
-    setNotifications(ns => [{ id: uid("N", ns, 3), ts: nowISO(), type, message, read: false }, ...ns]);
+  function pushNotification(type, message, forUser) {
+    setNotifications(ns => [{ id: uid("N", ns, 3), ts: nowISO(), type, message, read: false, forUser: forUser || null }, ...ns]);
+  }
+  function commentOnActivity(entryId, note) {
+    if (!note || !note.trim()) return;
+    let targetUser = "";
+    setAuditLog(al => al.map(a => {
+      if (a.id !== entryId) return a;
+      targetUser = a.user;
+      return { ...a, comments: [...(a.comments || []), { ts: nowISO(), note: note.trim(), by: currentUser }] };
+    }));
+    if (targetUser && targetUser !== currentUser) pushNotification("comment", note.trim(), targetUser);
+  }
+  function sendStaffMessage(toUserName, note) {
+    if (!note || !note.trim()) return;
+    pushNotification("message", note.trim(), toUserName);
+    logAction(currentUser, `Sent a message to ${toUserName}`, "Staff Activity");
   }
   function resetDemoData() {
     if (!window.confirm("Reset all data back to the original demo dataset? This clears anything added in this browser.")) return;
@@ -2958,7 +3130,7 @@ function SetvacoBusinessSystem() {
           <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPaletteOpen(true)} style={{ color: "var(--text-tertiary)" }}>
             <Search size={14} /> {t(lang, "app.search")} <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
           </button>
-          <NotificationBell notifications={notifications} setNotifications={setNotifications} lang={lang} />
+          <NotificationBell notifications={notifications} setNotifications={setNotifications} currentUser={currentUser} lang={lang} />
           <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }} title={t(lang, "app.language")}>
             <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
             <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
@@ -2973,12 +3145,13 @@ function SetvacoBusinessSystem() {
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
-          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
-          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
-          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} logAction={logAction} lang={lang} />}
+          {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} logAction={logAction} lang={lang} />}
         </div>
       </main>
     </div>
