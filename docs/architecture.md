@@ -262,11 +262,12 @@ overlay, independent of the per-user login above it. It's implemented as
 plain vanilla JS/HTML sitting outside the React tree — the overlay markup
 is in `<body>` before `#root`, and the unlock script is a separate `<script>`
 tag after the React app's — specifically so it blocks the view before
-React/Babel even finish loading, not just after mount. Unlocking sets a
-`sessionStorage` flag (`setvaco_demo_ok`), so it resets when the browser tab
-closes; the gate also reads the persisted language preference (if any) from
-the same `localStorage` key the app uses, so returning visitors see the
-gate in whichever language they'd last picked.
+React/Babel even finish loading, not just after mount. Unlocking isn't
+persisted anywhere (no `sessionStorage`/`localStorage`) — the code is asked
+for again on every page load or refresh, by design; the gate also reads the
+persisted language preference (if any) from the same `localStorage` key the
+app uses, so returning visitors see the gate in whichever language they'd
+last picked.
 
 **This is not real security and shouldn't be treated as one.** The code is
 plaintext in page source — `view-source:` or the browser devtools reveal it
