@@ -8,6 +8,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// Safe to expose client-side: the anon key only grants what Row-Level
+// Security on the database allows, nothing more. Real access control lives
+// in Postgres (see supabase/migrations/), not in keeping this key secret.
+window.SUPABASE_URL = "https://wemcdhkivyyflrapqkpp.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWNkaGtpdnl5ZmxyYXBxa3BwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMDQ5NDEsImV4cCI6MjEwMTc4MDk0MX0.HvfpMk2BxmvBhXw81MXTY4hUJlTop_Yp9-iXqcv0dJY";
+window.sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
@@ -227,6 +236,15 @@ const Style = () => <style>{`
   .mis-bell-dot { position:absolute; top:-2px; right:-2px; width:8px; height:8px; border-radius:50%; background: var(--vital); border: 1.5px solid var(--panel); }
   .mis-drawer-overlay { position:fixed; inset:0; background: rgba(10,11,12,0.5); z-index: 70; }
   .mis-drawer { position:fixed; top:0; right:0; bottom:0; width: 400px; max-width: 92vw; background: var(--panel); border-left: 1px solid var(--border); z-index: 71; overflow-y:auto; box-shadow: -12px 0 30px rgba(0,0,0,0.4); }
+  /* Full sheet — a near-fullscreen overlay for a single record's whole
+     picture (currently: staff activity). Bigger and taller than .mis-modal
+     (which is sized for a form), narrower than edge-to-edge so the app
+     chrome behind it stays visible as context. */
+  .mis-sheet-overlay { position:fixed; inset:0; background: rgba(10,11,12,0.6); z-index: 85; display:flex; align-items:flex-start; justify-content:center; padding: 3vh 16px; overflow-y:auto; }
+  .mis-sheet { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 980px; min-height: 90vh; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+  .mis-sheet-head { display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border-soft); }
+  .mis-sheet-body { padding: 24px; display:flex; flex-direction:column; gap: 22px; }
+  @media (max-width: 720px) { .mis-sheet-overlay { padding: 0; } .mis-sheet { border-radius: 0; min-height: 100vh; } }
   .mis-empty { color: var(--text-tertiary); font-size: 13px; padding: 24px; text-align:center; }
   .mis-link-btn { background:none; border:none; color: var(--info); font-size:12px; text-decoration:underline; padding:0; cursor:pointer; }
   .mis-grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -528,11 +546,24 @@ const TRANSLATIONS = {
     "login.eyebrow": "SETVACO · Business System",
     "login.tagline": "Crushing & screening equipment, spare parts, and technical service — engineered for mining and quarry operations across West Africa.",
     "login.username": "Username",
+    "login.email": "Email address",
     "login.password": "Password",
     "login.signIn": "Sign in",
-    "login.invalid": "Unrecognized username or password, or this account is suspended.",
+    "login.invalid": "Incorrect email or password, or this account is suspended.",
     "login.demoHint": "Demo credentials — any username below, password: setvaco-demo",
     "login.logout": "Log out",
+    "login.forgotPassword": "Forgot your password?",
+    "login.resetSent": "Check your email for a link to reset your password.",
+    "login.setNewPassword": "Set your password",
+    "login.setNewPasswordHint": "Choose a password for your SETVACO account.",
+    "login.newPassword": "New password",
+    "login.confirmPassword": "Confirm password",
+    "login.passwordsDontMatch": "Passwords don't match.",
+    "login.passwordTooShort": "Password must be at least 8 characters.",
+    "login.setPassword": "Set password",
+    "login.passwordSet": "Password set. You're signed in.",
+    "login.backToSignIn": "Back to sign in",
+    "login.loading": "Loading…",
     "dash.focusOn": "Focus on:",
     "dash.allBranches": "All branches",
     "dash.itemsAboveReorder": "Items above reorder level",
@@ -631,6 +662,8 @@ const TRANSLATIONS = {
     "inv.onHandLabel": "On hand",
     "inv.reorderAtParen": "(reorder at {n})",
     "inv.activityWhoDidWhat": "Activity — who did what",
+    "inv.stockLedger": "Stock movement ledger",
+    "inv.noLedgerEntries": "No stock movements recorded yet.",
     "inv.noActivityForRecord": "No recorded activity yet for this record.",
     "common.status": "Status",
     "common.actions": "Actions",
@@ -770,6 +803,17 @@ const TRANSLATIONS = {
     "sa.clearFilter": "Clear filter",
     "sa.commentPlaceholder": "Add a comment…",
     "sa.commentBtn": "Comment",
+    "sa.totalActions": "Total actions",
+    "sa.allTime": "All time",
+    "sa.thisWeek": "This week",
+    "sa.lastSevenDays": "Last 7 days",
+    "sa.mostActiveModule": "Most active in",
+    "sa.activeSince": "Active since",
+    "sa.firstLoggedAction": "First logged action",
+    "sa.activityLast14Days": "Activity — last 14 days",
+    "sa.byModule": "By module",
+    "sa.fullTimeline": "Full timeline",
+    "sa.actionsOn": "actions on {date}",
     "fin.directorOnly": "Director-only view — not visible to Administrator or any other role.",
     "fin.totalStockValue": "Total Stock Value",
     "fin.allBranches": "All branches",
@@ -897,6 +941,7 @@ const TRANSLATIONS = {
     "dt.print": "Print",
     "dt.send": "Send",
     "dt.convertToInvoice": "Convert to invoice",
+    "dt.markPaid": "Mark paid",
     "dt.inclToSource": " · incl. to-source",
     "dt.itemsCount": "{n} item(s)",
     "dt.noInvoicesYet": "No invoices yet.",
@@ -1012,11 +1057,24 @@ const TRANSLATIONS = {
     "login.eyebrow": "SETVACO · Système d'entreprise",
     "login.tagline": "Équipements de concassage et de criblage, pièces détachées et service technique — conçus pour les opérations minières et de carrière en Afrique de l'Ouest.",
     "login.username": "Nom d'utilisateur",
+    "login.email": "Adresse e-mail",
     "login.password": "Mot de passe",
     "login.signIn": "Se connecter",
-    "login.invalid": "Nom d'utilisateur ou mot de passe non reconnu, ou ce compte est suspendu.",
+    "login.invalid": "E-mail ou mot de passe incorrect, ou ce compte est suspendu.",
     "login.demoHint": "Identifiants de démonstration — n'importe quel nom d'utilisateur ci-dessous, mot de passe : setvaco-demo",
     "login.logout": "Se déconnecter",
+    "login.forgotPassword": "Mot de passe oublié ?",
+    "login.resetSent": "Consultez votre e-mail pour réinitialiser votre mot de passe.",
+    "login.setNewPassword": "Définir votre mot de passe",
+    "login.setNewPasswordHint": "Choisissez un mot de passe pour votre compte SETVACO.",
+    "login.newPassword": "Nouveau mot de passe",
+    "login.confirmPassword": "Confirmer le mot de passe",
+    "login.passwordsDontMatch": "Les mots de passe ne correspondent pas.",
+    "login.passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+    "login.setPassword": "Définir le mot de passe",
+    "login.passwordSet": "Mot de passe défini. Vous êtes connecté.",
+    "login.backToSignIn": "Retour à la connexion",
+    "login.loading": "Chargement…",
     "dash.focusOn": "Filtrer par :",
     "dash.allBranches": "Toutes les succursales",
     "dash.itemsAboveReorder": "Articles au-dessus du seuil de réapprovisionnement",
@@ -1115,6 +1173,8 @@ const TRANSLATIONS = {
     "inv.onHandLabel": "En stock",
     "inv.reorderAtParen": "(seuil de réappro {n})",
     "inv.activityWhoDidWhat": "Activité — qui a fait quoi",
+    "inv.stockLedger": "Registre des mouvements de stock",
+    "inv.noLedgerEntries": "Aucun mouvement de stock enregistré pour le moment.",
     "inv.noActivityForRecord": "Aucune activité enregistrée pour cet article.",
     "common.status": "Statut",
     "common.actions": "Actions",
@@ -1254,6 +1314,17 @@ const TRANSLATIONS = {
     "sa.clearFilter": "Effacer le filtre",
     "sa.commentPlaceholder": "Ajouter un commentaire…",
     "sa.commentBtn": "Commenter",
+    "sa.totalActions": "Actions totales",
+    "sa.allTime": "Depuis le début",
+    "sa.thisWeek": "Cette semaine",
+    "sa.lastSevenDays": "7 derniers jours",
+    "sa.mostActiveModule": "Plus actif dans",
+    "sa.activeSince": "Actif depuis",
+    "sa.firstLoggedAction": "Première action enregistrée",
+    "sa.activityLast14Days": "Activité — 14 derniers jours",
+    "sa.byModule": "Par module",
+    "sa.fullTimeline": "Chronologie complète",
+    "sa.actionsOn": "actions le {date}",
     "fin.directorOnly": "Vue réservée au Directeur — non visible par l'Administrateur ni aucun autre rôle.",
     "fin.totalStockValue": "Valeur totale du stock",
     "fin.allBranches": "Toutes les succursales",
@@ -1381,6 +1452,7 @@ const TRANSLATIONS = {
     "dt.print": "Imprimer",
     "dt.send": "Envoyer",
     "dt.convertToInvoice": "Convertir en facture",
+    "dt.markPaid": "Marquer payée",
     "dt.inclToSource": " · dont à approvisionner",
     "dt.itemsCount": "{n} article(s)",
     "dt.noInvoicesYet": "Aucune facture pour le moment.",
@@ -1592,6 +1664,83 @@ function savePersisted(state) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
 }
 
+// ---------------------------------------------------------------------------
+// SUPABASE DATA LAYER — Customers and Stock Room/Inventory are wired to the
+// real database (see supabase/migrations/). Everything else in this file
+// (quotations, invoices, purchase orders, service jobs, users, ...) is still
+// the original local-state demo data — a later phase, not this one. Row
+// shapes below are translated to/from the field names the existing UI
+// components already expect, so those components didn't need rewriting.
+// ---------------------------------------------------------------------------
+function mapCustomerFromDb(row, countryNameByCode) {
+  return {
+    id: row.id,
+    displayCode: row.display_code,
+    name: row.name,
+    tier: row.tier,
+    country: countryNameByCode(row.country_code),
+    countryCode: row.country_code,
+    address: row.address || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    contactPerson: row.contact_person || "",
+    contactAddress: row.contact_address || "",
+    companyDetails: row.company_details || "",
+    poCode: row.po_code || "",
+    creditLimit: Number(row.credit_limit) || 0,
+    outstanding: Number(row.outstanding) || 0,
+    taxExempt: row.tax_exempt,
+    isWalkIn: row.is_walk_in,
+    contacts: (row.customer_contacts || []).map(c => ({ name: c.name, role: c.role || "", email: c.email || "", phone: c.phone || "" }))
+  };
+}
+function customerToDbFields(c) {
+  return {
+    name: c.name, tier: c.tier, country_code: c.countryCode || null, address: c.address || null,
+    email: c.email || null, phone: c.phone || null, contact_person: c.contactPerson || null,
+    contact_address: c.contactAddress || null, company_details: c.companyDetails || null,
+    po_code: c.poCode || null, credit_limit: c.creditLimit || 0, tax_exempt: !!c.taxExempt
+  };
+}
+function mapStockRoomFromDb(row) {
+  return { id: row.id, displayCode: row.display_code, name: row.name, branch: row.branches.name, branchId: row.branch_id };
+}
+function mapItemFromDb(row, stockRoomsById) {
+  const room = stockRoomsById[row.stock_room_id];
+  return {
+    id: row.id, displayCode: row.display_code, type: row.type, name: row.name,
+    brand: row.brand || "", category: row.category || "",
+    branch: room ? room.branch : "", stockRoom: row.stock_room_id,
+    qty: Number(row.qty) || 0, reorder: Number(row.reorder) || 0,
+    cost: Number(row.cost) || 0, sell: Number(row.sell) || 0
+  };
+}
+async function fetchCustomers() {
+  const { data, error } = await window.sb.from("customers").select("*, customer_contacts(*)").order("created_at");
+  if (error) throw error;
+  return data;
+}
+async function fetchStockRooms() {
+  const { data, error } = await window.sb.from("stock_rooms").select("*, branches(name)").order("created_at");
+  if (error) throw error;
+  return data;
+}
+async function fetchItems() {
+  const { data, error } = await window.sb.from("items_with_stock").select("*").order("created_at");
+  if (error) throw error;
+  return data;
+}
+async function fetchBranches() {
+  const { data, error } = await window.sb.from("branches").select("*").order("name");
+  if (error) throw error;
+  return data;
+}
+async function fetchCountries() {
+  const { data, error } = await window.sb.from("countries").select("*").order("name");
+  if (error) throw error;
+  return data;
+}
+
 function exportRowsToExcel(filename, rows, sheetName) {
   if (!window.XLSX || !rows || !rows.length) return false;
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -1716,6 +1865,28 @@ function Drawer({ title, onClose, children }) {
     </div>
   </React.Fragment>;
 }
+// A near-fullscreen overlay for a single record's whole picture — bigger
+// than Modal (sized for a form) and wider than Drawer (a narrow side
+// panel). Closes on Escape and on a click outside the sheet, same as Modal.
+function Sheet({ title, subtitle, onClose, headerExtra, children }) {
+  useEffect(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return <div className="mis-sheet-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="mis-sheet mis-view-enter">
+      <div className="mis-sheet-head">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>{title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          {headerExtra}
+          <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+        </div>
+      </div>
+      <div className="mis-sheet-body">{children}</div>
+    </div>
+  </div>;
+}
 function Tabs({ tabs, active, onChange }) {
   return <div className="mis-tabs">
     {tabs.map(t => <button key={t.key} type="button" className={"mis-tab" + (active === t.key ? " active" : "")} onClick={() => onChange(t.key)}>{t.label}</button>)}
@@ -1764,20 +1935,23 @@ function mergeInventoryRows(rows, type, items, stockRooms, branchFallback) {
     const branch = String(r.Branch || branchFallback || BRANCHES[0]).trim();
     const roomName = String(r["Stock Room"] || r.StockRoom || r.Room || "Main Store").trim();
     let room = newRooms.find(sr => sr.name === roomName && sr.branch === branch);
-    if (!room) { room = { id: uid("SR", newRooms, 2), name: roomName, branch }; newRooms = [...newRooms, room]; }
+    if (!room) { room = { id: uid("SR", newRooms, 2), name: roomName, branch, isNewRoom: true }; newRooms = [...newRooms, room]; }
     const qty = Number(r.Qty ?? r.Quantity ?? r["On Hand"] ?? 0) || 0;
     const reorder = Number(r.Reorder ?? r["Reorder At"] ?? r.ReorderPoint ?? 0) || 0;
     const cost = Number(r.Cost ?? r["Unit Cost"] ?? 0) || 0;
     const sell = Number(r.Sell ?? r["Sell Price"] ?? r.Price ?? 0) || 0;
     const brand = String(r.Brand || "").trim();
     const category = String(r.Category || "").trim();
-    const existingIdx = newItems.findIndex(it => id && it.id === id);
+    // Match against displayCode (real data's human-readable code, e.g.
+    // "WP-1001") when present, falling back to id for demo-shaped rows.
+    const existingIdx = newItems.findIndex(it => id && (it.displayCode || it.id) === id);
     if (existingIdx >= 0) {
-      newItems[existingIdx] = { ...newItems[existingIdx], name: name || newItems[existingIdx].name, brand: brand || newItems[existingIdx].brand, category: category || newItems[existingIdx].category, branch, stockRoom: room.id, qty, reorder: reorder || newItems[existingIdx].reorder, cost: cost || newItems[existingIdx].cost, sell: sell || newItems[existingIdx].sell };
+      const prevQty = newItems[existingIdx].qty;
+      newItems[existingIdx] = { ...newItems[existingIdx], name: name || newItems[existingIdx].name, brand: brand || newItems[existingIdx].brand, category: category || newItems[existingIdx].category, branch, stockRoom: room.id, qty, reorder: reorder || newItems[existingIdx].reorder, cost: cost || newItems[existingIdx].cost, sell: sell || newItems[existingIdx].sell, __prevQty: prevQty };
       updated++;
     } else {
       const newId = id || uid(type === "equipment" ? "EQ" : "PT", newItems, 4);
-      newItems = [...newItems, { id: newId, type, name: name || newId, brand, category, branch, stockRoom: room.id, qty, reorder, cost, sell }];
+      newItems = [...newItems, { id: newId, displayCode: id || null, type, name: name || newId, brand, category, branch, stockRoom: room.id, qty, reorder, cost, sell, __isNew: true }];
       created++;
     }
   });
@@ -1798,7 +1972,42 @@ function groupPORows(rows) {
   return Object.values(groups);
 }
 
-function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog, lang }) {
+// The append-only ledger itself, made visible: every row here is a real,
+// never-edited insert into inventory_ledger — this is what "current stock"
+// is actually computed from, not a separate audit trail bolted on after
+// the fact.
+function StockLedgerHistory({ itemId, lang }) {
+  const [rows, setRows] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    setRows(null);
+    window.sb.from("inventory_ledger")
+      .select("*, profiles(name)")
+      .eq("item_id", itemId)
+      .order("created_at", { ascending: false })
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        if (err) { setError(err.message); return; }
+        setRows(data);
+      });
+    return () => { cancelled = true; };
+  }, [itemId]);
+  return <div>
+    <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".04em" }}>{t(lang, "inv.stockLedger")}</div>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+    {rows === null && !error && <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "login.loading")}</p>}
+    {rows && rows.length === 0 && <div className="mis-empty">{t(lang, "inv.noLedgerEntries")}</div>}
+    {rows && rows.map(r => <div key={r.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12 }}>
+      <span style={{ color: "var(--text-secondary)" }}>{r.reason}{r.note ? ` — ${r.note}` : ""}</span>
+      <span className="mis-mono" style={{ color: r.qty_delta > 0 ? "var(--safe)" : "var(--vital)", whiteSpace: "nowrap", marginLeft: 8 }}>
+        {r.qty_delta > 0 ? "+" : ""}{r.qty_delta} · {r.profiles ? r.profiles.name : "—"} · {fmtDateTime(r.created_at)}
+      </span>
+    </div>)}
+  </div>;
+}
+
+function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, realBranches, reloadStock, dataLoading, dataError, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog, lang }) {
   const label = type === "equipment" ? "Equipment" : "Part";
   const typeLabel = type === "equipment" ? t(lang, "inv.equipment") : t(lang, "inv.part");
   const canManage = ["director", "admin", "warehouse", "procurement"].includes(role);
@@ -1812,13 +2021,17 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
   const [preview, setPreview] = useState(null);
   const [poPreview, setPoPreview] = useState(null);
   const [newRoomForm, setNewRoomForm] = useState({ name: "", branch: BRANCHES[0] });
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [roomBusy, setRoomBusy] = useState(false);
+  const [roomError, setRoomError] = useState("");
 
   const typedItems = items.filter(i => i.type === type);
   const rooms = stockRooms.filter(r => branchFilter === "All" || r.branch === branchFilter);
   const filtered = typedItems
     .filter(i => branchFilter === "All" || i.branch === branchFilter)
     .filter(i => roomFilter === "All" || i.stockRoom === roomFilter)
-    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || i.id.toLowerCase().includes(search.toLowerCase()) || (i.brand || "").toLowerCase().includes(search.toLowerCase()));
+    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()) || (i.displayCode || i.id).toLowerCase().includes(search.toLowerCase()) || (i.brand || "").toLowerCase().includes(search.toLowerCase()));
 
   function roomLabel(id) { const r = stockRooms.find(x => x.id === id); return r ? `${r.name} · ${r.branch}` : "—"; }
 
@@ -1828,22 +2041,86 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
       setPreview({ ...result, fileName: file.name });
     }).catch(err => window.alert("Could not read file: " + err.message));
   }
-  function confirmUpload() {
-    if (!preview) return;
-    setItems(preview.items);
-    setStockRooms(preview.stockRooms);
-    logAction(currentUser, `Uploaded ${label.toLowerCase()} inventory sheet "${preview.fileName}" — ${preview.created} new, ${preview.updated} updated`, "Inventory");
-    pushNotification("inventory", `${preview.created + preview.updated} ${label.toLowerCase()} record(s) imported from ${preview.fileName}`);
-    setPreview(null);
-    setShowUpload(false);
+  // Writes the previewed sheet for real: new stock rooms are inserted first
+  // (so items referencing them get a real stock_room_id), then each item is
+  // either created (with an opening `initial_stock` ledger entry) or, for an
+  // existing item, updated on its non-quantity fields with the quantity
+  // change written as a separate `adjustment` ledger entry — never an
+  // overwrite of "qty" itself, since that column doesn't exist.
+  async function confirmUpload() {
+    if (!preview || uploadBusy) return;
+    setUploadBusy(true);
+    setUploadError("");
+    try {
+      const roomIdMap = {};
+      for (const room of preview.stockRooms) {
+        if (!room.isNewRoom) continue;
+        const branchRow = realBranches.find(b => b.name === room.branch);
+        if (!branchRow) throw new Error(`No branch named "${room.branch}" exists yet — add it before importing.`);
+        const { data: created, error } = await window.sb.from("stock_rooms")
+          .insert({ branch_id: branchRow.id, name: room.name })
+          .select().single();
+        if (error) throw error;
+        roomIdMap[room.id] = created.id;
+      }
+      for (const item of preview.items) {
+        const realStockRoomId = roomIdMap[item.stockRoom] || item.stockRoom;
+        if (item.__isNew) {
+          const { data: createdItem, error } = await window.sb.from("items")
+            .insert({
+              stock_room_id: realStockRoomId, type, name: item.name, brand: item.brand || null,
+              category: item.category || null, reorder: item.reorder || 0, cost: item.cost || 0, sell: item.sell || 0,
+              display_code: item.displayCode || null
+            })
+            .select().single();
+          if (error) throw error;
+          if (item.qty > 0) {
+            const { error: adjError } = await window.sb.rpc("adjust_stock", {
+              p_item_id: createdItem.id, p_qty_delta: item.qty, p_reason: "initial_stock",
+              p_note: `Imported from "${preview.fileName}"`
+            });
+            if (adjError) throw adjError;
+          }
+        } else {
+          const { error } = await window.sb.from("items").update({
+            name: item.name, brand: item.brand || null, category: item.category || null,
+            stock_room_id: realStockRoomId, reorder: item.reorder || 0, cost: item.cost || 0, sell: item.sell || 0
+          }).eq("id", item.id);
+          if (error) throw error;
+          const delta = item.qty - (item.__prevQty || 0);
+          if (delta !== 0) {
+            const { error: adjError } = await window.sb.rpc("adjust_stock", {
+              p_item_id: item.id, p_qty_delta: delta, p_reason: "adjustment",
+              p_note: `Recount from "${preview.fileName}"`
+            });
+            if (adjError) throw adjError;
+          }
+        }
+      }
+      await reloadStock();
+      logAction(currentUser, `Uploaded ${label.toLowerCase()} inventory sheet "${preview.fileName}" — ${preview.created} new, ${preview.updated} updated`, "Inventory");
+      pushNotification("inventory", `${preview.created + preview.updated} ${label.toLowerCase()} record(s) imported from ${preview.fileName}`);
+      setPreview(null);
+      setShowUpload(false);
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploadBusy(false);
+    }
   }
-  function addRoom(e) {
+  async function addRoom(e) {
     e.preventDefault();
-    if (!newRoomForm.name.trim()) return;
-    const room = { id: uid("SR", stockRooms, 2), name: newRoomForm.name.trim(), branch: newRoomForm.branch };
-    setStockRooms(rs => [...rs, room]);
-    logAction(currentUser, `Created stock room "${room.name}" at ${room.branch}`, "Inventory");
+    if (!newRoomForm.name.trim() || roomBusy) return;
+    setRoomBusy(true);
+    setRoomError("");
+    const branchRow = realBranches.find(b => b.name === newRoomForm.branch);
+    if (!branchRow) { setRoomBusy(false); setRoomError(`No branch named "${newRoomForm.branch}" exists yet.`); return; }
+    const { error } = await window.sb.from("stock_rooms").insert({ branch_id: branchRow.id, name: newRoomForm.name.trim() });
+    if (error) { setRoomBusy(false); setRoomError(error.message); return; }
+    await reloadStock();
+    logAction(currentUser, `Created stock room "${newRoomForm.name.trim()}" at ${newRoomForm.branch}`, "Inventory");
     setNewRoomForm({ name: "", branch: BRANCHES[0] });
+    setRoomBusy(false);
     setShowAddRoom(false);
   }
   function handleUploadPO(file) {
@@ -1862,7 +2139,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
     setShowUploadPO(false);
   }
   function exportReport() {
-    const rows = filtered.map(i => ({ Code: i.id, Name: i.name, Brand: i.brand, Category: i.category, Branch: i.branch, "Stock Room": roomLabel(i.stockRoom), "On Hand": i.qty, "Reorder At": i.reorder, Cost: i.cost, "Sell Price": i.sell }));
+    const rows = filtered.map(i => ({ Code: i.displayCode || i.id, Name: i.name, Brand: i.brand, Category: i.category, Branch: i.branch, "Stock Room": roomLabel(i.stockRoom), "On Hand": i.qty, "Reorder At": i.reorder, Cost: i.cost, "Sell Price": i.sell }));
     const ok = exportRowsToExcel(`setvaco-${type}-inventory-${todayISO()}.xlsx`, rows, label + " Inventory");
     if (ok) logAction(currentUser, `Exported ${label.toLowerCase()} inventory report (${rows.length} rows)`, "Inventory");
     else window.alert("Nothing to export for the current filter.");
@@ -1871,6 +2148,8 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
   const itemHistory = historyItem ? auditLog.filter(a => a.action.includes(historyItem.id) || a.action.includes(historyItem.name)) : [];
 
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {dataError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{dataError}</p>}
+    {dataLoading && <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "login.loading")}</p>}
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 12px", width: 260 }}>
@@ -1900,7 +2179,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
       columns={[
         { header: "", render: it => <CoreSample layers={stockLayers(it)} size={26} /> },
         { header: typeLabel, render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
-        { header: t(lang, "inv.code"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.id}</span> },
+        { header: t(lang, "inv.code"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.displayCode || it.id}</span> },
         { header: t(lang, "inv.brand"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
         { header: t(lang, "common.branch"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}><BranchTag branch={it.branch} /></span> },
         { header: t(lang, "inv.stockRoom"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{roomLabel(it.stockRoom)}</span> },
@@ -1917,18 +2196,20 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
 
     {showAddRoom && <Modal title={t(lang, "inv.addStockRoom")} onClose={() => setShowAddRoom(false)} footer={<React.Fragment>
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(false)}>{t(lang, "common.cancel")}</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={addRoom}>{t(lang, "inv.createRoom")}</button>
+      <button type="button" disabled={roomBusy} className="mis-btn-primary mis-focus" onClick={addRoom}>{roomBusy ? t(lang, "login.loading") : t(lang, "inv.createRoom")}</button>
     </React.Fragment>}>
       <form onSubmit={addRoom} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {roomError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{roomError}</p>}
         <Field label={t(lang, "inv.roomName")}><TInput required value={newRoomForm.name} onChange={e => setNewRoomForm(f => ({ ...f, name: e.target.value }))} placeholder={t(lang, "inv.roomNamePlaceholder")} /></Field>
         <Field label={t(lang, "common.branch")}><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</TSelect></Field>
       </form>
     </Modal>}
 
-    {showUpload && <Modal title={tf(lang, "inv.uploadInventorySheetTitle", { type: typeLabel.toLowerCase() })} wide onClose={() => { setShowUpload(false); setPreview(null); }} footer={preview ? <React.Fragment>
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "inv.chooseDifferentFile")}</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {tf(lang, "inv.importRows", { n: preview.created + preview.updated })}</button>
+    {showUpload && <Modal title={tf(lang, "inv.uploadInventorySheetTitle", { type: typeLabel.toLowerCase() })} wide onClose={() => { setShowUpload(false); setPreview(null); setUploadError(""); }} footer={preview ? <React.Fragment>
+      <button type="button" disabled={uploadBusy} className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "inv.chooseDifferentFile")}</button>
+      <button type="button" disabled={uploadBusy} className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {uploadBusy ? t(lang, "login.loading") : tf(lang, "inv.importRows", { n: preview.created + preview.updated })}</button>
     </React.Fragment> : null}>
+      {uploadError && <p style={{ fontSize: 12, color: "var(--vital)", marginBottom: 10 }}>{uploadError}</p>}
       {!preview && <React.Fragment>
         <FileDrop label={t(lang, "inv.dropExcelFile")} accept=".xlsx,.xls,.csv" onFile={handleUploadFile} hint={t(lang, "inv.expectedColumnsInventory")} />
         <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "inv.uploadInventoryHint")}</p>
@@ -1954,12 +2235,14 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
 
     {historyItem && <Drawer title={tf(lang, "inv.historyTitle", { name: historyItem.name })} onClose={() => setHistoryItem(null)}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
-        <div className="mis-kv"><span>{t(lang, "inv.code")}</span><b className="mis-mono">{historyItem.id}</b></div>
+        <div className="mis-kv"><span>{t(lang, "inv.code")}</span><b className="mis-mono">{historyItem.displayCode || historyItem.id}</b></div>
         <div className="mis-kv"><span>{t(lang, "common.branch")}</span><b>{historyItem.branch}</b></div>
         <div className="mis-kv"><span>{t(lang, "inv.stockRoomLabel")}</span><b>{roomLabel(historyItem.stockRoom)}</b></div>
         <div className="mis-kv"><span>{t(lang, "inv.onHandLabel")}</span><b>{historyItem.qty} {tf(lang, "inv.reorderAtParen", { n: historyItem.reorder })}</b></div>
       </div>
       <div className="mis-divider" style={{ marginBottom: 12 }} />
+      <StockLedgerHistory itemId={historyItem.id} lang={lang} />
+      <div className="mis-divider" style={{ margin: "12px 0" }} />
       <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".04em" }}>{t(lang, "inv.activityWhoDidWhat")}</div>
       {itemHistory.length === 0 && <div className="mis-empty">{t(lang, "inv.noActivityForRecord")}</div>}
       {itemHistory.map(a => <div key={a.id} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
@@ -2175,7 +2458,7 @@ function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction,
   </Modal>;
 }
 
-function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, lang }) {
+function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, onMarkPaid, lang }) {
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   function total(doc) { return typeof doc.total === "number" ? doc.total : doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
   return <DataTable
@@ -2192,6 +2475,7 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
         <button type="button" className="mis-link-btn" onClick={() => onPrint(d)}>{t(lang, "dt.print")}</button>
         {d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>{t(lang, "dt.send")}</button>}
         {kind === "quotation" && d.status !== "Invoiced" && d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>{t(lang, "dt.convertToInvoice")}</button>}
+        {kind === "invoice" && d.status === "Issued" && onMarkPaid && <button type="button" className="mis-link-btn" onClick={() => onMarkPaid(d)}>{t(lang, "dt.markPaid")}</button>}
       </div> }
     ]}
     rows={docs}
@@ -2514,8 +2798,14 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       const line = q.lines.find(l => l.itemId === it.id);
       return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
     }));
-    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated`, "Sales");
+    setCustomers(cs => cs.map(c => c.id === q.customerId ? { ...c, outstanding: (c.outstanding || 0) + inv.total } : c));
+    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated, added ${fmtGHS(inv.total)} to outstanding balance`, "Sales");
     pushNotification("invoice", `${inv.id} issued to ${custName(q.customerId)}`);
+  }
+  function markInvoicePaid(inv) {
+    setInvoices(is => is.map(x => x.id === inv.id ? { ...x, status: "Paid" } : x));
+    setCustomers(cs => cs.map(c => c.id === inv.customerId ? { ...c, outstanding: Math.max(0, (c.outstanding || 0) - inv.total) } : c));
+    logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)} — removed ${fmtGHS(inv.total)} from outstanding balance`, "Sales");
   }
 
   const partsList = items.filter(i => i.type === "part");
@@ -2532,7 +2822,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.transactionHistory")}</h4>
     <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} lang={lang} />
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.invoicesHeading")}</h4>
-    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} lang={lang} />
+    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} onMarkPaid={["director", "admin", "finance"].includes(role) ? markInvoicePaid : undefined} lang={lang} />
 
     {showCreate && <CreateQuotationModal
       type={type}
@@ -2791,26 +3081,44 @@ function ContactsEditor({ contacts, setContacts, lang }) {
   </div>;
 }
 
-function CreateCustomerModal({ customers, setCustomers, priceBooks, currentUser, logAction, onClose, lang }) {
+function CreateCustomerModal({ customers, setCustomers, countries, reloadCustomers, priceBooks, currentUser, logAction, onClose, lang }) {
   const standardBook = priceBooks.find(b => b.isStandard);
-  const [form, setForm] = useState({ name: "", country: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0, taxExempt: false, priceBookId: standardBook ? standardBook.id : "" });
+  const [form, setForm] = useState({ name: "", countryCode: "", address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", tier: "Standard", creditLimit: 0, taxExempt: false, priceBookId: standardBook ? standardBook.id : "" });
   const [contacts, setContacts] = useState([]);
-  function submit(e) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
-    const customer = { id: uid("C", customers, 2), ...form, creditLimit: Number(form.creditLimit) || 0, outstanding: 0, contacts };
-    setCustomers(cs => [...cs, customer]);
-    logAction(currentUser, `Created customer record for ${customer.name}`, "Customers");
+    if (!form.name.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    const { data: created, error: insertError } = await window.sb.from("customers")
+      .insert(customerToDbFields(form))
+      .select()
+      .single();
+    if (insertError) { setBusy(false); setError(insertError.message); return; }
+    if (contacts.length) {
+      const { error: contactsError } = await window.sb.from("customer_contacts")
+        .insert(contacts.map(c => ({ customer_id: created.id, name: c.name, role: c.role || null, email: c.email || null, phone: c.phone || null })));
+      if (contactsError) { setBusy(false); setError(contactsError.message); return; }
+    }
+    await reloadCustomers();
+    logAction(currentUser, `Created customer record for ${form.name}`, "Customers");
+    setBusy(false);
     onClose();
   }
   return <Modal title={t(lang, "cust.createCustomer")} wide onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
-    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><UserPlus size={14} /> {t(lang, "cust.createCustomer")}</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}><UserPlus size={14} /> {busy ? t(lang, "login.loading") : t(lang, "cust.createCustomer")}</button>
   </React.Fragment>}>
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
       <div className="mis-grid-2">
         <Field label={t(lang, "cust.customerCompanyName")}><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
-        <Field label={t(lang, "common.country")}><TInput required value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} /></Field>
+        <Field label={t(lang, "common.country")}><TSelect required value={form.countryCode} onChange={e => setForm(f => ({ ...f, countryCode: e.target.value }))}>
+          <option value="">—</option>
+          {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+        </TSelect></Field>
       </div>
       <Field label={t(lang, "common.address")}><TInput value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></Field>
       <div className="mis-grid-2">
@@ -2875,7 +3183,7 @@ function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClos
   </Drawer>;
 }
 
-function Customers({ role, currentUser, customers, setCustomers, quotations, invoices, auditLog, priceBooks, logAction, lang }) {
+function Customers({ role, currentUser, customers, setCustomers, countries, reloadCustomers, dataLoading, dataError, quotations, invoices, auditLog, priceBooks, logAction, lang }) {
   const canCreate = ["director", "admin", "sales"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState(null);
@@ -2883,6 +3191,8 @@ function Customers({ role, currentUser, customers, setCustomers, quotations, inv
     <div style={{ display: "flex", justifyContent: "flex-end" }}>
       {canCreate && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><UserPlus size={14} /> {t(lang, "cust.createCustomer")}</button>}
     </div>
+    {dataError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{dataError}</p>}
+    {dataLoading && <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "login.loading")}</p>}
     <DataTable columns={[
       { header: t(lang, "cust.customerCol"), render: c => <button type="button" className="mis-link-btn" style={{ color: "var(--text-primary)", textDecoration: "none", fontSize: 13 }} onClick={() => setDetail(c)}>{c.name}</button> },
       { header: t(lang, "common.country"), render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.country}</span> },
@@ -2892,7 +3202,7 @@ function Customers({ role, currentUser, customers, setCustomers, quotations, inv
       { header: t(lang, "cust.creditLimitCol"), render: c => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(c.creditLimit)}</span> },
       { header: t(lang, "cust.outstandingCol"), render: c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <span className="mis-mono" style={{ fontSize: 12, color: risky ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(c.outstanding)} ({pct}%)</span>; } }
     ]} rows={customers} rowKey={c => c.id} empty={t(lang, "cust.noCustomersYet")} />
-    {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} priceBooks={priceBooks} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} priceBooks={priceBooks} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
     {detail && <CustomerDetailDrawer customer={detail} quotations={quotations} invoices={invoices} auditLog={auditLog} onClose={() => setDetail(null)} lang={lang} />}
   </div>;
 }
@@ -3392,45 +3702,136 @@ function VarianceAudit({ auditLog, lang }) {
     ]} rows={auditLog} rowKey={a => a.id} empty={t(lang, "dash.noActivityYet")} />}
   </div>;
 }
-function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessage, lang }) {
-  const [staffFilter, setStaffFilter] = useState("All");
-  const [composingFor, setComposingFor] = useState(null);
-  const [messageDraft, setMessageDraft] = useState({});
+// ---------------------------------------------------------------------------
+// STAFF ACTIVITY SHEET — the full-screen "what has this person been up to"
+// view. Two small hand-rolled SVG charts (this app has no charting library
+// and none of these are complex enough to need one) plus the same detail
+// list StaffActivityTab already renders, scoped to one person.
+// ---------------------------------------------------------------------------
+
+// Daily activity, last 14 days. A single hue (magnitude, not identity) so
+// there's no categorical-color-safety question to validate — bar height is
+// the only encoding. Thin bars, rounded data-ends, 2px gap between bars,
+// per-bar hover tooltip.
+function ActivityByDayChart({ entries, lang }) {
+  const [hover, setHover] = useState(null);
+  const days = 14;
+  const todayMs = new Date(todayISO()).getTime();
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const dateMs = todayMs - (days - 1 - i) * 86400000;
+    const date = new Date(dateMs).toISOString().slice(0, 10);
+    return { date, count: 0 };
+  });
+  entries.forEach(a => {
+    const d = String(a.ts || "").slice(0, 10);
+    const b = buckets.find(x => x.date === d);
+    if (b) b.count++;
+  });
+  const max = Math.max(1, ...buckets.map(b => b.count));
+  const w = 100, h = 44, gap = 0.6, barW = w / days - gap;
+  return <div style={{ position: "relative" }}>
+    <svg viewBox={`0 0 ${w} ${h + 14}`} width="100%" height={130} preserveAspectRatio="none" style={{ overflow: "visible" }}>
+      <line x1="0" y1={h} x2={w} y2={h} stroke="var(--border)" strokeWidth="0.4" />
+      {buckets.map((b, i) => {
+        const barH = (b.count / max) * (h - 4);
+        const x = i * (w / days) + gap / 2;
+        const y = h - barH;
+        const isHover = hover === i;
+        return <g key={b.date}
+          onMouseEnter={() => setHover(i)}
+          onMouseLeave={() => setHover(hv => hv === i ? null : hv)}
+          style={{ cursor: "default" }}>
+          <rect x={x} y={0} width={barW} height={h} fill="transparent" />
+          <rect x={x} y={y} width={barW} height={Math.max(barH, 1)} rx={Math.min(barW / 2, 1.4)}
+            fill={isHover ? "var(--ore)" : "var(--ore)"} opacity={b.count === 0 ? 0.12 : (isHover ? 1 : 0.72)} />
+          {(i === 0 || i === days - 1 || i % 7 === 0) && <text x={x + barW / 2} y={h + 9} fontSize="3" textAnchor="middle" fill="var(--text-tertiary)">
+            {new Date(b.date).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit" })}
+          </text>}
+        </g>;
+      })}
+    </svg>
+    {hover !== null && <div style={{
+      position: "absolute", pointerEvents: "none",
+      left: `${(hover + 0.5) / days * 100}%`, top: 0, transform: "translate(-50%, -100%)",
+      background: "var(--ink)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 6, whiteSpace: "nowrap", zIndex: 5
+    }}>
+      <b>{buckets[hover].count}</b> {tf(lang, "sa.actionsOn", { date: fmtDateTime(buckets[hover].date).split(",")[0] })}
+    </div>}
+  </div>;
+}
+
+// By-module breakdown — horizontal bars, direct-labeled (module name +
+// count sit next to every bar), one hue. Identity here is carried by the
+// text label, never by color, so there's nothing to color-validate.
+function ModuleBreakdownChart({ entries, lang }) {
+  const counts = {};
+  entries.forEach(a => { counts[a.module || "—"] = (counts[a.module || "—"] || 0) + 1; });
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map(r => r[1]));
+  if (rows.length === 0) return <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>;
+  return <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    {rows.map(([module, count]) => <div key={module} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 12, color: "var(--text-secondary)", width: 120, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{module}</span>
+      <div style={{ flex: 1, height: 8, borderRadius: 4, background: "var(--panel-alt)", overflow: "hidden" }}>
+        <div style={{ width: `${(count / max) * 100}%`, height: "100%", borderRadius: 4, background: "var(--ore)" }} />
+      </div>
+      <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-primary)", width: 24, textAlign: "right", flexShrink: 0 }}>{count}</span>
+    </div>)}
+  </div>;
+}
+
+function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSendMessage, onClose, lang }) {
+  const [messageDraft, setMessageDraft] = useState("");
   const [commentDraft, setCommentDraft] = useState({});
-  const staff = users.filter(u => u.status === "Active");
-  function countFor(name) { return auditLog.filter(a => a.user === name).length; }
-  const feed = staffFilter === "All" ? auditLog : auditLog.filter(a => a.user === staffFilter);
-  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.staffOverview")}</h3>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-        {staff.map(u => { const active = staffFilter === u.name; return <div key={u.id} className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, cursor: "pointer", border: active ? "1px solid var(--ore)" : "1px solid transparent" }} onClick={() => setStaffFilter(f => f === u.name ? "All" : u.name)}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <Avatar name={u.name} role={u.role} size={32} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name}</div>
-              <RolePill role={u.role} lang={lang} />
-            </div>
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>{tf(lang, "sa.activityCount", { n: countFor(u.name) })}</div>
-          <button type="button" className="mis-link-btn" onClick={e => { e.stopPropagation(); setComposingFor(c => c === u.id ? null : u.id); }}><MessageSquare size={12} /> {t(lang, "sa.messageBtn")}</button>
-          {composingFor === u.id && <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }} onClick={e => e.stopPropagation()}>
-            <TArea rows={2} value={messageDraft[u.id] || ""} onChange={e => setMessageDraft(d => ({ ...d, [u.id]: e.target.value }))} placeholder={t(lang, "sa.messagePlaceholder")} />
-            <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={() => { onSendMessage(u.name, messageDraft[u.id]); setMessageDraft(d => ({ ...d, [u.id]: "" })); setComposingFor(null); }}>{t(lang, "sa.sendBtn")}</button>
-          </div>}
-        </div>; })}
-        {staff.length === 0 && <div className="mis-empty">{t(lang, "ua.noUsersYet")}</div>}
+  const entries = auditLog.filter(a => a.user === staffUser.name).slice().sort((a, b) => b.ts.localeCompare(a.ts));
+  const weekAgoISO = new Date(Date.now() - 7 * 86400000).toISOString();
+  const thisWeek = entries.filter(a => a.ts >= weekAgoISO).length;
+  const moduleCounts = {};
+  entries.forEach(a => { moduleCounts[a.module || "—"] = (moduleCounts[a.module || "—"] || 0) + 1; });
+  const topModule = Object.entries(moduleCounts).sort((a, b) => b[1] - a[1])[0];
+  const firstEntry = entries.length ? entries[entries.length - 1] : null;
+
+  return <Sheet
+    onClose={onClose}
+    title={<React.Fragment>
+      <Avatar name={staffUser.name} role={staffUser.role} size={44} />
+      <div style={{ minWidth: 0 }}>
+        <h3 className="mis-display" style={{ fontSize: 19, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{staffUser.name}</h3>
+        <RolePill role={staffUser.role} lang={lang} />
       </div>
+    </React.Fragment>}
+    headerExtra={<button type="button" className="mis-btn-ghost mis-focus" onClick={() => setMessageDraft(d => d === null ? "" : null)}>
+      <MessageSquare size={14} /> {t(lang, "sa.messageBtn")}
+    </button>}
+  >
+    {messageDraft !== null && <div className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+      <TArea rows={2} value={messageDraft} onChange={e => setMessageDraft(e.target.value)} placeholder={t(lang, "sa.messagePlaceholder")} />
+      <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={() => { onSendMessage(staffUser.name, messageDraft); setMessageDraft(null); }}>{t(lang, "sa.sendBtn")}</button>
+    </div>}
+
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+      <StatCard label={t(lang, "sa.totalActions")} value={entries.length} sub={t(lang, "sa.allTime")} icon={ClipboardList} tint="var(--ore)" soft="var(--ore-soft)" />
+      <StatCard label={t(lang, "sa.thisWeek")} value={thisWeek} sub={t(lang, "sa.lastSevenDays")} icon={BarChart3} tint="var(--info)" soft="var(--info-soft)" />
+      <StatCard label={t(lang, "sa.mostActiveModule")} value={topModule ? topModule[0] : "—"} sub={topModule ? tf(lang, "sa.activityCount", { n: topModule[1] }) : ""} icon={Tags} tint="var(--teal)" soft="var(--teal-soft)" />
+      <StatCard label={t(lang, "sa.activeSince")} value={firstEntry ? fmtDateTime(firstEntry.ts).split(",")[0] : "—"} sub={t(lang, "sa.firstLoggedAction")} icon={HistoryIcon} tint="var(--coral)" soft="var(--coral-soft)" />
     </div>
+
     <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{staffFilter === "All" ? t(lang, "sa.allActivity") : tf(lang, "sa.activityFor", { name: staffFilter })}</h3>
-        {staffFilter !== "All" && <button type="button" className="mis-link-btn" onClick={() => setStaffFilter("All")}>{t(lang, "sa.clearFilter")}</button>}
-      </div>
-      {feed.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
-      {feed.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.activityLast14Days")}</h3>
+      <ActivityByDayChart entries={entries} lang={lang} />
+    </div>
+
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.byModule")}</h3>
+      <ModuleBreakdownChart entries={entries} lang={lang} />
+    </div>
+
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.fullTimeline")}</h3>
+      {entries.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
+      {entries.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "var(--text-primary)" }}><b>{a.user}</b> — {a.action}</span>
+          <span style={{ fontSize: 12, color: "var(--text-primary)" }}>{a.action}</span>
           <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
@@ -3444,6 +3845,58 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
         </div>
       </div>)}
     </div>
+  </Sheet>;
+}
+
+function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessage, lang }) {
+  const [composingFor, setComposingFor] = useState(null);
+  const [messageDraft, setMessageDraft] = useState({});
+  const [commentDraft, setCommentDraft] = useState({});
+  const [openStaff, setOpenStaff] = useState(null);
+  const staff = users.filter(u => u.status === "Active");
+  function countFor(name) { return auditLog.filter(a => a.user === name).length; }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.staffOverview")}</h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+        {staff.map(u => <div key={u.id} className="mis-panel-alt mis-card-hover" style={{ borderRadius: 12, padding: 12, cursor: "pointer" }} onClick={() => setOpenStaff(u)}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <Avatar name={u.name} role={u.role} size={32} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name}</div>
+              <RolePill role={u.role} lang={lang} />
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8 }}>{tf(lang, "sa.activityCount", { n: countFor(u.name) })}</div>
+          <button type="button" className="mis-link-btn" onClick={e => { e.stopPropagation(); setComposingFor(c => c === u.id ? null : u.id); }}><MessageSquare size={12} /> {t(lang, "sa.messageBtn")}</button>
+          {composingFor === u.id && <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }} onClick={e => e.stopPropagation()}>
+            <TArea rows={2} value={messageDraft[u.id] || ""} onChange={e => setMessageDraft(d => ({ ...d, [u.id]: e.target.value }))} placeholder={t(lang, "sa.messagePlaceholder")} />
+            <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={() => { onSendMessage(u.name, messageDraft[u.id]); setMessageDraft(d => ({ ...d, [u.id]: "" })); setComposingFor(null); }}>{t(lang, "sa.sendBtn")}</button>
+          </div>}
+        </div>)}
+        {staff.length === 0 && <div className="mis-empty">{t(lang, "ua.noUsersYet")}</div>}
+      </div>
+    </div>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.allActivity")}</h3>
+      {auditLog.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
+      {auditLog.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "var(--text-primary)" }}><b className="mis-link-btn" style={{ fontSize: 12, textDecoration: "none" }} onClick={() => { const u = staff.find(x => x.name === a.user); if (u) setOpenStaff(u); }}>{a.user}</b> — {a.action}</span>
+          <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
+        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 8 }}>
+          <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
+          <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
+        </div>)}
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <TInput value={commentDraft[a.id] || ""} onChange={e => setCommentDraft(d => ({ ...d, [a.id]: e.target.value }))} placeholder={t(lang, "sa.commentPlaceholder")} />
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onComment(a.id, commentDraft[a.id]); setCommentDraft(d => ({ ...d, [a.id]: "" })); }}>{t(lang, "sa.commentBtn")}</button>
+        </div>
+      </div>)}
+    </div>
+    {openStaff && <StaffActivitySheet staffUser={openStaff} auditLog={auditLog} currentUser={currentUser} onComment={onComment} onSendMessage={onSendMessage} onClose={() => setOpenStaff(null)} lang={lang} />}
   </div>;
 }
 
@@ -3623,30 +4076,15 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
 }
 
 // ---------------------------------------------------------------------------
-// LOGIN — prototype-level gate: checks the typed username against the local
-// demo user list (case-insensitive, must be Active) and a shared demo
-// password. Not connected to a real backend — the Supabase Auth backend in
-// supabase/ already exists and is the intended real login once the frontend
-// takes the Vite+React build-step cutover documented in
-// docs/architecture.md; this is a faster interim step that at least gates
-// entry by a real user identity instead of a free role dropdown.
+// LOGIN — real Supabase Auth. supabase.auth.signInWithPassword() checks the
+// email/password against auth.users (GoTrue), which stores the password as
+// a bcrypt hash — nothing about hashing or verifying a password is built or
+// trusted here, it's entirely Supabase's job. On success, the app loads the
+// matching `profiles` row (name/role/company) — see the useEffect in
+// SetvacoBusinessSystem that watches the Supabase session.
 // ---------------------------------------------------------------------------
-const DEMO_PASSWORD = "setvaco-demo";
-function LoginScreen({ users, lang, setLang, onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-
-  function submit(e) {
-    e.preventDefault();
-    const match = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.status === "Active");
-    if (!match || password !== DEMO_PASSWORD) { setError(true); return; }
-    setError(false);
-    onLogin(match.id);
-  }
-
+function AuthShell({ lang, setLang, children }) {
   const mosaicColors = ["var(--coral)", "var(--teal)", "var(--sky)", "var(--sky)", "var(--coral)", "var(--teal)", "var(--teal)", "var(--sky)", "var(--coral)"];
-
   return <div className="mis-root mis-auth-shell">
     <Style />
     <div className="mis-auth-hero">
@@ -3666,25 +4104,87 @@ function LoginScreen({ users, lang, setLang, onLogin }) {
           <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
         </div>
       </div>
-      <div className="mis-auth-card mis-view-enter">
-        <div className="mis-eyebrow" style={{ marginBottom: 6 }}>{t(lang, "login.title")}</div>
-        <div className="mis-display" style={{ fontSize: 24, color: "var(--ink)", marginBottom: 22 }}>{t(lang, "login.subtitle")}</div>
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Field label={t(lang, "login.username")}><TInput autoFocus value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. kowusu" /></Field>
-          <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
-          {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "login.invalid")}</p>}
-          <button type="submit" className="mis-btn-primary mis-focus" style={{ justifyContent: "center", padding: "11px 16px" }}>{t(lang, "login.signIn")}</button>
-        </form>
-        <div className="mis-divider" style={{ margin: "22px 0 14px" }} />
-        <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
-          <p style={{ marginBottom: 6 }}>{t(lang, "login.demoHint")}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {users.filter(u => u.status === "Active").map(u => <span key={u.id} className="mis-mono">{u.username} — {t(lang, "role." + u.role)}</span>)}
-          </div>
-        </div>
-      </div>
+      <div className="mis-auth-card mis-view-enter">{children}</div>
     </div>
   </div>;
+}
+
+function LoginScreen({ lang, setLang }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const { error: signInError } = await window.sb.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (signInError) setError(t(lang, "login.invalid"));
+  }
+
+  async function forgotPassword() {
+    if (!email.trim()) { setError(t(lang, "login.email") + " ?"); return; }
+    setBusy(true);
+    await window.sb.auth.resetPasswordForEmail(email.trim());
+    setBusy(false);
+    setResetSent(true);
+  }
+
+  return <AuthShell lang={lang} setLang={setLang}>
+    <div className="mis-eyebrow" style={{ marginBottom: 6 }}>{t(lang, "login.title")}</div>
+    <div className="mis-display" style={{ fontSize: 24, color: "var(--ink)", marginBottom: 22 }}>{t(lang, "login.subtitle")}</div>
+    {resetSent
+      ? <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "login.resetSent")}</p>
+      : <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Field label={t(lang, "login.email")}><TInput autoFocus type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@setvaco.com" /></Field>
+          <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+          {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+          <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center", padding: "11px 16px" }}>{busy ? t(lang, "login.loading") : t(lang, "login.signIn")}</button>
+          <button type="button" className="mis-link-btn" style={{ fontSize: 12, textAlign: "center" }} onClick={forgotPassword}>{t(lang, "login.forgotPassword")}</button>
+        </form>}
+  </AuthShell>;
+}
+
+// Shown when the URL carries a Supabase password-recovery link
+// (#access_token=...&type=recovery — see the hash-parsing useEffect in
+// SetvacoBusinessSystem). supabase.auth.updateUser() is the only place a
+// plaintext password is ever handled, and it goes straight to Supabase Auth
+// over HTTPS — nothing here stores or logs it.
+function SetPasswordScreen({ lang, setLang, onDone }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (password.length < 8) { setError(t(lang, "login.passwordTooShort")); return; }
+    if (password !== confirm) { setError(t(lang, "login.passwordsDontMatch")); return; }
+    setError("");
+    setBusy(true);
+    const { error: updateError } = await window.sb.auth.updateUser({ password });
+    setBusy(false);
+    if (updateError) { setError(updateError.message); return; }
+    setDone(true);
+    setTimeout(onDone, 1200);
+  }
+
+  return <AuthShell lang={lang} setLang={setLang}>
+    <div className="mis-eyebrow" style={{ marginBottom: 6 }}>{t(lang, "login.setNewPassword")}</div>
+    <div className="mis-display" style={{ fontSize: 20, color: "var(--ink)", marginBottom: 10 }}>{t(lang, "login.setNewPasswordHint")}</div>
+    {done
+      ? <p style={{ fontSize: 13, color: "var(--safe)" }}>{t(lang, "login.passwordSet")}</p>
+      : <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
+          <Field label={t(lang, "login.newPassword")}><TInput autoFocus type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+          <Field label={t(lang, "login.confirmPassword")}><TInput type="password" value={confirm} onChange={e => setConfirm(e.target.value)} /></Field>
+          {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+          <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center", padding: "11px 16px" }}>{busy ? t(lang, "login.loading") : t(lang, "login.setPassword")}</button>
+        </form>}
+  </AuthShell>;
 }
 
 // ---------------------------------------------------------------------------
@@ -3692,13 +4192,99 @@ function LoginScreen({ users, lang, setLang, onLogin }) {
 // ---------------------------------------------------------------------------
 function SetvacoBusinessSystem() {
   const persisted = loadPersisted();
-  const [loggedInUserId, setLoggedInUserId] = useState(() => (persisted && persisted.loggedInUserId) || null);
+  // Real Supabase Auth session + the matching `profiles` row (name/role/
+  // company). supabase-js persists the session itself (its own localStorage
+  // key) — nothing about "who's logged in" is tracked in our own state.
+  const [authLoading, setAuthLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState("");
+  // A Supabase password-recovery link lands here as #access_token=...&type=recovery.
+  const [recoveryMode, setRecoveryMode] = useState(() => window.location.hash.includes("type=recovery"));
+
+  useEffect(() => {
+    window.sb.auth.getSession().then(({ data }) => { setSession(data.session); setAuthLoading(false); });
+    const { data: sub } = window.sb.auth.onAuthStateChange((event, newSession) => {
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
+      setSession(newSession);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) { setProfile(null); return; }
+    let cancelled = false;
+    window.sb.from("profiles").select("*").eq("id", session.user.id).single().then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) { setProfileError(error.message); return; }
+      setProfile(data);
+      setProfileError("");
+    });
+    return () => { cancelled = true; };
+  }, [session]);
+
+  function countryNameByCode(code) {
+    const c = countries.find(x => x.code === code);
+    return c ? c.name : (code || "");
+  }
+
+  async function reloadCustomers() {
+    const rows = await fetchCustomers();
+    setCustomers(rows.map(r => mapCustomerFromDb(r, countryNameByCode)));
+  }
+  async function reloadStock() {
+    const roomRows = await fetchStockRooms();
+    const mappedRooms = roomRows.map(mapStockRoomFromDb);
+    setStockRooms(mappedRooms);
+    const roomsById = {};
+    mappedRooms.forEach(r => { roomsById[r.id] = r; });
+    const itemRows = await fetchItems();
+    setItems(itemRows.map(r => mapItemFromDb(r, roomsById)));
+  }
+
+  // Loads real Customers/Stock Room data once we know who's signed in (RLS
+  // needs an authenticated session to return any rows at all).
+  useEffect(() => {
+    if (!profile) return;
+    let cancelled = false;
+    setDataLoading(true);
+    setDataError("");
+    Promise.all([fetchCountries(), fetchBranches()])
+      .then(([countryRows, branchRows]) => {
+        if (cancelled) return;
+        setCountries(countryRows);
+        setRealBranches(branchRows);
+        return Promise.all([fetchCustomers(), fetchStockRooms()]).then(([customerRows, roomRows]) => {
+          if (cancelled) return;
+          const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
+          setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
+          const mappedRooms = roomRows.map(mapStockRoomFromDb);
+          setStockRooms(mappedRooms);
+          const roomsById = {};
+          mappedRooms.forEach(r => { roomsById[r.id] = r; });
+          return fetchItems().then(itemRows => {
+            if (cancelled) return;
+            setItems(itemRows.map(r => mapItemFromDb(r, roomsById)));
+          });
+        });
+      })
+      .catch(err => { if (!cancelled) setDataError(err.message); })
+      .finally(() => { if (!cancelled) setDataLoading(false); });
+    return () => { cancelled = true; };
+  }, [profile]);
+
   const [nav, setNav] = useState("dashboard");
   const [lang, setLang] = useState(() => (persisted && persisted.lang) || "en");
-  const [stockRooms, setStockRooms] = useState(() => (persisted && persisted.stockRooms) || initialStockRooms);
-  const [items, setItems] = useState(() => (persisted && persisted.items) || [...initialParts, ...initialEquipment]);
+  // Stock Room/Inventory and Customers load from the real database (see the
+  // data-fetching useEffect below) — no local demo fallback for these three.
+  const [stockRooms, setStockRooms] = useState([]);
+  const [items, setItems] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [realBranches, setRealBranches] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
-  const [customers, setCustomers] = useState(() => (persisted && persisted.customers) || initialCustomers);
   const [quotations, setQuotations] = useState(() => (persisted && persisted.quotations) || initialQuotations);
   const [invoices, setInvoices] = useState(() => (persisted && persisted.invoices) || initialInvoices);
   const [purchaseOrders, setPurchaseOrders] = useState(() => (persisted && persisted.purchaseOrders) || initialPurchaseOrders);
@@ -3719,15 +4305,14 @@ function SetvacoBusinessSystem() {
   const navRefs = useRef({});
   const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
 
-  const loggedInUser = users.find(u => u.id === loggedInUserId && u.status === "Active") || null;
-  const role = loggedInUser ? loggedInUser.role : null;
-  const currentUser = loggedInUser ? loggedInUser.name : null;
+  const role = profile ? profile.role : null;
+  const currentUser = profile ? profile.name : null;
   const allowedNav = NAV.filter(n => n.roles.includes(role));
 
-  useEffect(() => { if (loggedInUser && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
+  useEffect(() => { if (profile && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang, loggedInUserId]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -3769,10 +4354,28 @@ function SetvacoBusinessSystem() {
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
     window.location.reload();
   }
-  function logout() { setLoggedInUserId(null); }
+  function logout() { window.sb.auth.signOut(); }
 
-  if (!loggedInUser) {
-    return <LoginScreen users={users} lang={lang} setLang={setLang} onLogin={setLoggedInUserId} />;
+  if (recoveryMode) {
+    return <SetPasswordScreen lang={lang} setLang={setLang} onDone={() => {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      setRecoveryMode(false);
+    }} />;
+  }
+  if (authLoading) {
+    return <AuthShell lang={lang} setLang={setLang}><p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "login.loading")}</p></AuthShell>;
+  }
+  if (!session) {
+    return <LoginScreen lang={lang} setLang={setLang} />;
+  }
+  if (!profile) {
+    // Signed in with Supabase Auth but no matching `profiles` row (or RLS
+    // denied it, e.g. a suspended account) — a real, informative dead end
+    // rather than silently hanging on a blank screen.
+    return <AuthShell lang={lang} setLang={setLang}>
+      <p style={{ fontSize: 13, color: "var(--vital)", marginBottom: 12 }}>{profileError || t(lang, "login.invalid")}</p>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={logout}>{t(lang, "login.backToSignIn")}</button>
+    </AuthShell>;
   }
 
   const sidebarWidth = collapsed ? 76 : 236;
@@ -3828,8 +4431,8 @@ function SetvacoBusinessSystem() {
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
         <div key={nav} className="mis-view-enter">
           {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} serviceContracts={serviceContracts} auditLog={auditLog} role={role} lang={lang} />}
-          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
-          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
@@ -3837,7 +4440,7 @@ function SetvacoBusinessSystem() {
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
-          {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
+          {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
