@@ -407,3 +407,29 @@ frontend isn't cut over to Supabase yet). All five need migrations,
 RLS policies, and seed rows mirroring `initialAssets` /
 `initialServiceContracts` / `initialPriceBooks` / `initialPriceBookEntries`
 in `index.html` before Phase 1 auth cutover.
+
+## Fixed: `customer.outstanding` now actually moves
+
+Found while reviewing the system as a whole: `customer.outstanding` — the
+balance the credit-risk gate (`isCreditRisk`) and the approval escalation
+both read — was seeded with a plausible number but never updated by
+anything. Issuing an invoice didn't increase it; there was no way to
+decrease it at all, since no "mark invoice paid" action existed. The
+credit-risk feature was silently checking a number frozen at whatever it
+happened to be seeded with, which would have drifted further from reality
+the longer the demo ran.
+
+Fixed in `SalesQuotations`: `convertQuotationToInvoice` now adds the new
+invoice's total to the customer's `outstanding` the moment it's issued,
+and a new "Mark paid" action (director/admin/finance, shown on `Issued`
+invoices in `DocumentsTable`) flips the invoice to `Paid` and subtracts
+that same amount back off. Deliberately binary (Issued → Paid, full
+amount) rather than a partial-payments ledger — that's a materially bigger
+feature (a real AR/payments table) that wasn't asked for here; this fix is
+scoped to making the number that already exists and already gates two
+features actually correct.
+
+Seed `outstanding` values were left as-is (treated as each customer's
+pre-existing balance from before this system existed) rather than
+recomputed from seed invoice history — same "opening balance" convention
+any real bookkeeping system uses.
