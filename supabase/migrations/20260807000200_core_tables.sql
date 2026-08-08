@@ -25,6 +25,11 @@ create table profiles (
   created_at timestamptz not null default now()
 );
 
+-- role is never taken from raw_user_meta_data: that field is client-supplied
+-- at signup time and must not be trusted for a privilege-bearing column.
+-- Every profile starts at the least-privileged 'sales' role; admin-manage-user
+-- (the only sanctioned account-creation path, already gated on caller being an
+-- active admin) escalates it afterward via its service-role client.
 create function handle_new_auth_user() returns trigger language plpgsql security definer as $$
 begin
   insert into profiles (id, name, email, username, role)
@@ -33,7 +38,7 @@ begin
     coalesce(new.raw_user_meta_data->>'name', new.email),
     new.email,
     coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data->>'role', 'sales')
+    'sales'
   );
   return new;
 end $$;

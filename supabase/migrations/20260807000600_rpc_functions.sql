@@ -182,8 +182,10 @@ begin
   end if;
   select name into v_actor_name from profiles where id = v_actor;
 
-  select * into v_quotation from quotations where id = p_quotation_id;
-  if v_quotation.id is null then raise exception 'Quotation not found'; end if;
+  update quotations set status = 'Invoiced'
+  where id = p_quotation_id and status in ('Quoted', 'Sent')
+  returning * into v_quotation;
+  if v_quotation.id is null then raise exception 'Quotation not found or not in a convertible status'; end if;
   select name into v_customer_name from customers where id = v_quotation.customer_id;
 
   insert into invoices (quotation_id, type, customer_id, subtotal, apply_tax, tax_rate, tax_amount, total, status, created_by)
@@ -199,8 +201,6 @@ begin
       update items set qty = greatest(0, qty - v_line.qty) where id = v_line.item_id;
     end if;
   end loop;
-
-  update quotations set status = 'Invoiced' where id = v_quotation.id;
 
   insert into audit_log (actor_id, actor_name, action, module, entity_type, entity_id)
   values (v_actor, v_actor_name,

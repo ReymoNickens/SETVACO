@@ -50,9 +50,17 @@ Deno.serve(async (req) => {
         email: body.email,
         email_confirm: true,
         password: crypto.randomUUID(), // temp password; user resets via the standard Supabase reset-password flow
-        user_metadata: { name: body.name, username: body.username, role: body.role },
+        user_metadata: { name: body.name, username: body.username },
       });
       if (error) throw error;
+
+      // The on_auth_user_created trigger always assigns the least-privileged
+      // 'sales' role (it never trusts client-supplied signup metadata for
+      // this). Escalate it here instead, now that the caller has already
+      // been verified as an active admin above.
+      const { error: roleError } = await admin.from("profiles").update({ role: body.role }).eq("id", data.user!.id);
+      if (roleError) throw roleError;
+
       await admin.from("audit_log").insert({
         actor_id: user.id,
         actor_name: callerProfile.role,

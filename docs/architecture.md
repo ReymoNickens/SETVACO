@@ -103,6 +103,21 @@ atomically." See `20260807000600_rpc_functions.sql` for the full set:
   migration change and consumed by both the frontend and the Edge Functions,
   so a renamed column becomes a type error instead of a silent runtime bug.
 
+## One-time manual step: disable self-serve signup on the hosted project
+
+`supabase/config.toml`'s `enable_signup = false` only governs the local CLI
+dev stack — `migrate.yml` and `deploy-functions.yml` push migrations and
+function secrets, never `[auth]` config, so a freshly linked hosted project
+keeps Supabase's platform default of self-serve signup **enabled** until
+someone disables it by hand in Dashboard → Authentication → Providers →
+Email → "Allow new users to sign up". Until that's done, anyone can call
+`supabase.auth.signUp()` directly. The `on_auth_user_created` trigger always
+assigns the new profile the least-privileged `sales` role regardless (it
+never trusts client-supplied signup metadata), so this can't be used to
+self-grant admin — but it would still let an outsider create a live,
+authenticated `sales`-role account, which the intended model (accounts
+provisioned only via the `admin-manage-user` Edge Function) doesn't expect.
+
 ## Rollout (no big-bang rewrite)
 
 The prototype (`index.html`) keeps running unmodified through Phase 0.
