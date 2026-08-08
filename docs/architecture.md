@@ -184,3 +184,26 @@ rate + label in `tax_profiles` instead of a pluggable strategy-pattern
 engine. If a genuine mine-operator-scale client or in-house mining
 operation materializes, revisit this section — the foundation here doesn't
 block building any of the deferred pieces, it just doesn't pre-build them.
+
+## Frontend i18n (EN/FR) — scope
+
+`index.html` has a translation dictionary (`TRANSLATIONS`) and `t(lang, key)`
+helper, a language toggle in the header, and the choice persists via the
+existing `localStorage` mechanism (`lang` field alongside the rest of the
+app state; will move to `profiles.locale` once real auth lands). Wired
+scope: sidebar navigation, header/sidebar chrome (signed-in-as, search
+prompt, footer), and the customer-facing quotation/invoice **documents and
+emails** (`printDocument`, `SendDocumentModal`) — the two things a
+francophone branch or customer actually needs day-to-day.
+
+**Not yet wired**: the internal screens themselves — Inventory tables,
+Purchasing, Customers, Users & Access, Variance & Audit, and all their forms
+— plus dynamically-built strings (audit log entries, toast messages,
+`window.alert`/`window.confirm` text). Those are a different, harder class
+of work: extracting variables out of business-logic template literals into
+parametrized translation strings, not just relabeling static JSX. Translating
+them requires wiring `t(lang, …)` through each of those components (most
+don't currently receive a `lang` prop) using the same pattern already
+established in `SalesQuotations`/`ServiceJobsTab` → `SendDocumentModal`.
+Do this screen-by-screen rather than all at once, and re-run the Babel+jsdom
+role/nav sweep after each screen — don't ship a mixed-language UI.
