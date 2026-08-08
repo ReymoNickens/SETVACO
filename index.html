@@ -8,7 +8,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 html,body,#root{height:100%;margin:0;}
 *{box-sizing:border-box;}
 body{margin:0;font-family:ui-sans-serif,system-ui,sans-serif;}
@@ -23,44 +25,87 @@ button{cursor:pointer;}
    real per-user authorization is enforced by the login screen and (once
    wired) the backend, not this. See docs/architecture.md. */
 #gate-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  background: #131B4A;
-  display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 9999; display: flex;
   font-family: 'IBM Plex Sans', Arial, sans-serif;
 }
-#gate-box {
-  background: #FFFFFF; border-radius: 16px; padding: 32px 28px;
-  width: 320px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.35);
-  text-align: center;
+#gate-hero {
+  flex: 0 0 42%; min-width: 320px; position: relative; overflow: hidden; display: flex;
+  flex-direction: column; justify-content: space-between; padding: 48px 44px;
+  background: linear-gradient(155deg, #2A3B94 0%, #131B4A 78%);
+  color: #fff;
 }
-#gate-box h1 { font-size: 18px; margin: 0 0 4px; color: #0F1330; }
-#gate-box p { font-size: 12px; color: #565E85; margin: 0 0 20px; }
+#gate-hero::before, #gate-hero::after {
+  content: ""; position: absolute; border-radius: 50%; pointer-events: none;
+}
+#gate-hero::before { width: 460px; height: 460px; right: -160px; bottom: -180px; background: rgba(255,255,255,0.05); }
+#gate-hero::after { width: 300px; height: 300px; right: -80px; bottom: -40px; border: 60px solid rgba(255,255,255,0.045); background: transparent; }
+#gate-mosaic { display: grid; grid-template-columns: repeat(3, 8px); gap: 6px; opacity: 0.6; margin-bottom: 18px; }
+#gate-mosaic span { width: 8px; height: 8px; border-radius: 2px; display: block; }
+#gate-hero-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 14px; }
+#gate-hero-word { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -0.01em; }
+#gate-hero-rule { height: 4px; width: 64px; border-radius: 2px; margin-top: 6px; background: linear-gradient(90deg, #2A3B94 0%, #2A3B94 30%, #14B8A6 30%, #14B8A6 60%, #F0555C 60%, #F0555C 100%); }
+#gate-tagline { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.82); max-width: 340px; position: relative; }
+#gate-form-wrap {
+  flex: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 32px;
+  background: #F3F5FC;
+  background-image: radial-gradient(rgba(19,27,74,0.035) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+#gate-box {
+  background: #FFFFFF; border: 1px solid #E9ECFA; border-radius: 16px; padding: 32px 28px;
+  width: 100%; max-width: 340px; box-shadow: 0 1px 2px rgba(19,27,74,0.07);
+}
+#gate-box-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #8D93B8; margin-bottom: 6px; }
+#gate-box h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; margin: 0 0 20px; color: #0F1330; }
+#gate-box p { font-size: 12px; color: #565E85; margin: 0 0 16px; }
 #gate-box input {
   width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
-  border: 1px solid #DBE1F5; font-size: 14px; margin-bottom: 12px;
+  border: 1px solid #DBE1F5; font-size: 14px; margin-bottom: 12px; background: #EEF1FB;
 }
+#gate-box input:focus { outline: 2px solid #2A3B94; outline-offset: 1px; }
 #gate-box button {
-  width: 100%; padding: 10px 12px; border-radius: 8px; border: none;
-  background: #2A3B94; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+  width: 100%; padding: 11px 12px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, #2A3B94 0%, #3A4EC0 100%); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 #gate-error { color: #DC3E4C; font-size: 12px; margin-top: 10px; min-height: 14px; }
-#gate-lang { position: absolute; top: 16px; right: 16px; display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #DBE1F5; }
-#gate-lang button { width: auto; padding: 5px 9px; border-radius: 0; background: transparent; color: #565E85; font-size: 11px; font-weight: 600; }
+#gate-lang { position: absolute; top: 24px; right: 28px; display: flex; border-radius: 10px; overflow: hidden; border: 1px solid #DBE1F5; background: #EEF1FB; }
+#gate-lang button { width: auto; padding: 7px 10px; border-radius: 0; background: transparent; color: #565E85; font-size: 12px; font-weight: 600; }
 #gate-lang button.active { background: #2A3B94; color: #fff; }
+@media (max-width: 860px) {
+  #gate-overlay { flex-direction: column; overflow-y: auto; }
+  #gate-hero { flex: 0 0 auto; min-width: 0; padding: 32px 28px; }
+  #gate-tagline { max-width: none; }
+}
 </style>
 </head>
 <body>
 <div id="gate-overlay">
-  <div id="gate-lang">
-    <button type="button" id="gate-lang-en">EN</button>
-    <button type="button" id="gate-lang-fr">FR</button>
+  <div id="gate-hero">
+    <div>
+      <div id="gate-mosaic">
+        <span style="background:#F0555C"></span><span style="background:#14B8A6"></span><span style="background:#3E7BFA"></span>
+        <span style="background:#3E7BFA"></span><span style="background:#F0555C"></span><span style="background:#14B8A6"></span>
+        <span style="background:#14B8A6"></span><span style="background:#3E7BFA"></span><span style="background:#F0555C"></span>
+      </div>
+      <div id="gate-hero-eyebrow">SETVACO · Business System</div>
+      <div id="gate-hero-word">SETVACO</div>
+      <div id="gate-hero-rule"></div>
+    </div>
+    <p id="gate-tagline">Crushing &amp; screening equipment, spare parts, and technical service — engineered for mining and quarry operations across West Africa.</p>
   </div>
-  <div id="gate-box">
-    <h1 id="gate-title">SETVACO Business System</h1>
-    <p id="gate-subtitle">This is a private client demo. Enter the access code to continue.</p>
-    <input id="gate-input" type="password" placeholder="Access code" autofocus />
-    <button type="button" id="gate-submit">Enter</button>
-    <div id="gate-error"></div>
+  <div id="gate-form-wrap">
+    <div id="gate-lang">
+      <button type="button" id="gate-lang-en">EN</button>
+      <button type="button" id="gate-lang-fr">FR</button>
+    </div>
+    <div id="gate-box">
+      <div id="gate-box-eyebrow">Private Access</div>
+      <h1 id="gate-title">SETVACO Business System</h1>
+      <p id="gate-subtitle">This is a private client demo. Enter the access code to continue.</p>
+      <input id="gate-input" type="password" placeholder="Access code" autofocus />
+      <button type="button" id="gate-submit">Enter</button>
+      <div id="gate-error"></div>
+    </div>
   </div>
 </div>
 <div id="root"></div>
@@ -188,6 +233,30 @@ const Style = () => <style>{`
   .mis-grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   @media (max-width: 720px) { .mis-grid-2, .mis-grid-3 { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .mis-nav-item, .mis-btn-primary, .mis-btn-ghost, .mis-strata-seg { transition: none; } }
+
+  /* Auth screens (login / access gate) — split hero + form layout. */
+  .mis-auth-shell { min-height: 700px; width: 100%; display: flex; }
+  .mis-auth-hero {
+    flex: 0 0 42%; min-width: 360px; position: relative; overflow: hidden; display: flex;
+    flex-direction: column; justify-content: space-between; padding: 48px 44px;
+    background: linear-gradient(155deg, var(--brand) 0%, var(--brand-deep) 78%);
+    background-image: linear-gradient(155deg, var(--brand) 0%, var(--brand-deep) 78%),
+      radial-gradient(circle at 85% 12%, rgba(20,184,166,0.20), transparent 42%),
+      radial-gradient(circle at 8% 92%, rgba(240,85,92,0.16), transparent 46%);
+    color: #FFFFFF;
+  }
+  .mis-auth-hero-gear { position: absolute; right: -60px; bottom: -60px; opacity: 0.10; pointer-events: none; }
+  .mis-auth-mosaic { position: absolute; top: 40px; left: 44px; display: grid; grid-template-columns: repeat(3, 8px); gap: 6px; opacity: 0.55; }
+  .mis-auth-mosaic span { width: 8px; height: 8px; border-radius: 2px; }
+  .mis-auth-tagline { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.82); max-width: 340px; }
+  .mis-auth-form-wrap { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 32px; background: var(--paper); background-image: radial-gradient(rgba(19,27,74,0.035) 1px, transparent 1px); background-size: 16px 16px; }
+  .mis-auth-lang { position: absolute; top: 24px; right: 28px; }
+  .mis-auth-card { width: 100%; max-width: 380px; }
+  @media (max-width: 860px) {
+    .mis-auth-shell { flex-direction: column; }
+    .mis-auth-hero { flex: 0 0 auto; min-width: 0; padding: 32px 28px; }
+    .mis-auth-tagline { max-width: none; }
+  }
 `}</style>;
 
 const { useState, useMemo, useEffect, useRef } = React;
@@ -422,12 +491,107 @@ const TRANSLATIONS = {
     "email.hint": "Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app.",
     "login.title": "Sign in",
     "login.subtitle": "SETVACO Business System",
+    "login.eyebrow": "SETVACO · Business System",
+    "login.tagline": "Crushing & screening equipment, spare parts, and technical service — engineered for mining and quarry operations across West Africa.",
     "login.username": "Username",
     "login.password": "Password",
     "login.signIn": "Sign in",
     "login.invalid": "Unrecognized username or password, or this account is suspended.",
     "login.demoHint": "Demo credentials — any username below, password: setvaco-demo",
-    "login.logout": "Log out"
+    "login.logout": "Log out",
+    "dash.focusOn": "Focus on:",
+    "dash.allBranches": "All branches",
+    "dash.itemsAboveReorder": "Items above reorder level",
+    "dash.of": "of",
+    "dash.itemsHealthy": "items healthy",
+    "dash.quotationsInvoiced": "Quotations invoiced",
+    "dash.quotationsClosed": "quotations closed",
+    "dash.stockValue": "Stock Value",
+    "dash.partsEquipAllBranches": "Parts & equipment, all branches",
+    "dash.belowReorderPoint": "Below Reorder Point",
+    "dash.itemsNeedingReplenishment": "Items needing replenishment",
+    "dash.openQuotations": "Open Quotations",
+    "dash.partsEquipService": "Parts, equipment & service",
+    "dash.posInProgress": "POs In Progress",
+    "dash.orderedOrInTransit": "Ordered or in transit",
+    "dash.itemsNearestDepletion": "Items nearest depletion",
+    "dash.onHandReorder": "on hand / reorder",
+    "dash.allItemsAboveReorder": "All items above reorder level.",
+    "dash.customerCreditRisk": "Customer credit risk",
+    "dash.recentActivity": "Recent activity",
+    "dash.noActivityYet": "No activity recorded yet.",
+    "bo.order": "Order",
+    "bo.item": "Item",
+    "bo.needed": "Needed",
+    "bo.onHand": "On Hand",
+    "bo.shortfall": "Shortfall",
+    "bo.supplyStatus": "Supply status",
+    "bo.notYetOrdered": "Not yet ordered",
+    "bo.eta": "ETA",
+    "bo.description": "Lines where the quoted or invoiced quantity exceeds what's currently on hand, cross-referenced against open purchase orders.",
+    "bo.descriptionLimited": " Full transit/vendor detail is limited to procurement, warehouse and admin access.",
+    "bo.empty": "No back-ordered lines — all quoted/invoiced quantities are covered by stock.",
+    "salesov.show": "Show:",
+    "salesov.everything": "Everything",
+    "salesov.partsOnly": "Parts only",
+    "salesov.equipmentOnly": "Equipment only",
+    "salesov.serviceOnly": "Service only",
+    "salesov.backordersOnly": "Back-orders only",
+    "salesov.openPartQuotes": "Open Part Quotes",
+    "salesov.awaitingConfirmation": "Awaiting confirmation",
+    "salesov.openEquipmentQuotes": "Open Equipment Quotes",
+    "salesov.activeServiceJobs": "Active Service Jobs",
+    "salesov.inProgress": "In progress",
+    "salesov.backOrderedLines": "Back-Ordered Lines",
+    "salesov.qtyExceedsStock": "Qty exceeds on-hand stock",
+    "salesov.recentQuotations": "Recent quotations",
+    "salesov.noQuotationsYet": "No quotations yet.",
+    "common.cancel": "Cancel",
+    "common.branch": "Branch",
+    "inv.part": "Part",
+    "inv.equipment": "Equipment",
+    "inv.searchPlaceholder": "Search name, code, or brand",
+    "inv.all": "All",
+    "inv.allStockRooms": "All stock rooms",
+    "inv.exportReport": "Export report",
+    "inv.stockRoomBtn": "Stock room",
+    "inv.uploadPOBtn": "Upload purchase order",
+    "inv.uploadSheetBtn": "Upload {type} sheet",
+    "inv.code": "Code",
+    "inv.brand": "Brand",
+    "inv.stockRoom": "Stock Room",
+    "inv.onHand": "On Hand",
+    "inv.reorderAt": "Reorder At",
+    "inv.cost": "Cost",
+    "inv.sellPrice": "Sell Price",
+    "inv.history": "History",
+    "inv.emptyFilter": "No items match this filter.",
+    "inv.addStockRoom": "Add stock room",
+    "inv.createRoom": "Create room",
+    "inv.roomName": "Room name",
+    "inv.roomNamePlaceholder": "e.g. Overflow Store",
+    "inv.uploadInventorySheetTitle": "Upload {type} inventory sheet",
+    "inv.chooseDifferentFile": "Choose different file",
+    "inv.importRows": "Import {n} rows",
+    "inv.dropExcelFile": "Click or drop an Excel/CSV file",
+    "inv.expectedColumnsInventory": "Expected columns: Code, Name, Brand, Category, Branch, Stock Room, Qty, Reorder, Cost, Sell",
+    "inv.uploadInventoryHint": "Existing codes are updated in place; unmatched codes are created as new records. Stock rooms referenced by name are created automatically if they don't already exist.",
+    "inv.new": "new",
+    "inv.updated": "updated",
+    "inv.uploadPOFileTitle": "Upload purchase order file",
+    "inv.importPOs": "Import {n} PO(s)",
+    "inv.dropPOFile": "Click or drop an Excel/CSV purchase order file",
+    "inv.expectedColumnsPO": "Expected columns: PO Number, Vendor, Item Code, Item Name, Qty, Expected Date",
+    "inv.uploadPOHint": "The system reads each line, groups it by PO number, and notifies Procurement once imported.",
+    "inv.unspecifiedVendor": "Unspecified vendor",
+    "inv.lineItems": "{n} line item(s)",
+    "inv.expectedDate": ", expected {date}",
+    "inv.historyTitle": "{name} — history",
+    "inv.stockRoomLabel": "Stock room",
+    "inv.onHandLabel": "On hand",
+    "inv.reorderAtParen": "(reorder at {n})",
+    "inv.activityWhoDidWhat": "Activity — who did what",
+    "inv.noActivityForRecord": "No recorded activity yet for this record."
   },
   fr: {
     "nav.dashboard": "Tableau de bord",
@@ -479,16 +643,116 @@ const TRANSLATIONS = {
     "email.hint": "Ouvre votre client de messagerie par défaut avec le destinataire, la copie, l'objet et le message pré-remplis — ce prototype n'a pas de serveur de messagerie propre, l'envoi se fait donc via votre propre application de messagerie.",
     "login.title": "Connexion",
     "login.subtitle": "Système d'entreprise SETVACO",
+    "login.eyebrow": "SETVACO · Système d'entreprise",
+    "login.tagline": "Équipements de concassage et de criblage, pièces détachées et service technique — conçus pour les opérations minières et de carrière en Afrique de l'Ouest.",
     "login.username": "Nom d'utilisateur",
     "login.password": "Mot de passe",
     "login.signIn": "Se connecter",
     "login.invalid": "Nom d'utilisateur ou mot de passe non reconnu, ou ce compte est suspendu.",
     "login.demoHint": "Identifiants de démonstration — n'importe quel nom d'utilisateur ci-dessous, mot de passe : setvaco-demo",
-    "login.logout": "Se déconnecter"
+    "login.logout": "Se déconnecter",
+    "dash.focusOn": "Filtrer par :",
+    "dash.allBranches": "Toutes les succursales",
+    "dash.itemsAboveReorder": "Articles au-dessus du seuil de réapprovisionnement",
+    "dash.of": "sur",
+    "dash.itemsHealthy": "articles en bon état",
+    "dash.quotationsInvoiced": "Devis facturés",
+    "dash.quotationsClosed": "devis clôturés",
+    "dash.stockValue": "Valeur du stock",
+    "dash.partsEquipAllBranches": "Pièces et équipements, toutes succursales",
+    "dash.belowReorderPoint": "Sous le seuil de réapprovisionnement",
+    "dash.itemsNeedingReplenishment": "Articles à réapprovisionner",
+    "dash.openQuotations": "Devis ouverts",
+    "dash.partsEquipService": "Pièces, équipements et service",
+    "dash.posInProgress": "Bons de commande en cours",
+    "dash.orderedOrInTransit": "Commandé ou en transit",
+    "dash.itemsNearestDepletion": "Articles proches de la rupture de stock",
+    "dash.onHandReorder": "en stock / réappro",
+    "dash.allItemsAboveReorder": "Tous les articles sont au-dessus du seuil de réapprovisionnement.",
+    "dash.customerCreditRisk": "Risque de crédit client",
+    "dash.recentActivity": "Activité récente",
+    "dash.noActivityYet": "Aucune activité enregistrée pour le moment.",
+    "bo.order": "Commande",
+    "bo.item": "Article",
+    "bo.needed": "Requis",
+    "bo.onHand": "En stock",
+    "bo.shortfall": "Manquant",
+    "bo.supplyStatus": "Statut d'approvisionnement",
+    "bo.notYetOrdered": "Pas encore commandé",
+    "bo.eta": "Date prévue",
+    "bo.description": "Lignes où la quantité devisée ou facturée dépasse le stock actuellement disponible, recoupées avec les bons de commande ouverts.",
+    "bo.descriptionLimited": " Le détail complet du transit/fournisseur est réservé aux accès achats, magasin et administration.",
+    "bo.empty": "Aucune ligne en rupture — toutes les quantités devisées/facturées sont couvertes par le stock.",
+    "salesov.show": "Afficher :",
+    "salesov.everything": "Tout",
+    "salesov.partsOnly": "Pièces uniquement",
+    "salesov.equipmentOnly": "Équipements uniquement",
+    "salesov.serviceOnly": "Service uniquement",
+    "salesov.backordersOnly": "Ruptures uniquement",
+    "salesov.openPartQuotes": "Devis de pièces ouverts",
+    "salesov.awaitingConfirmation": "En attente de confirmation",
+    "salesov.openEquipmentQuotes": "Devis d'équipements ouverts",
+    "salesov.activeServiceJobs": "Interventions de service actives",
+    "salesov.inProgress": "En cours",
+    "salesov.backOrderedLines": "Lignes en rupture",
+    "salesov.qtyExceedsStock": "Quantité supérieure au stock disponible",
+    "salesov.recentQuotations": "Devis récents",
+    "salesov.noQuotationsYet": "Aucun devis pour le moment.",
+    "common.cancel": "Annuler",
+    "common.branch": "Succursale",
+    "inv.part": "Pièce",
+    "inv.equipment": "Équipement",
+    "inv.searchPlaceholder": "Rechercher par nom, code ou marque",
+    "inv.all": "Tout",
+    "inv.allStockRooms": "Tous les magasins",
+    "inv.exportReport": "Exporter le rapport",
+    "inv.stockRoomBtn": "Magasin",
+    "inv.uploadPOBtn": "Importer un bon de commande",
+    "inv.uploadSheetBtn": "Importer la fiche {type}",
+    "inv.code": "Code",
+    "inv.brand": "Marque",
+    "inv.stockRoom": "Magasin",
+    "inv.onHand": "En stock",
+    "inv.reorderAt": "Seuil de réappro",
+    "inv.cost": "Coût",
+    "inv.sellPrice": "Prix de vente",
+    "inv.history": "Historique",
+    "inv.emptyFilter": "Aucun article ne correspond à ce filtre.",
+    "inv.addStockRoom": "Ajouter un magasin",
+    "inv.createRoom": "Créer le magasin",
+    "inv.roomName": "Nom du magasin",
+    "inv.roomNamePlaceholder": "ex. Dépôt de débordement",
+    "inv.uploadInventorySheetTitle": "Importer la fiche d'inventaire {type}",
+    "inv.chooseDifferentFile": "Choisir un autre fichier",
+    "inv.importRows": "Importer {n} lignes",
+    "inv.dropExcelFile": "Cliquer ou déposer un fichier Excel/CSV",
+    "inv.expectedColumnsInventory": "Colonnes attendues : Code, Nom, Marque, Catégorie, Succursale, Magasin, Qté, Réappro, Coût, Vente",
+    "inv.uploadInventoryHint": "Les codes existants sont mis à jour ; les codes non reconnus sont créés comme nouveaux enregistrements. Les magasins référencés par nom sont créés automatiquement s'ils n'existent pas déjà.",
+    "inv.new": "nouveau(x)",
+    "inv.updated": "mis à jour",
+    "inv.uploadPOFileTitle": "Importer un fichier de bon de commande",
+    "inv.importPOs": "Importer {n} bon(s) de commande",
+    "inv.dropPOFile": "Cliquer ou déposer un fichier Excel/CSV de bon de commande",
+    "inv.expectedColumnsPO": "Colonnes attendues : N° de BC, Fournisseur, Code article, Nom article, Qté, Date prévue",
+    "inv.uploadPOHint": "Le système lit chaque ligne, la regroupe par numéro de BC, et notifie le service achats une fois importé.",
+    "inv.unspecifiedVendor": "Fournisseur non précisé",
+    "inv.lineItems": "{n} ligne(s)",
+    "inv.expectedDate": ", prévu le {date}",
+    "inv.historyTitle": "{name} — historique",
+    "inv.stockRoomLabel": "Magasin",
+    "inv.onHandLabel": "En stock",
+    "inv.reorderAtParen": "(seuil de réappro {n})",
+    "inv.activityWhoDidWhat": "Activité — qui a fait quoi",
+    "inv.noActivityForRecord": "Aucune activité enregistrée pour cet article."
   }
 };
 function t(lang, key) {
   return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+}
+// Template variant: t(lang, key) with {placeholder} tokens replaced from vars.
+function tf(lang, key, vars) {
+  var s = t(lang, key);
+  return s.replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] != null) ? vars[k] : m);
 }
 
 const initialStockRooms = [
@@ -781,8 +1045,9 @@ function groupPORows(rows) {
   return Object.values(groups);
 }
 
-function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog }) {
+function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog, lang }) {
   const label = type === "equipment" ? "Equipment" : "Part";
+  const typeLabel = type === "equipment" ? t(lang, "inv.equipment") : t(lang, "inv.part");
   const canManage = ["admin", "warehouse", "procurement"].includes(role);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("All");
@@ -857,93 +1122,93 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 12px", width: 260 }}>
           <Search size={14} style={{ color: "var(--text-tertiary)" }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, code, or brand" style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", fontSize: 13, width: "100%" }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t(lang, "inv.searchPlaceholder")} style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", fontSize: 13, width: "100%" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <MapPin size={14} style={{ color: "var(--text-tertiary)" }} />
           <TSelect value={branchFilter} onChange={e => { setBranchFilter(e.target.value); setRoomFilter("All"); }} style={{ width: 170 }}>
-            <option>All</option>{BRANCHES.map(b => <option key={b}>{b}</option>)}
+            <option value="All">{t(lang, "inv.all")}</option>{BRANCHES.map(b => <option key={b}>{b}</option>)}
           </TSelect>
         </div>
         <TSelect value={roomFilter} onChange={e => setRoomFilter(e.target.value)} style={{ width: 190 }}>
-          <option value="All">All stock rooms</option>
+          <option value="All">{t(lang, "inv.allStockRooms")}</option>
           {rooms.map(r => <option key={r.id} value={r.id}>{r.name} · {r.branch}</option>)}
         </TSelect>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button type="button" className="mis-btn-ghost mis-focus" onClick={exportReport}><Download size={14} /> Export report</button>
-        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(true)}><Plus size={14} /> Stock room</button>}
-        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowUploadPO(true)}><ClipboardList size={14} /> Upload purchase order</button>}
-        {canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowUpload(true)}><Upload size={14} /> Upload {label.toLowerCase()} sheet</button>}
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={exportReport}><Download size={14} /> {t(lang, "inv.exportReport")}</button>
+        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(true)}><Plus size={14} /> {t(lang, "inv.stockRoomBtn")}</button>}
+        {canManage && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowUploadPO(true)}><ClipboardList size={14} /> {t(lang, "inv.uploadPOBtn")}</button>}
+        {canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowUpload(true)}><Upload size={14} /> {tf(lang, "inv.uploadSheetBtn", { type: typeLabel.toLowerCase() })}</button>}
       </div>
     </div>
 
     <DataTable
       columns={[
         { header: "", render: it => <CoreSample layers={stockLayers(it)} size={26} /> },
-        { header: label, render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
-        { header: "Code", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.id}</span> },
-        { header: "Brand", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
-        { header: "Branch", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}><BranchTag branch={it.branch} /></span> },
-        { header: "Stock Room", render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{roomLabel(it.stockRoom)}</span> },
-        { header: "On Hand", render: it => <span className="mis-mono" style={{ color: it.qty < it.reorder ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
-        { header: "Reorder At", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.reorder}</span> },
-        { header: "Cost", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.cost)}</span> },
-        { header: "Sell Price", render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.sell)}</span> },
-        { header: "", render: it => <button type="button" className="mis-link-btn" onClick={() => setHistoryItem(it)}>History</button> }
+        { header: typeLabel, render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
+        { header: t(lang, "inv.code"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.id}</span> },
+        { header: t(lang, "inv.brand"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.brand}</span> },
+        { header: t(lang, "common.branch"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}><BranchTag branch={it.branch} /></span> },
+        { header: t(lang, "inv.stockRoom"), render: it => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{roomLabel(it.stockRoom)}</span> },
+        { header: t(lang, "inv.onHand"), render: it => <span className="mis-mono" style={{ color: it.qty < it.reorder ? "var(--vital)" : "var(--text-primary)" }}>{it.qty}</span> },
+        { header: t(lang, "inv.reorderAt"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{it.reorder}</span> },
+        { header: t(lang, "inv.cost"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.cost)}</span> },
+        { header: t(lang, "inv.sellPrice"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{fmtGHS(it.sell)}</span> },
+        { header: "", render: it => <button type="button" className="mis-link-btn" onClick={() => setHistoryItem(it)}>{t(lang, "inv.history")}</button> }
       ]}
       rows={filtered}
       rowKey={it => it.id}
-      empty={`No ${label.toLowerCase()}s match this filter.`}
+      empty={t(lang, "inv.emptyFilter")}
     />
 
-    {showAddRoom && <Modal title="Add stock room" onClose={() => setShowAddRoom(false)} footer={<React.Fragment>
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(false)}>Cancel</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={addRoom}>Create room</button>
+    {showAddRoom && <Modal title={t(lang, "inv.addStockRoom")} onClose={() => setShowAddRoom(false)} footer={<React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAddRoom(false)}>{t(lang, "common.cancel")}</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={addRoom}>{t(lang, "inv.createRoom")}</button>
     </React.Fragment>}>
       <form onSubmit={addRoom} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <Field label="Room name"><TInput required value={newRoomForm.name} onChange={e => setNewRoomForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Overflow Store" /></Field>
-        <Field label="Branch"><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</TSelect></Field>
+        <Field label={t(lang, "inv.roomName")}><TInput required value={newRoomForm.name} onChange={e => setNewRoomForm(f => ({ ...f, name: e.target.value }))} placeholder={t(lang, "inv.roomNamePlaceholder")} /></Field>
+        <Field label={t(lang, "common.branch")}><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</TSelect></Field>
       </form>
     </Modal>}
 
-    {showUpload && <Modal title={`Upload ${label.toLowerCase()} inventory sheet`} wide onClose={() => { setShowUpload(false); setPreview(null); }} footer={preview ? <React.Fragment>
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>Choose different file</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> Import {preview.created + preview.updated} rows</button>
+    {showUpload && <Modal title={tf(lang, "inv.uploadInventorySheetTitle", { type: typeLabel.toLowerCase() })} wide onClose={() => { setShowUpload(false); setPreview(null); }} footer={preview ? <React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "inv.chooseDifferentFile")}</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {tf(lang, "inv.importRows", { n: preview.created + preview.updated })}</button>
     </React.Fragment> : null}>
       {!preview && <React.Fragment>
-        <FileDrop label="Click or drop an Excel/CSV file" accept=".xlsx,.xls,.csv" onFile={handleUploadFile} hint="Expected columns: Code, Name, Brand, Category, Branch, Stock Room, Qty, Reorder, Cost, Sell" />
-        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Existing codes are updated in place; unmatched codes are created as new records. Stock rooms referenced by name are created automatically if they don't already exist.</p>
+        <FileDrop label={t(lang, "inv.dropExcelFile")} accept=".xlsx,.xls,.csv" onFile={handleUploadFile} hint={t(lang, "inv.expectedColumnsInventory")} />
+        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "inv.uploadInventoryHint")}</p>
       </React.Fragment>}
-      {preview && <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{preview.fileName}: <b style={{ color: "var(--safe)" }}>{preview.created} new</b>, <b style={{ color: "var(--caution)" }}>{preview.updated} updated</b>.</p>}
+      {preview && <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{preview.fileName}: <b style={{ color: "var(--safe)" }}>{preview.created} {t(lang, "inv.new")}</b>, <b style={{ color: "var(--caution)" }}>{preview.updated} {t(lang, "inv.updated")}</b>.</p>}
     </Modal>}
 
-    {showUploadPO && <Modal title="Upload purchase order file" wide onClose={() => { setShowUploadPO(false); setPoPreview(null); }} footer={poPreview ? <React.Fragment>
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPoPreview(null)}>Choose different file</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUploadPO}><Check size={14} /> Import {poPreview.groups.length} PO(s)</button>
+    {showUploadPO && <Modal title={t(lang, "inv.uploadPOFileTitle")} wide onClose={() => { setShowUploadPO(false); setPoPreview(null); }} footer={poPreview ? <React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPoPreview(null)}>{t(lang, "inv.chooseDifferentFile")}</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUploadPO}><Check size={14} /> {tf(lang, "inv.importPOs", { n: poPreview.groups.length })}</button>
     </React.Fragment> : null}>
       {!poPreview && <React.Fragment>
-        <FileDrop label="Click or drop an Excel/CSV purchase order file" accept=".xlsx,.xls,.csv" onFile={handleUploadPO} hint="Expected columns: PO Number, Vendor, Item Code, Item Name, Qty, Expected Date" />
-        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>The system reads each line, groups it by PO number, and notifies Procurement once imported.</p>
+        <FileDrop label={t(lang, "inv.dropPOFile")} accept=".xlsx,.xls,.csv" onFile={handleUploadPO} hint={t(lang, "inv.expectedColumnsPO")} />
+        <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "inv.uploadPOHint")}</p>
       </React.Fragment>}
       {poPreview && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10 }}>
-          <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{g.poNumber} — {g.vendor || "Unspecified vendor"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{g.lines.length} line item(s){g.expected ? `, expected ${g.expected}` : ""}</div>
+          <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{g.poNumber} — {g.vendor || t(lang, "inv.unspecifiedVendor")}</div>
+          <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{tf(lang, "inv.lineItems", { n: g.lines.length })}{g.expected ? tf(lang, "inv.expectedDate", { date: g.expected }) : ""}</div>
         </div>)}
       </div>}
     </Modal>}
 
-    {historyItem && <Drawer title={`${historyItem.name} — history`} onClose={() => setHistoryItem(null)}>
+    {historyItem && <Drawer title={tf(lang, "inv.historyTitle", { name: historyItem.name })} onClose={() => setHistoryItem(null)}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 16 }}>
-        <div className="mis-kv"><span>Code</span><b className="mis-mono">{historyItem.id}</b></div>
-        <div className="mis-kv"><span>Branch</span><b>{historyItem.branch}</b></div>
-        <div className="mis-kv"><span>Stock room</span><b>{roomLabel(historyItem.stockRoom)}</b></div>
-        <div className="mis-kv"><span>On hand</span><b>{historyItem.qty} (reorder at {historyItem.reorder})</b></div>
+        <div className="mis-kv"><span>{t(lang, "inv.code")}</span><b className="mis-mono">{historyItem.id}</b></div>
+        <div className="mis-kv"><span>{t(lang, "common.branch")}</span><b>{historyItem.branch}</b></div>
+        <div className="mis-kv"><span>{t(lang, "inv.stockRoomLabel")}</span><b>{roomLabel(historyItem.stockRoom)}</b></div>
+        <div className="mis-kv"><span>{t(lang, "inv.onHandLabel")}</span><b>{historyItem.qty} {tf(lang, "inv.reorderAtParen", { n: historyItem.reorder })}</b></div>
       </div>
       <div className="mis-divider" style={{ marginBottom: 12 }} />
-      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".04em" }}>Activity — who did what</div>
-      {itemHistory.length === 0 && <div className="mis-empty">No recorded activity yet for this record.</div>}
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".04em" }}>{t(lang, "inv.activityWhoDidWhat")}</div>
+      {itemHistory.length === 0 && <div className="mis-empty">{t(lang, "inv.noActivityForRecord")}</div>}
       {itemHistory.map(a => <div key={a.id} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{a.action}</div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{a.user} · {fmtDateTime(a.ts)}</div>
@@ -1289,7 +1554,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
   </div>;
 }
 
-function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, typeFilter }) {
+function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, typeFilter, lang }) {
   const canSeeSupplyChain = ["admin", "procurement", "warehouse"].includes(role);
   const rows = [];
   [...quotations, ...invoices].forEach(d => {
@@ -1303,22 +1568,22 @@ function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, ty
     });
   });
   const columns = [
-    { header: "Order", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.docId}</span> },
-    { header: "Item", render: r => <span>{r.itemName}</span> },
-    { header: "Needed", render: r => <span className="mis-mono">{r.needed}</span> },
-    { header: "On Hand", render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.onHand}</span> },
-    { header: "Shortfall", render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.shortfall}</span> }
+    { header: t(lang, "bo.order"), render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.docId}</span> },
+    { header: t(lang, "bo.item"), render: r => <span>{r.itemName}</span> },
+    { header: t(lang, "bo.needed"), render: r => <span className="mis-mono">{r.needed}</span> },
+    { header: t(lang, "bo.onHand"), render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.onHand}</span> },
+    { header: t(lang, "bo.shortfall"), render: r => <span className="mis-mono" style={{ color: "var(--vital)" }}>{r.shortfall}</span> }
   ];
-  if (canSeeSupplyChain) columns.push({ header: "Supply status", render: r => r.pos.length
-    ? r.pos.map(po => { const cs = statusColor(po.status); return <div key={po.id} style={{ fontSize: 11, marginBottom: 2 }}><Badge color={cs[0]} soft={cs[1]}>{po.status}</Badge> {po.id}{po.expected ? ` · ETA ${po.expected}` : ""}</div>; })
-    : <span style={{ fontSize: 12, color: "var(--vital)" }}>Not yet ordered</span> });
+  if (canSeeSupplyChain) columns.push({ header: t(lang, "bo.supplyStatus"), render: r => r.pos.length
+    ? r.pos.map(po => { const cs = statusColor(po.status); return <div key={po.id} style={{ fontSize: 11, marginBottom: 2 }}><Badge color={cs[0]} soft={cs[1]}>{po.status}</Badge> {po.id}{po.expected ? ` · ${t(lang, "bo.eta")} ${po.expected}` : ""}</div>; })
+    : <span style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "bo.notYetOrdered")}</span> });
   return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-    <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Lines where the quoted or invoiced quantity exceeds what's currently on hand, cross-referenced against open purchase orders.{!canSeeSupplyChain ? " Full transit/vendor detail is limited to procurement, warehouse and admin access." : ""}</p>
-    <DataTable columns={columns} rows={rows} rowKey={r => r.key} empty="No back-ordered lines — all quoted/invoiced quantities are covered by stock." />
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "bo.description")}{!canSeeSupplyChain ? t(lang, "bo.descriptionLimited") : ""}</p>
+    <DataTable columns={columns} rows={rows} rowKey={r => r.key} empty={t(lang, "bo.empty")} />
   </div>;
 }
 
-function SalesOverview({ quotations, invoices, serviceJobs, customers, items, purchaseOrders, role }) {
+function SalesOverview({ quotations, invoices, serviceJobs, customers, items, purchaseOrders, role, lang }) {
   const [overviewFilter, setOverviewFilter] = useState("all");
   const openPartQuotes = quotations.filter(q => q.type === "part" && q.status !== "Invoiced" && q.status !== "Rejected").length;
   const openEquipQuotes = quotations.filter(q => q.type === "equipment" && q.status !== "Invoiced" && q.status !== "Rejected").length;
@@ -1329,25 +1594,25 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
   const showStats = ["all", "parts", "equipment", "service"].includes(overviewFilter);
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Show:</span>
+      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "salesov.show")}</span>
       <TSelect value={overviewFilter} onChange={e => setOverviewFilter(e.target.value)} style={{ width: 200 }}>
-        <option value="all">Everything</option>
-        <option value="parts">Parts only</option>
-        <option value="equipment">Equipment only</option>
-        <option value="service">Service only</option>
-        <option value="backorder">Back-orders only</option>
+        <option value="all">{t(lang, "salesov.everything")}</option>
+        <option value="parts">{t(lang, "salesov.partsOnly")}</option>
+        <option value="equipment">{t(lang, "salesov.equipmentOnly")}</option>
+        <option value="service">{t(lang, "salesov.serviceOnly")}</option>
+        <option value="backorder">{t(lang, "salesov.backordersOnly")}</option>
       </TSelect>
     </div>
     {showStats && <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      {(overviewFilter === "all" || overviewFilter === "parts") && <StatCard label="Open Part Quotes" value={openPartQuotes} sub="Awaiting confirmation" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />}
-      {(overviewFilter === "all" || overviewFilter === "equipment") && <StatCard label="Open Equipment Quotes" value={openEquipQuotes} sub="Awaiting confirmation" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />}
-      {(overviewFilter === "all" || overviewFilter === "service") && <StatCard label="Active Service Jobs" value={activeJobs} sub="In progress" icon={Wrench} tint="var(--ore)" soft="var(--ore-soft)" />}
-      {overviewFilter === "all" && <StatCard label="Back-Ordered Lines" value={backOrderLines} sub="Qty exceeds on-hand stock" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />}
+      {(overviewFilter === "all" || overviewFilter === "parts") && <StatCard label={t(lang, "salesov.openPartQuotes")} value={openPartQuotes} sub={t(lang, "salesov.awaitingConfirmation")} icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />}
+      {(overviewFilter === "all" || overviewFilter === "equipment") && <StatCard label={t(lang, "salesov.openEquipmentQuotes")} value={openEquipQuotes} sub={t(lang, "salesov.awaitingConfirmation")} icon={Truck} tint="var(--info)" soft="var(--info-soft)" />}
+      {(overviewFilter === "all" || overviewFilter === "service") && <StatCard label={t(lang, "salesov.activeServiceJobs")} value={activeJobs} sub={t(lang, "salesov.inProgress")} icon={Wrench} tint="var(--ore)" soft="var(--ore-soft)" />}
+      {overviewFilter === "all" && <StatCard label={t(lang, "salesov.backOrderedLines")} value={backOrderLines} sub={t(lang, "salesov.qtyExceedsStock")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />}
     </div>}
-    {(overviewFilter === "all" || overviewFilter === "backorder") && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" />}
+    {(overviewFilter === "all" || overviewFilter === "backorder") && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" lang={lang} />}
     {overviewFilter === "all" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent quotations</h3>
-      {recent.length === 0 && <div className="mis-empty">No quotations yet.</div>}
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "salesov.recentQuotations")}</h3>
+      {recent.length === 0 && <div className="mis-empty">{t(lang, "salesov.noQuotationsYet")}</div>}
       {recent.map(q => { const cs = statusColor(q.status); return <div key={q.id} className="mis-row" style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px", borderBottom: "1px solid var(--border-soft)" }}>
         <span style={{ fontSize: 13 }}>{q.id} · {custName(q.customerId)} <span style={{ color: "var(--text-tertiary)" }}>({q.type})</span></span>
         <Badge color={cs[0]} soft={cs[1]}>{q.status}</Badge>
@@ -2019,7 +2284,7 @@ function CommandPalette({ open, onClose, allowedNav, setNav, customers, items, q
 // ---------------------------------------------------------------------------
 // DASHBOARD
 // ---------------------------------------------------------------------------
-function Dashboard({ items, quotations, invoices, purchaseOrders, customers, auditLog, role }) {
+function Dashboard({ items, quotations, invoices, purchaseOrders, customers, auditLog, role, lang }) {
   const [dashboardBranchFilter, setDashboardBranchFilter] = useState("All");
   const dashboardItems = dashboardBranchFilter === "All" ? items : items.filter(i => i.branch === dashboardBranchFilter);
   const stockValue = dashboardItems.reduce((s, i) => s + i.qty * i.cost, 0);
@@ -2031,39 +2296,39 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
   const healthyPct = Math.round((dashboardItems.length - lowStock.length) / Math.max(dashboardItems.length, 1) * 100);
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Focus on:</span>
+      <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "dash.focusOn")}</span>
       <TSelect value={dashboardBranchFilter} onChange={e => setDashboardBranchFilter(e.target.value)} style={{ width: 200 }}>
-        <option value="All">All branches</option>
+        <option value="All">{t(lang, "dash.allBranches")}</option>
         {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
       </TSelect>
     </div>
     <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
-      <RingStat pct={healthyPct} color="var(--teal)" label="Items above reorder level" sub={`${dashboardItems.length - lowStock.length} of ${dashboardItems.length} items healthy`} big />
+      <RingStat pct={healthyPct} color="var(--teal)" label={t(lang, "dash.itemsAboveReorder")} sub={`${dashboardItems.length - lowStock.length} ${t(lang, "dash.of")} ${dashboardItems.length} ${t(lang, "dash.itemsHealthy")}`} big />
       <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)" }} />
-      <RingStat pct={fulfilledPct} color="var(--sky)" label="Quotations invoiced" sub={`${quotations.filter(q => q.status === "Invoiced").length} of ${quotations.length} quotations closed`} />
+      <RingStat pct={fulfilledPct} color="var(--sky)" label={t(lang, "dash.quotationsInvoiced")} sub={`${quotations.filter(q => q.status === "Invoiced").length} ${t(lang, "dash.of")} ${quotations.length} ${t(lang, "dash.quotationsClosed")}`} />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-      <StatCard label="Stock Value" value={fmtGHS(stockValue)} sub={dashboardBranchFilter === "All" ? "Parts & equipment, all branches" : dashboardBranchFilter} icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
-      <StatCard label="Below Reorder Point" value={lowStock.length} sub="Items needing replenishment" icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
-      <StatCard label="Open Quotations" value={openQuotes} sub="Parts, equipment & service" icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
-      <StatCard label="POs In Progress" value={inTransitPOs} sub="Ordered or in transit" icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
+      <StatCard label={t(lang, "dash.stockValue")} value={fmtGHS(stockValue)} sub={dashboardBranchFilter === "All" ? t(lang, "dash.partsEquipAllBranches") : dashboardBranchFilter} icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
+      <StatCard label={t(lang, "dash.belowReorderPoint")} value={lowStock.length} sub={t(lang, "dash.itemsNeedingReplenishment")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
+      <StatCard label={t(lang, "dash.openQuotations")} value={openQuotes} sub={t(lang, "dash.partsEquipService")} icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
+      <StatCard label={t(lang, "dash.posInProgress")} value={inTransitPOs} sub={t(lang, "dash.orderedOrInTransit")} icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
       <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Items nearest depletion</h3>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.itemsNearestDepletion")}</h3>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <CoreSample layers={stockLayers(it)} size={30} />
               <div><div style={{ fontSize: 13, color: "var(--text-primary)" }}>{it.name}</div><div className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: 6 }}>{it.brand} · <BranchTag branch={it.branch} /></div></div>
             </div>
-            <div style={{ textAlign: "right" }}><div className="mis-mono" style={{ fontSize: 13, color: "var(--vital)" }}>{it.qty} / {it.reorder}</div><div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>on hand / reorder</div></div>
+            <div style={{ textAlign: "right" }}><div className="mis-mono" style={{ fontSize: 13, color: "var(--vital)" }}>{it.qty} / {it.reorder}</div><div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "dash.onHandReorder")}</div></div>
           </div>)}
-          {lowStock.length === 0 && <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>All items above reorder level.</p>}
+          {lowStock.length === 0 && <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{t(lang, "dash.allItemsAboveReorder")}</p>}
         </div>
       </div>
       <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Customer credit risk</h3>
+        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.customerCreditRisk")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {customers.map(c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <div key={c.id}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4, color: risky ? "var(--vital)" : "var(--text-secondary)" }}><span>{c.name}</span><span className="mis-mono">{pct}%</span></div>
@@ -2073,8 +2338,8 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
       </div>
     </div>
     {["admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Recent activity</h3>
-      {recentActivity.length === 0 && <div className="mis-empty">No activity recorded yet.</div>}
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.recentActivity")}</h3>
+      {recentActivity.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
         <span style={{ color: "var(--text-secondary)" }}>{a.action}</span>
         <span style={{ color: "var(--text-tertiary)", whiteSpace: "nowrap" }}>{a.user} · {fmtDateTime(a.ts)}</span>
@@ -2106,32 +2371,42 @@ function LoginScreen({ users, lang, setLang, onLogin }) {
     onLogin(match.id);
   }
 
-  return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--brand-deep)" }}>
+  const mosaicColors = ["var(--coral)", "var(--teal)", "var(--sky)", "var(--sky)", "var(--coral)", "var(--teal)", "var(--teal)", "var(--sky)", "var(--coral)"];
+
+  return <div className="mis-root mis-auth-shell">
     <Style />
-    <div style={{ position: "absolute", top: 20, right: 20 }}>
-      <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
-        <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
-        <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
+    <div className="mis-auth-hero">
+      <div className="mis-auth-hero-gear"><GearMark size={340} spin mosaic={false} /></div>
+      <div className="mis-auth-mosaic">{mosaicColors.map((c, i) => <span key={i} style={{ background: c }} />)}</div>
+      <div>
+        <div className="mis-eyebrow" style={{ color: "rgba(255,255,255,0.6)", marginBottom: 14 }}>{t(lang, "login.eyebrow")}</div>
+        <div className="mis-display" style={{ fontSize: 34, color: "#FFFFFF", lineHeight: 1.08 }}>SETVACO</div>
+        <StrataRule className="mt-1.5" />
       </div>
+      <p className="mis-auth-tagline">{t(lang, "login.tagline")}</p>
     </div>
-    <div className="mis-panel" style={{ width: "100%", maxWidth: 380, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 4 }}>
-        <div className="mis-seal" style={{ width: 52, height: 52, background: "var(--brand)" }}>
-          <GearMark size={32} spin />
+    <div className="mis-auth-form-wrap">
+      <div className="mis-auth-lang">
+        <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
+          <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
+          <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
         </div>
-        <div className="mis-display" style={{ fontSize: 20, color: "var(--ink)" }}>{t(lang, "login.subtitle")}</div>
       </div>
-      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <Field label={t(lang, "login.username")}><TInput autoFocus value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. kowusu" /></Field>
-        <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
-        {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "login.invalid")}</p>}
-        <button type="submit" className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{t(lang, "login.signIn")}</button>
-      </form>
-      <div className="mis-divider" />
-      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
-        <p style={{ marginBottom: 6 }}>{t(lang, "login.demoHint")}</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {users.filter(u => u.status === "Active").map(u => <span key={u.id} className="mis-mono">{u.username} — {t(lang, "role." + u.role)}</span>)}
+      <div className="mis-auth-card mis-view-enter">
+        <div className="mis-eyebrow" style={{ marginBottom: 6 }}>{t(lang, "login.title")}</div>
+        <div className="mis-display" style={{ fontSize: 24, color: "var(--ink)", marginBottom: 22 }}>{t(lang, "login.subtitle")}</div>
+        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <Field label={t(lang, "login.username")}><TInput autoFocus value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. kowusu" /></Field>
+          <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+          {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "login.invalid")}</p>}
+          <button type="submit" className="mis-btn-primary mis-focus" style={{ justifyContent: "center", padding: "11px 16px" }}>{t(lang, "login.signIn")}</button>
+        </form>
+        <div className="mis-divider" style={{ margin: "22px 0 14px" }} />
+        <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
+          <p style={{ marginBottom: 6 }}>{t(lang, "login.demoHint")}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {users.filter(u => u.status === "Active").map(u => <span key={u.id} className="mis-mono">{u.username} — {t(lang, "role." + u.role)}</span>)}
+          </div>
         </div>
       </div>
     </div>
@@ -2257,10 +2532,10 @@ function SetvacoBusinessSystem() {
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
         <div key={nav} className="mis-view-enter">
-          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} />}
-          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
-          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
-          {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} />}
+          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} auditLog={auditLog} role={role} lang={lang} />}
+          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
@@ -2293,8 +2568,20 @@ root.render(<SetvacoBusinessSystem />);
   // access control. Real per-user auth is the login screen above this.
   var ACCESS_CODE = "Setvaco2026";
   var GATE_STRINGS = {
-    en: { title: "SETVACO Business System", subtitle: "This is a private client demo. Enter the access code to continue.", placeholder: "Access code", enter: "Enter", error: "Incorrect access code." },
-    fr: { title: "Système d'entreprise SETVACO", subtitle: "Ceci est une démonstration client privée. Entrez le code d'accès pour continuer.", placeholder: "Code d'accès", enter: "Entrer", error: "Code d'accès incorrect." }
+    en: {
+      title: "SETVACO Business System", subtitle: "This is a private client demo. Enter the access code to continue.",
+      placeholder: "Access code", enter: "Enter", error: "Incorrect access code.",
+      heroEyebrow: "SETVACO · Business System",
+      tagline: "Crushing & screening equipment, spare parts, and technical service — engineered for mining and quarry operations across West Africa.",
+      boxEyebrow: "Private Access"
+    },
+    fr: {
+      title: "Système d'entreprise SETVACO", subtitle: "Ceci est une démonstration client privée. Entrez le code d'accès pour continuer.",
+      placeholder: "Code d'accès", enter: "Entrer", error: "Code d'accès incorrect.",
+      heroEyebrow: "SETVACO · Système d'entreprise",
+      tagline: "Équipements de concassage et de criblage, pièces détachées et service technique — conçus pour les opérations minières et de carrière en Afrique de l'Ouest.",
+      boxEyebrow: "Accès privé"
+    }
   };
 
   var overlay = document.getElementById("gate-overlay");
@@ -2303,6 +2590,9 @@ root.render(<SetvacoBusinessSystem />);
   var errorEl = document.getElementById("gate-error");
   var titleEl = document.getElementById("gate-title");
   var subtitleEl = document.getElementById("gate-subtitle");
+  var heroEyebrowEl = document.getElementById("gate-hero-eyebrow");
+  var taglineEl = document.getElementById("gate-tagline");
+  var boxEyebrowEl = document.getElementById("gate-box-eyebrow");
   var langEnBtn = document.getElementById("gate-lang-en");
   var langFrBtn = document.getElementById("gate-lang-fr");
 
@@ -2320,6 +2610,9 @@ root.render(<SetvacoBusinessSystem />);
     subtitleEl.textContent = s.subtitle;
     input.placeholder = s.placeholder;
     submitBtn.textContent = s.enter;
+    heroEyebrowEl.textContent = s.heroEyebrow;
+    taglineEl.textContent = s.tagline;
+    boxEyebrowEl.textContent = s.boxEyebrow;
     errorEl.textContent = "";
     langEnBtn.className = lang === "en" ? "active" : "";
     langFrBtn.className = lang === "fr" ? "active" : "";
