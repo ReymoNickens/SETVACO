@@ -207,3 +207,32 @@ don't currently receive a `lang` prop) using the same pattern already
 established in `SalesQuotations`/`ServiceJobsTab` → `SendDocumentModal`.
 Do this screen-by-screen rather than all at once, and re-run the Babel+jsdom
 role/nav sweep after each screen — don't ship a mixed-language UI.
+
+## Frontend login gate — prototype-level, not real auth
+
+`index.html` now shows a `LoginScreen` before the app: username + a shared
+demo password (`setvaco-demo`, matching the real password already seeded in
+`supabase/seed.sql`'s `auth.users` rows, so the two won't drift confusingly).
+A successful match against the local demo user list (`users` state, must be
+`status === "Active"`) sets `loggedInUserId`, which now determines `role` and
+`currentUser` — the old free role-switcher dropdown in the header is gone,
+replaced by a Log out button, since a real login determines your role rather
+than letting you pick it.
+
+**This is explicitly not connected to the real Supabase Auth backend** built
+earlier in this document — it's the same fidelity as the role dropdown it
+replaced, just gated by a real user identity instead of a free choice. The
+real login is the Phase 1 auth cutover already described under Rollout
+below: real Supabase Auth, a Vite+React build step (required — in-browser
+Babel can't hold a scoped Supabase client), real sessions, real password
+checks via GoTrue. When that phase starts, `LoginScreen` gets replaced
+wholesale by a `supabase.auth.signInWithPassword()` flow — don't try to
+gradually wire this one up to the real backend in place, the auth models
+are different enough (session tokens vs. a plain `loggedInUserId` in
+localStorage) that a clean swap is simpler than a migration.
+
+Session persists via the existing `localStorage` mechanism (`loggedInUserId`
+field). If an admin suspends a logged-in user in Users & Access, that
+session naturally drops back to the login screen next render, since
+`loggedInUser` is looked up live by id + `status === 'Active'` on every
+render rather than cached at login time.

@@ -303,16 +303,6 @@ const ROLES = {
   service: { label: "Service Technician Lead" },
   finance: { label: "Finance / Audit" }
 };
-// Simulated "logged in" identity per role — stands in for real authentication,
-// which this static prototype does not implement.
-const CURRENT_USERS = {
-  admin: { name: "Efua Mensah", email: "e.mensah@setvaco.com" },
-  sales: { name: "Kwabena Owusu", email: "k.owusu@setvaco.com" },
-  warehouse: { name: "Yaw Darko", email: "y.darko@setvaco.com" },
-  procurement: { name: "Abena Sarpong", email: "a.sarpong@setvaco.com" },
-  service: { name: "Kojo Boateng", email: "k.boateng@setvaco.com" },
-  finance: { name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com" }
-};
 const ALL_ROLES = Object.keys(ROLES);
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
@@ -385,7 +375,15 @@ const TRANSLATIONS = {
     "email.subject": "Subject",
     "email.messagePreview": "Message preview",
     "email.close": "Close",
-    "email.hint": "Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app."
+    "email.hint": "Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app.",
+    "login.title": "Sign in",
+    "login.subtitle": "SETVACO Business System",
+    "login.username": "Username",
+    "login.password": "Password",
+    "login.signIn": "Sign in",
+    "login.invalid": "Unrecognized username or password, or this account is suspended.",
+    "login.demoHint": "Demo credentials — any username below, password: setvaco-demo",
+    "login.logout": "Log out"
   },
   fr: {
     "nav.dashboard": "Tableau de bord",
@@ -434,7 +432,15 @@ const TRANSLATIONS = {
     "email.subject": "Objet",
     "email.messagePreview": "Aperçu du message",
     "email.close": "Fermer",
-    "email.hint": "Ouvre votre client de messagerie par défaut avec le destinataire, la copie, l'objet et le message pré-remplis — ce prototype n'a pas de serveur de messagerie propre, l'envoi se fait donc via votre propre application de messagerie."
+    "email.hint": "Ouvre votre client de messagerie par défaut avec le destinataire, la copie, l'objet et le message pré-remplis — ce prototype n'a pas de serveur de messagerie propre, l'envoi se fait donc via votre propre application de messagerie.",
+    "login.title": "Connexion",
+    "login.subtitle": "Système d'entreprise SETVACO",
+    "login.username": "Nom d'utilisateur",
+    "login.password": "Mot de passe",
+    "login.signIn": "Se connecter",
+    "login.invalid": "Nom d'utilisateur ou mot de passe non reconnu, ou ce compte est suspendu.",
+    "login.demoHint": "Identifiants de démonstration — n'importe quel nom d'utilisateur ci-dessous, mot de passe : setvaco-demo",
+    "login.logout": "Se déconnecter"
   }
 };
 function t(lang, key) {
@@ -2034,11 +2040,66 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
 }
 
 // ---------------------------------------------------------------------------
+// LOGIN — prototype-level gate: checks the typed username against the local
+// demo user list (case-insensitive, must be Active) and a shared demo
+// password. Not connected to a real backend — the Supabase Auth backend in
+// supabase/ already exists and is the intended real login once the frontend
+// takes the Vite+React build-step cutover documented in
+// docs/architecture.md; this is a faster interim step that at least gates
+// entry by a real user identity instead of a free role dropdown.
+// ---------------------------------------------------------------------------
+const DEMO_PASSWORD = "setvaco-demo";
+function LoginScreen({ users, lang, setLang, onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  function submit(e) {
+    e.preventDefault();
+    const match = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.status === "Active");
+    if (!match || password !== DEMO_PASSWORD) { setError(true); return; }
+    setError(false);
+    onLogin(match.id);
+  }
+
+  return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--brand-deep)" }}>
+    <Style />
+    <div style={{ position: "absolute", top: 20, right: 20 }}>
+      <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
+        <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
+        <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
+      </div>
+    </div>
+    <div className="mis-panel" style={{ width: "100%", maxWidth: 380, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div className="mis-seal" style={{ width: 52, height: 52, background: "var(--brand)" }}>
+          <GearMark size={32} spin />
+        </div>
+        <div className="mis-display" style={{ fontSize: 20, color: "var(--ink)" }}>{t(lang, "login.subtitle")}</div>
+      </div>
+      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Field label={t(lang, "login.username")}><TInput autoFocus value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. kowusu" /></Field>
+        <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+        {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "login.invalid")}</p>}
+        <button type="submit" className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{t(lang, "login.signIn")}</button>
+      </form>
+      <div className="mis-divider" />
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
+        <p style={{ marginBottom: 6 }}>{t(lang, "login.demoHint")}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {users.filter(u => u.status === "Active").map(u => <span key={u.id} className="mis-mono">{u.username} — {t(lang, "role." + u.role)}</span>)}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
 // MAIN APP
 // ---------------------------------------------------------------------------
 function SetvacoBusinessSystem() {
   const persisted = loadPersisted();
-  const [role, setRole] = useState("admin");
+  const [loggedInUserId, setLoggedInUserId] = useState(() => (persisted && persisted.loggedInUserId) || null);
   const [nav, setNav] = useState("dashboard");
   const [lang, setLang] = useState(() => (persisted && persisted.lang) || "en");
   const [stockRooms, setStockRooms] = useState(() => (persisted && persisted.stockRooms) || initialStockRooms);
@@ -2059,13 +2120,15 @@ function SetvacoBusinessSystem() {
   const navRefs = useRef({});
   const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
 
-  const currentUser = (CURRENT_USERS[role] || {}).name || "Unknown user";
+  const loggedInUser = users.find(u => u.id === loggedInUserId && u.status === "Active") || null;
+  const role = loggedInUser ? loggedInUser.role : null;
+  const currentUser = loggedInUser ? loggedInUser.name : null;
   const allowedNav = NAV.filter(n => n.roles.includes(role));
 
-  useEffect(() => { if (!allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
+  useEffect(() => { if (loggedInUser && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -2091,6 +2154,11 @@ function SetvacoBusinessSystem() {
     if (!window.confirm("Reset all data back to the original demo dataset? This clears anything added in this browser.")) return;
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
     window.location.reload();
+  }
+  function logout() { setLoggedInUserId(null); }
+
+  if (!loggedInUser) {
+    return <LoginScreen users={users} lang={lang} setLang={setLang} onLogin={setLoggedInUserId} />;
   }
 
   const sidebarWidth = collapsed ? 76 : 236;
@@ -2139,12 +2207,8 @@ function SetvacoBusinessSystem() {
             <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
             <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
           </div>
-          <div style={{ position: "relative" }}>
-            <select value={role} onChange={e => setRole(e.target.value)} className="mis-panel-alt mis-focus" style={{ fontSize: 13, borderRadius: 10, padding: "7px 26px 7px 12px", appearance: "none", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
-              {Object.keys(ROLES).map(key => <option key={key} value={key}>{t(lang, "role." + key)}</option>)}
-            </select>
-            <ChevronDown size={14} style={{ position: "absolute", right: 8, top: 9, color: "var(--text-tertiary)", pointerEvents: "none" }} />
-          </div>
+          <Avatar name={currentUser} role={role} size={30} />
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={logout}>{t(lang, "login.logout")}</button>
         </div>
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
