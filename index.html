@@ -16,9 +16,53 @@ table{border-collapse:collapse;}
 img,video{max-width:100%;height:auto;}
 button,input,select,textarea{font:inherit;color:inherit;}
 button{cursor:pointer;}
+/* Access-code gate — sits outside the React tree so it blocks the view
+   before React/Babel even finish loading, not just after mount. This is a
+   deterrent against casually stumbling on a public link, not real access
+   control — the code is plainly visible in page source to anyone who looks;
+   real per-user authorization is enforced by the login screen and (once
+   wired) the backend, not this. See docs/architecture.md. */
+#gate-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #131B4A;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Sans', Arial, sans-serif;
+}
+#gate-box {
+  background: #FFFFFF; border-radius: 16px; padding: 32px 28px;
+  width: 320px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  text-align: center;
+}
+#gate-box h1 { font-size: 18px; margin: 0 0 4px; color: #0F1330; }
+#gate-box p { font-size: 12px; color: #565E85; margin: 0 0 20px; }
+#gate-box input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #DBE1F5; font-size: 14px; margin-bottom: 12px;
+}
+#gate-box button {
+  width: 100%; padding: 10px 12px; border-radius: 8px; border: none;
+  background: #2A3B94; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+#gate-error { color: #DC3E4C; font-size: 12px; margin-top: 10px; min-height: 14px; }
+#gate-lang { position: absolute; top: 16px; right: 16px; display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #DBE1F5; }
+#gate-lang button { width: auto; padding: 5px 9px; border-radius: 0; background: transparent; color: #565E85; font-size: 11px; font-weight: 600; }
+#gate-lang button.active { background: #2A3B94; color: #fff; }
 </style>
 </head>
 <body>
+<div id="gate-overlay">
+  <div id="gate-lang">
+    <button type="button" id="gate-lang-en">EN</button>
+    <button type="button" id="gate-lang-fr">FR</button>
+  </div>
+  <div id="gate-box">
+    <h1 id="gate-title">SETVACO Business System</h1>
+    <p id="gate-subtitle">This is a private client demo. Enter the access code to continue.</p>
+    <input id="gate-input" type="password" placeholder="Access code" autofocus />
+    <button type="button" id="gate-submit">Enter</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
 "use strict";
@@ -303,16 +347,6 @@ const ROLES = {
   service: { label: "Service Technician Lead" },
   finance: { label: "Finance / Audit" }
 };
-// Simulated "logged in" identity per role — stands in for real authentication,
-// which this static prototype does not implement.
-const CURRENT_USERS = {
-  admin: { name: "Efua Mensah", email: "e.mensah@setvaco.com" },
-  sales: { name: "Kwabena Owusu", email: "k.owusu@setvaco.com" },
-  warehouse: { name: "Yaw Darko", email: "y.darko@setvaco.com" },
-  procurement: { name: "Abena Sarpong", email: "a.sarpong@setvaco.com" },
-  service: { name: "Kojo Boateng", email: "k.boateng@setvaco.com" },
-  finance: { name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com" }
-};
 const ALL_ROLES = Object.keys(ROLES);
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
@@ -328,6 +362,134 @@ const NAV = [
   { key: "access", label: "Users & Access", icon: KeyRound, roles: ["admin"] }
 ];
 const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
+
+// ---------------------------------------------------------------------------
+// i18n — EN/FR. Scope: navigation/app chrome and the customer-facing
+// quotation/invoice document + email templates (the two things a francophone
+// branch or customer actually needs day-to-day). Internal admin screens
+// (Inventory/Purchasing/Customers/Users & Access tables and forms, audit-log
+// and toast text) are not yet wired through this and stay English — see
+// docs/architecture.md for that scoping decision.
+// ---------------------------------------------------------------------------
+const TRANSLATIONS = {
+  en: {
+    "nav.dashboard": "Dashboard",
+    "nav.partsInventory": "Stock Room",
+    "nav.equipmentInventory": "Equipment Inventory",
+    "nav.salesoverview": "Sales Overview",
+    "nav.partsales": "Parts Sales",
+    "nav.equipmentsales": "Equipment Sales",
+    "nav.servicejobs": "Service",
+    "nav.purchasing": "Purchasing",
+    "nav.customers": "Customers",
+    "nav.variance": "Variance & Audit",
+    "nav.access": "Users & Access",
+    "role.admin": "Administrator",
+    "role.sales": "Sales Officer",
+    "role.warehouse": "Warehouse Clerk",
+    "role.procurement": "Procurement Officer",
+    "role.service": "Service Technician Lead",
+    "role.finance": "Finance / Audit",
+    "app.businessSystem": "BUSINESS SYSTEM",
+    "app.internal": "SETVACO · INTERNAL",
+    "app.signedInAs": "Signed in as",
+    "app.search": "Search or jump to…",
+    "app.resetDemo": "Reset demo data",
+    "app.footer": "SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA",
+    "app.language": "Language",
+    "doc.quotation": "Quotation",
+    "doc.invoice": "Invoice",
+    "doc.description": "Description",
+    "doc.qty": "Qty",
+    "doc.unitPrice": "Unit Price",
+    "doc.lineTotal": "Line Total",
+    "doc.total": "Total",
+    "doc.toBeSourced": "to be sourced",
+    "email.dear": "Dear",
+    "email.customer": "Customer",
+    "email.pleaseFindBelow": "Please find below",
+    "email.dated": "dated",
+    "email.kindRegards": "Kind regards",
+    "email.send": "Send",
+    "email.toCustomer": "to customer",
+    "email.openEmailClient": "Open email client",
+    "email.noEmailOnFile": "No customer email on file",
+    "email.to": "To",
+    "email.ccOfficials": "CC company officials",
+    "email.subject": "Subject",
+    "email.messagePreview": "Message preview",
+    "email.close": "Close",
+    "email.hint": "Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app.",
+    "login.title": "Sign in",
+    "login.subtitle": "SETVACO Business System",
+    "login.username": "Username",
+    "login.password": "Password",
+    "login.signIn": "Sign in",
+    "login.invalid": "Unrecognized username or password, or this account is suspended.",
+    "login.demoHint": "Demo credentials — any username below, password: setvaco-demo",
+    "login.logout": "Log out"
+  },
+  fr: {
+    "nav.dashboard": "Tableau de bord",
+    "nav.partsInventory": "Magasin",
+    "nav.equipmentInventory": "Inventaire des équipements",
+    "nav.salesoverview": "Aperçu des ventes",
+    "nav.partsales": "Ventes de pièces",
+    "nav.equipmentsales": "Ventes d'équipements",
+    "nav.servicejobs": "Service",
+    "nav.purchasing": "Achats",
+    "nav.customers": "Clients",
+    "nav.variance": "Écarts et audit",
+    "nav.access": "Utilisateurs et accès",
+    "role.admin": "Administrateur",
+    "role.sales": "Chargé(e) des ventes",
+    "role.warehouse": "Magasinier(ère)",
+    "role.procurement": "Responsable des achats",
+    "role.service": "Chef technicien de service",
+    "role.finance": "Finance / Audit",
+    "app.businessSystem": "SYSTÈME D'ENTREPRISE",
+    "app.internal": "SETVACO · INTERNE",
+    "app.signedInAs": "Connecté(e) en tant que",
+    "app.search": "Rechercher ou aller à…",
+    "app.resetDemo": "Réinitialiser les données de démonstration",
+    "app.footer": "SETVACO HOLDING LTD · PROTOTYPE · DONNÉES DE DÉMONSTRATION",
+    "app.language": "Langue",
+    "doc.quotation": "Devis",
+    "doc.invoice": "Facture",
+    "doc.description": "Description",
+    "doc.qty": "Qté",
+    "doc.unitPrice": "Prix unitaire",
+    "doc.lineTotal": "Total ligne",
+    "doc.total": "Total",
+    "doc.toBeSourced": "à approvisionner",
+    "email.dear": "Cher/Chère",
+    "email.customer": "Client",
+    "email.pleaseFindBelow": "Veuillez trouver ci-dessous",
+    "email.dated": "daté du",
+    "email.kindRegards": "Cordialement",
+    "email.send": "Envoyer",
+    "email.toCustomer": "au client",
+    "email.openEmailClient": "Ouvrir le client de messagerie",
+    "email.noEmailOnFile": "Aucun e-mail client enregistré",
+    "email.to": "À",
+    "email.ccOfficials": "Copie aux responsables de l'entreprise",
+    "email.subject": "Objet",
+    "email.messagePreview": "Aperçu du message",
+    "email.close": "Fermer",
+    "email.hint": "Ouvre votre client de messagerie par défaut avec le destinataire, la copie, l'objet et le message pré-remplis — ce prototype n'a pas de serveur de messagerie propre, l'envoi se fait donc via votre propre application de messagerie.",
+    "login.title": "Connexion",
+    "login.subtitle": "Système d'entreprise SETVACO",
+    "login.username": "Nom d'utilisateur",
+    "login.password": "Mot de passe",
+    "login.signIn": "Se connecter",
+    "login.invalid": "Nom d'utilisateur ou mot de passe non reconnu, ou ce compte est suspendu.",
+    "login.demoHint": "Identifiants de démonstration — n'importe quel nom d'utilisateur ci-dessous, mot de passe : setvaco-demo",
+    "login.logout": "Se déconnecter"
+  }
+};
+function t(lang, key) {
+  return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+}
 
 const initialStockRooms = [
   { id: "SR-01", name: "Main Store", branch: "Accra HQ" },
@@ -925,11 +1087,12 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
   </Modal>;
 }
 
-function printDocument(doc, customer, kind) {
+function printDocument(doc, customer, kind, lang) {
   const w = window.open("", "_blank", "width=800,height=900");
   if (!w) { window.alert("Please allow pop-ups to print or export this document."); return; }
   const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
-  const rowsHtml = doc.lines.map(l => `<tr><td>${l.desc}${l.newPart ? " (to be sourced)" : ""}</td><td>${l.qty}</td><td>${fmtGHS(l.unitPrice)}</td><td>${fmtGHS(l.qty * l.unitPrice)}</td></tr>`).join("");
+  const kindLabel = kind === "invoice" ? t(lang, "doc.invoice") : t(lang, "doc.quotation");
+  const rowsHtml = doc.lines.map(l => `<tr><td>${l.desc}${l.newPart ? ` (${t(lang, "doc.toBeSourced")})` : ""}</td><td>${l.qty}</td><td>${fmtGHS(l.unitPrice)}</td><td>${fmtGHS(l.qty * l.unitPrice)}</td></tr>`).join("");
   w.document.write(`<html><head><title>${doc.id}</title><style>
     body{font-family:Arial,sans-serif;padding:32px;color:#1a1c1e;}
     h1{font-size:20px;margin-bottom:4px;}
@@ -939,11 +1102,11 @@ function printDocument(doc, customer, kind) {
     .muted{color:#666;font-size:12px;}
   </style></head><body>
     <h1>SETVACO Holding Limited</h1>
-    <div class="muted">${kind === "invoice" ? "Invoice" : "Quotation"} ${doc.id} · ${doc.date}</div>
+    <div class="muted">${kindLabel} ${doc.id} · ${doc.date}</div>
     <hr/>
     <p><b>${customer ? customer.name : ""}</b><br/>${customer ? customer.address : ""}<br/>${customer ? customer.email : ""} · ${customer ? customer.phone : ""}</p>
-    <table><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead><tbody>${rowsHtml}</tbody></table>
-    <div class="tot">Total: ${fmtGHS(total)}</div>
+    <table><thead><tr><th>${t(lang, "doc.description")}</th><th>${t(lang, "doc.qty")}</th><th>${t(lang, "doc.unitPrice")}</th><th>${t(lang, "doc.lineTotal")}</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+    <div class="tot">${t(lang, "doc.total")}: ${fmtGHS(total)}</div>
     ${doc.notes ? `<p class="muted">${doc.notes}</p>` : ""}
   </body></html>`);
   w.document.close();
@@ -951,14 +1114,15 @@ function printDocument(doc, customer, kind) {
   w.print();
 }
 
-function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, onClose, onSent }) {
+function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, onClose, onSent, lang }) {
   const officials = users.filter(u => ["admin", "finance"].includes(u.role)).map(u => u.email);
   const [ccSelected, setCcSelected] = useState(officials);
   const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
-  const subject = `${kind === "invoice" ? "Invoice" : "Quotation"} ${doc.id} from SETVACO Holding Ltd`;
-  const body = `Dear ${customer ? customer.contactPerson : "Customer"},\n\nPlease find below ${kind === "invoice" ? "invoice" : "quotation"} ${doc.id} dated ${doc.date}, total ${fmtGHS(total)}.\n\n`
+  const kindLabel = kind === "invoice" ? t(lang, "doc.invoice") : t(lang, "doc.quotation");
+  const subject = `${kindLabel} ${doc.id} from SETVACO Holding Ltd`;
+  const body = `${t(lang, "email.dear")} ${customer ? customer.contactPerson : t(lang, "email.customer")},\n\n${t(lang, "email.pleaseFindBelow")} ${kindLabel.toLowerCase()} ${doc.id} ${t(lang, "email.dated")} ${doc.date}, ${t(lang, "doc.total").toLowerCase()} ${fmtGHS(total)}.\n\n`
     + doc.lines.map(l => `- ${l.desc} x${l.qty} @ ${fmtGHS(l.unitPrice)}`).join("\n")
-    + `\n\nKind regards,\n${currentUser}\nSETVACO Holding Limited`;
+    + `\n\n${t(lang, "email.kindRegards")},\n${currentUser}\nSETVACO Holding Limited`;
   const cc = ccSelected.join(",");
   const href = customer ? buildMailto(customer.email, cc, subject, body) : undefined;
   function toggle(email) { setCcSelected(s => s.includes(email) ? s.filter(x => x !== email) : [...s, email]); }
@@ -966,22 +1130,22 @@ function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction,
     logAction(currentUser, `Sent ${doc.id} to ${customer ? customer.email : "customer"} (cc: ${cc || "none"})`, "Communications");
     onSent && onSent();
   }
-  return <Modal title={`Send ${kind === "invoice" ? "invoice" : "quotation"} to customer`} onClose={onClose} footer={<React.Fragment>
-    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Close</button>
-    {customer ? <a className="mis-btn-primary mis-focus" href={href} onClick={handleSend}><Mail size={14} /> Open email client</a>
-      : <button type="button" className="mis-btn-primary mis-focus" disabled><Mail size={14} /> No customer email on file</button>}
+  return <Modal title={`${t(lang, "email.send")} ${kindLabel.toLowerCase()} ${t(lang, "email.toCustomer")}`} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "email.close")}</button>
+    {customer ? <a className="mis-btn-primary mis-focus" href={href} onClick={handleSend}><Mail size={14} /> {t(lang, "email.openEmailClient")}</a>
+      : <button type="button" className="mis-btn-primary mis-focus" disabled><Mail size={14} /> {t(lang, "email.noEmailOnFile")}</button>}
   </React.Fragment>}>
-    <div className="mis-kv"><span>To</span><b>{customer ? `${customer.name} <${customer.email}>` : "—"}</b></div>
-    <Field label="CC company officials">
+    <div className="mis-kv"><span>{t(lang, "email.to")}</span><b>{customer ? `${customer.name} <${customer.email}>` : "—"}</b></div>
+    <Field label={t(lang, "email.ccOfficials")}>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {users.map(u => <label key={u.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-          <input type="checkbox" checked={ccSelected.includes(u.email)} onChange={() => toggle(u.email)} /> {u.name} <span style={{ color: "var(--text-tertiary)" }}>({ROLES[u.role].label})</span>
+          <input type="checkbox" checked={ccSelected.includes(u.email)} onChange={() => toggle(u.email)} /> {u.name} <span style={{ color: "var(--text-tertiary)" }}>({t(lang, "role." + u.role)})</span>
         </label>)}
       </div>
     </Field>
-    <Field label="Subject"><TInput value={subject} readOnly /></Field>
-    <Field label="Message preview"><TArea value={body} readOnly rows={8} /></Field>
-    <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Opens your default email client with the recipient, cc, subject and message pre-filled — this prototype has no mail server of its own, so sending happens through your own mail app.</p>
+    <Field label={t(lang, "email.subject")}><TInput value={subject} readOnly /></Field>
+    <Field label={t(lang, "email.messagePreview")}><TArea value={body} readOnly rows={8} /></Field>
+    <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "email.hint")}</p>
   </Modal>;
 }
 
@@ -1044,7 +1208,7 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
   </Drawer>;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification }) {
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification, lang }) {
   const canManage = ["admin", "service"].includes(role);
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
@@ -1118,7 +1282,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
       defaultLines={showCreate.defaultLines}
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
     />}
-    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} onSent={() => {
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
       setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
@@ -1267,7 +1431,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
   </Drawer>;
 }
 
-function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification }) {
+function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, users, logAction, pushNotification, lang }) {
   const type = page === "equipmentsales" ? "equipment" : "part";
   const [showCreate, setShowCreate] = useState(false);
   const [sendDoc, setSendDoc] = useState(null);
@@ -1302,9 +1466,9 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> Create quotation</button>}
     </div>
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Transaction History</h4>
-    <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation")} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
+    <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} />
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>Invoices</h4>
-    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice")} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
+    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} />
 
     {showCreate && <CreateQuotationModal
       type={type}
@@ -1316,7 +1480,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
       onClose={() => setShowCreate(false)}
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
     />}
-    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} onSent={() => {
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
       if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
       setSendDoc(null);
     }} />}
@@ -1920,12 +2084,68 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
 }
 
 // ---------------------------------------------------------------------------
+// LOGIN — prototype-level gate: checks the typed username against the local
+// demo user list (case-insensitive, must be Active) and a shared demo
+// password. Not connected to a real backend — the Supabase Auth backend in
+// supabase/ already exists and is the intended real login once the frontend
+// takes the Vite+React build-step cutover documented in
+// docs/architecture.md; this is a faster interim step that at least gates
+// entry by a real user identity instead of a free role dropdown.
+// ---------------------------------------------------------------------------
+const DEMO_PASSWORD = "setvaco-demo";
+function LoginScreen({ users, lang, setLang, onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  function submit(e) {
+    e.preventDefault();
+    const match = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.status === "Active");
+    if (!match || password !== DEMO_PASSWORD) { setError(true); return; }
+    setError(false);
+    onLogin(match.id);
+  }
+
+  return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--brand-deep)" }}>
+    <Style />
+    <div style={{ position: "absolute", top: 20, right: 20 }}>
+      <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
+        <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
+        <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
+      </div>
+    </div>
+    <div className="mis-panel" style={{ width: "100%", maxWidth: 380, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div className="mis-seal" style={{ width: 52, height: 52, background: "var(--brand)" }}>
+          <GearMark size={32} spin />
+        </div>
+        <div className="mis-display" style={{ fontSize: 20, color: "var(--ink)" }}>{t(lang, "login.subtitle")}</div>
+      </div>
+      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Field label={t(lang, "login.username")}><TInput autoFocus value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. kowusu" /></Field>
+        <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+        {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{t(lang, "login.invalid")}</p>}
+        <button type="submit" className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{t(lang, "login.signIn")}</button>
+      </form>
+      <div className="mis-divider" />
+      <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
+        <p style={{ marginBottom: 6 }}>{t(lang, "login.demoHint")}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {users.filter(u => u.status === "Active").map(u => <span key={u.id} className="mis-mono">{u.username} — {t(lang, "role." + u.role)}</span>)}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
 // MAIN APP
 // ---------------------------------------------------------------------------
 function SetvacoBusinessSystem() {
   const persisted = loadPersisted();
-  const [role, setRole] = useState("admin");
+  const [loggedInUserId, setLoggedInUserId] = useState(() => (persisted && persisted.loggedInUserId) || null);
   const [nav, setNav] = useState("dashboard");
+  const [lang, setLang] = useState(() => (persisted && persisted.lang) || "en");
   const [stockRooms, setStockRooms] = useState(() => (persisted && persisted.stockRooms) || initialStockRooms);
   const [items, setItems] = useState(() => (persisted && persisted.items) || [...initialParts, ...initialEquipment]);
   const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
@@ -1944,13 +2164,15 @@ function SetvacoBusinessSystem() {
   const navRefs = useRef({});
   const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
 
-  const currentUser = (CURRENT_USERS[role] || {}).name || "Unknown user";
+  const loggedInUser = users.find(u => u.id === loggedInUserId && u.status === "Active") || null;
+  const role = loggedInUser ? loggedInUser.role : null;
+  const currentUser = loggedInUser ? loggedInUser.name : null;
   const allowedNav = NAV.filter(n => n.roles.includes(role));
 
-  useEffect(() => { if (!allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
+  useEffect(() => { if (loggedInUser && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
   useEffect(() => {
-    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings });
-  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings]);
+    savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId });
+  }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, users, auditLog, notifications, approvalSettings, lang, loggedInUserId]);
   useEffect(() => {
     const el = navRefs.current[nav];
     if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
@@ -1977,6 +2199,11 @@ function SetvacoBusinessSystem() {
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* storage unavailable */ }
     window.location.reload();
   }
+  function logout() { setLoggedInUserId(null); }
+
+  if (!loggedInUser) {
+    return <LoginScreen users={users} lang={lang} setLang={setLang} onLogin={setLoggedInUserId} />;
+  }
 
   const sidebarWidth = collapsed ? 76 : 236;
   return <div className="mis-root" style={{ minHeight: "700px", width: "100%", display: "flex" }}>
@@ -1988,13 +2215,13 @@ function SetvacoBusinessSystem() {
         </div>
         {!collapsed && <div>
           <div className="mis-display" style={{ fontSize: 17, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
-          <div className="mis-mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>BUSINESS SYSTEM</div>
+          <div className="mis-mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{t(lang, "app.businessSystem")}</div>
         </div>}
       </div>
       <nav style={{ flex: 1, padding: "10px 0", position: "relative" }}>
         <div className="mis-nav-pill" style={{ top: pill.top, height: pill.height, opacity: pill.opacity }} />
-        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; return <button key={n.key} ref={el => { navRefs.current[n.key] = el; }} type="button" title={collapsed ? n.label : undefined} className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "10px 0" : "10px 16px", fontSize: 13, marginBottom: 2 }}>
-          <Ic size={16} />{!collapsed && n.label}
+        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; const label = t(lang, "nav." + n.key); return <button key={n.key} ref={el => { navRefs.current[n.key] = el; }} type="button" title={collapsed ? label : undefined} className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "10px 0" : "10px 16px", fontSize: 13, marginBottom: 2 }}>
+          <Ic size={16} />{!collapsed && label}
         </button>; })}
       </nav>
       <div style={{ padding: collapsed ? "10px 0" : "10px 16px", display: "flex", justifyContent: collapsed ? "center" : "flex-end" }}>
@@ -2003,29 +2230,29 @@ function SetvacoBusinessSystem() {
         </button>
       </div>
       {!collapsed && <div className="mis-mono" style={{ padding: "10px 16px 16px", fontSize: 10, color: "rgba(255,255,255,0.42)", borderTop: "1px solid var(--brand-line)" }}>
-        SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA
-        <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" style={{ color: "rgba(255,255,255,0.55)" }} onClick={resetDemoData}>Reset demo data</button></div>
+        {t(lang, "app.footer")}
+        <div style={{ marginTop: 6 }}><button type="button" className="mis-link-btn" style={{ color: "rgba(255,255,255,0.55)" }} onClick={resetDemoData}>{t(lang, "app.resetDemo")}</button></div>
       </div>}
     </aside>
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--paper)" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--paper)", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <div className="mis-eyebrow" style={{ marginBottom: 2 }}>SETVACO · INTERNAL</div>
-          <h1 className="mis-display" style={{ fontSize: 24, color: "var(--ink)", lineHeight: 1 }}>{((allowedNav.find(n => n.key === nav) || {}).label || "Dashboard").toUpperCase()}</h1>
+          <div className="mis-eyebrow" style={{ marginBottom: 2 }}>{t(lang, "app.internal")}</div>
+          <h1 className="mis-display" style={{ fontSize: 24, color: "var(--ink)", lineHeight: 1 }}>{t(lang, "nav." + ((allowedNav.find(n => n.key === nav) || {}).key || "dashboard")).toUpperCase()}</h1>
           <StrataRule className="mt-1.5" />
-          <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>Signed in as {currentUser} · {ROLES[role].label}</p>
+          <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>{t(lang, "app.signedInAs")} {currentUser} · {t(lang, "role." + role)}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPaletteOpen(true)} style={{ color: "var(--text-tertiary)" }}>
-            <Search size={14} /> Search or jump to… <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
+            <Search size={14} /> {t(lang, "app.search")} <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
           </button>
           <NotificationBell notifications={notifications} setNotifications={setNotifications} />
-          <div style={{ position: "relative" }}>
-            <select value={role} onChange={e => setRole(e.target.value)} className="mis-panel-alt mis-focus" style={{ fontSize: 13, borderRadius: 10, padding: "7px 26px 7px 12px", appearance: "none", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
-              {Object.entries(ROLES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
-            </select>
-            <ChevronDown size={14} style={{ position: "absolute", right: 8, top: 9, color: "var(--text-tertiary)", pointerEvents: "none" }} />
+          <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }} title={t(lang, "app.language")}>
+            <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
+            <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
           </div>
+          <Avatar name={currentUser} role={role} size={30} />
+          <button type="button" className="mis-btn-ghost mis-focus" onClick={logout}>{t(lang, "login.logout")}</button>
         </div>
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
@@ -2034,8 +2261,8 @@ function SetvacoBusinessSystem() {
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} />}
-          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} />}
-          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
+          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
@@ -2058,6 +2285,68 @@ function SetvacoBusinessSystem() {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<SetvacoBusinessSystem />);
+</script>
+<script>
+(function() {
+  // Change this before sharing a demo link. Visible in page source to
+  // anyone who looks — a deterrent against casual stumbling, not real
+  // access control. Real per-user auth is the login screen above this.
+  var ACCESS_CODE = "Setvaco2026";
+  var GATE_STRINGS = {
+    en: { title: "SETVACO Business System", subtitle: "This is a private client demo. Enter the access code to continue.", placeholder: "Access code", enter: "Enter", error: "Incorrect access code." },
+    fr: { title: "Système d'entreprise SETVACO", subtitle: "Ceci est une démonstration client privée. Entrez le code d'accès pour continuer.", placeholder: "Code d'accès", enter: "Entrer", error: "Code d'accès incorrect." }
+  };
+
+  var overlay = document.getElementById("gate-overlay");
+  var input = document.getElementById("gate-input");
+  var submitBtn = document.getElementById("gate-submit");
+  var errorEl = document.getElementById("gate-error");
+  var titleEl = document.getElementById("gate-title");
+  var subtitleEl = document.getElementById("gate-subtitle");
+  var langEnBtn = document.getElementById("gate-lang-en");
+  var langFrBtn = document.getElementById("gate-lang-fr");
+
+  function detectLang() {
+    try {
+      var raw = localStorage.getItem("setvaco_system_state_v1");
+      var parsed = raw ? JSON.parse(raw) : null;
+      return (parsed && parsed.lang === "fr") ? "fr" : "en";
+    } catch (e) { return "en"; }
+  }
+
+  function applyLang(lang) {
+    var s = GATE_STRINGS[lang] || GATE_STRINGS.en;
+    titleEl.textContent = s.title;
+    subtitleEl.textContent = s.subtitle;
+    input.placeholder = s.placeholder;
+    submitBtn.textContent = s.enter;
+    errorEl.textContent = "";
+    langEnBtn.className = lang === "en" ? "active" : "";
+    langFrBtn.className = lang === "fr" ? "active" : "";
+    overlay.dataset.lang = lang;
+  }
+
+  function tryUnlock() {
+    if (input.value === ACCESS_CODE) {
+      sessionStorage.setItem("setvaco_demo_ok", "1");
+      overlay.style.display = "none";
+    } else {
+      errorEl.textContent = (GATE_STRINGS[overlay.dataset.lang] || GATE_STRINGS.en).error;
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  applyLang(detectLang());
+  if (sessionStorage.getItem("setvaco_demo_ok") === "1") {
+    overlay.style.display = "none";
+  }
+
+  submitBtn.addEventListener("click", tryUnlock);
+  input.addEventListener("keydown", function(e) { if (e.key === "Enter") tryUnlock(); });
+  langEnBtn.addEventListener("click", function() { applyLang("en"); input.focus(); });
+  langFrBtn.addEventListener("click", function() { applyLang("fr"); input.focus(); });
+})();
 </script>
 </body>
 </html>

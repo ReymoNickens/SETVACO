@@ -1,0 +1,39 @@
+# Local development config for the Supabase CLI (`supabase start` /
+# `supabase db reset`). See docs/architecture.md for the full backend plan.
+
+project_id = "setvaco"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_signup = false          # staff accounts are provisioned via the admin-manage-user Edge Function only
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+[edge_runtime]
+enabled = true
+
+[functions.send-document-email]
+verify_jwt = true
+
+[functions.admin-manage-user]
+verify_jwt = true
