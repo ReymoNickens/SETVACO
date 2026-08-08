@@ -276,3 +276,54 @@ shared demo link and poking around; it does not replace `LoginScreen`,
 doesn't replace making the GitHub repo private, and doesn't replace real
 backend authorization. Change `ACCESS_CODE` before sharing a link, and treat
 it as a doorbell, not a lock.
+
+## Salesforce-inspired additions — what was adopted and what wasn't
+
+The client's team has a Salesforce background, so a review pass was done
+against Salesforce's feature set to pull in what's genuinely useful here,
+without turning this into a Salesforce clone the way the earlier "Pan-African
+mining ERP" pitch would have turned it into a full mining ERP. Adopted:
+
+- **Path** (`PathStepper`, `index.html`): the numbered-circle stage tracker
+  Salesforce shows on Opportunity/Case records, reimplemented against this
+  app's actual status flow. Shown on the quotation detail drawer
+  (`Quoted → Sent → Invoiced`) and the service job detail drawer
+  (`Open → In Progress → Completed`) — only when the record's status is
+  actually one of those three; `Pending Approval` and `Rejected` are
+  exception branches, not points on the path, matching how Salesforce Path
+  only tracks the "happy path" stages too.
+- **Credit-risk-gated approval**: `creditLimit`/`outstanding` per customer
+  already existed (Customers table, Dashboard "Customer Credit Risk"
+  widget) but weren't wired into anything — the equivalent Salesforce
+  pattern is a validation rule on Opportunity that blocks progress based on
+  a rollup from the Account. `needsApproval` in `CreateQuotationModal` now
+  also holds a quotation for sign-off when the customer is over
+  `CREDIT_RISK_THRESHOLD` (75%) of their credit limit, not just over the
+  value threshold or on the manually-maintained flagged list.
+- **Director role + Company Financials** (`ROLES`, `CompanyFinancials` in
+  `index.html`): Salesforce's Role Hierarchy plus profile-restricted
+  report/dashboard folders — an executive sees a rollup nobody else does.
+  `director` has the same nav access as `admin` everywhere (added to every
+  `NAV` roles array and permission check `admin` appears in) plus one
+  exclusive page: total stock value, weighted pipeline, total customer
+  outstanding, and estimated gross margin by part, company-wide.
+
+**Deliberately not adopted** (would be over-building for a parts/equipment
+sales-and-inventory business, the same call made in "Deferred scope"
+above): Leads and lead conversion (sales here starts directly as a
+quotation against a known customer, there's no separate prospecting
+funnel), Campaigns, Territory Management, Opportunity Splits/forecasting
+categories beyond the single weighted-pipeline number already shown,
+Chatter (the existing Staff Activity module already covers
+comment/mention-style staff communication for this app's scale), and
+Duplicate Rules (the existing customer-lookup-by-name flow hasn't shown a
+duplicate-data problem worth a rules engine yet).
+
+**Known gap:** `director` is a frontend-only role for now. The Supabase
+`roles` lookup table and the `has_role(...)` arrays throughout
+`supabase/migrations/20260807000500_rls_policies.sql` still list only the
+original six roles — harmless today since the frontend isn't cut over to
+real Supabase Auth yet (see "Frontend login gate" above), but add
+`director` to both when Phase 1 auth cutover happens, or a director-role
+account will pass the frontend's login screen and then fail every RLS
+check.

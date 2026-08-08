@@ -299,6 +299,7 @@ const HistoryIcon = p => <Icon {...p} paths={<><path d="M3 12a9 9 0 1 0 3-6.7"/>
 const Globe2 = p => <Icon {...p} paths={<><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18"/><path d="M12 3a15 15 0 0 0 0 18"/></>} />;
 const Printer = p => <Icon {...p} paths={<><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="14" width="12" height="8"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></>} />;
 const MessageSquare = p => <Icon {...p} paths={<path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>} />;
+const BarChart3 = p => <Icon {...p} paths={<><line x1="6" y1="20" x2="6" y2="15"/><line x1="12" y1="20" x2="12" y2="9"/><line x1="18" y1="20" x2="18" y2="4"/></>} />;
 
 // Core-sample mark: drill-core cylinder with layered strata, recolored per item.
 function CoreSample({ layers, size = 40 }) {
@@ -320,7 +321,7 @@ function stockLayers(item) {
 function StrataRule({ className }) {
   return <div className={"mis-strata-rule " + (className || "")} />;
 }
-const ROLE_COLORS = { admin: "#2E6DA4", sales: "#1F8A5A", warehouse: "#C99A3D", procurement: "#7A5FB8", service: "#1E7FD6", finance: "#5C6672" };
+const ROLE_COLORS = { director: "#1A1D29", admin: "#2E6DA4", sales: "#1F8A5A", warehouse: "#C99A3D", procurement: "#7A5FB8", service: "#1E7FD6", finance: "#5C6672" };
 function initials(name) { return (name || "").split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("").toUpperCase(); }
 function Avatar({ name, role, size = 34 }) {
   const bg = ROLE_COLORS[role] || "var(--sky)";
@@ -410,6 +411,7 @@ function useCountUp(value, duration = 700) {
 // service to mining/quarry/construction clients across West Africa.
 // ---------------------------------------------------------------------------
 const ROLES = {
+  director: { label: "Director" },
   admin: { label: "Administrator" },
   sales: { label: "Sales Officer" },
   warehouse: { label: "Warehouse Clerk" },
@@ -421,18 +423,34 @@ const ALL_ROLES = Object.keys(ROLES);
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
   { key: "partsInventory", label: "Stock Room", icon: Package, roles: ALL_ROLES },
-  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["admin", "sales", "warehouse", "procurement", "finance"] },
-  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["admin", "sales", "finance"] },
-  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["admin", "sales", "warehouse", "finance"] },
-  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["admin", "sales", "finance"] },
-  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["admin", "service", "warehouse"] },
-  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["admin", "procurement", "finance"] },
-  { key: "customers", label: "Customers", icon: Users, roles: ["admin", "sales", "finance"] },
-  { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["admin", "finance"] },
-  { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["admin", "finance"] },
-  { key: "access", label: "Users & Access", icon: KeyRound, roles: ["admin"] }
+  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["director", "admin", "sales", "warehouse", "procurement", "finance"] },
+  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"] },
+  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"] },
+  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"] },
+  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"] },
+  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"] },
+  { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
+  { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
+  { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["director", "admin", "finance"] },
+  { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
+  { key: "financials", label: "Company Financials", icon: BarChart3, roles: ["director"] }
 ];
 const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
+// Linear happy-path stage sequences for PathStepper. "Pending Approval" and
+// "Rejected" (quotations) are exception branches, not points on this path —
+// PathStepper is only shown when the record's status is actually on it.
+const QUOTE_FLOW_STAGES = ["Quoted", "Sent", "Invoiced"];
+const JOB_FLOW_STAGES = ["Open", "In Progress", "Completed"];
+// Customers at or above this outstanding/creditLimit ratio are treated as a
+// credit risk: flagged red in the Customers table and Dashboard widget, and
+// held for approval automatically when a new quotation is created for them.
+const CREDIT_RISK_THRESHOLD = 0.75;
+function creditUtilization(customer) { return customer.creditLimit > 0 ? customer.outstanding / customer.creditLimit : 0; }
+function isCreditRisk(customer) { return creditUtilization(customer) > CREDIT_RISK_THRESHOLD; }
+// Weighting used to convert a quotation's status into a probability-adjusted
+// pipeline value, shared by the Sales Overview KPI and the director-only
+// Company Financials rollup.
+const FORECAST_WEIGHTS = { "Pending Approval": 0.2, Quoted: 0.3, Sent: 0.6, Invoiced: 1 };
 
 // ---------------------------------------------------------------------------
 // i18n — EN/FR. Coverage is app-wide: every screen's static labels, form
@@ -455,7 +473,9 @@ const TRANSLATIONS = {
     "nav.customers": "Customers",
     "nav.variance": "Variance & Audit",
     "nav.staffActivity": "Staff Activity",
+    "nav.financials": "Company Financials",
     "nav.access": "Users & Access",
+    "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
     "role.warehouse": "Warehouse Clerk",
@@ -737,6 +757,21 @@ const TRANSLATIONS = {
     "sa.clearFilter": "Clear filter",
     "sa.commentPlaceholder": "Add a comment…",
     "sa.commentBtn": "Comment",
+    "fin.directorOnly": "Director-only view — not visible to Administrator or any other role.",
+    "fin.totalStockValue": "Total Stock Value",
+    "fin.allBranches": "All branches",
+    "fin.weightedPipeline": "Weighted Pipeline",
+    "fin.partsAndEquipment": "Parts + Equipment",
+    "fin.customerOutstanding": "Customer Outstanding",
+    "fin.totalReceivables": "Total receivables",
+    "fin.estGrossMargin": "Est. Gross Margin",
+    "fin.onCurrentStock": "On current stock, at sell price",
+    "fin.marginByPart": "Margin by Part",
+    "fin.costCol": "Cost",
+    "fin.sellCol": "Sell",
+    "fin.marginPerUnitCol": "Margin/unit",
+    "fin.onHandCol": "On Hand",
+    "fin.totalMarginCol": "Total Margin",
     "va.varianceDesc": "Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.",
     "va.idCol": "ID",
     "va.countedCol": "Counted",
@@ -776,6 +811,7 @@ const TRANSLATIONS = {
     "cq.taxWaivedSuffix": " (waived — customer is tax-exempt)",
     "cq.total": "Total",
     "cq.aboveThreshold": "Above the {threshold} approval threshold — this quotation will be held for management sign-off.",
+    "cq.creditRiskHold": "This customer is at {pct}% of their credit limit — this quotation will be held for management sign-off.",
     "cq.notesOptional": "Notes (optional)",
     "cq.notesPlaceholder": "Delivery terms, validity period, etc.",
     "cq.notListedHint": "Part not listed? Add it from Stock Room first, then quote it here. Tax-exempt customers automatically skip tax.",
@@ -846,7 +882,9 @@ const TRANSLATIONS = {
     "nav.customers": "Clients",
     "nav.variance": "Écarts et audit",
     "nav.staffActivity": "Activité du personnel",
+    "nav.financials": "Finances de l'entreprise",
     "nav.access": "Utilisateurs et accès",
+    "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
     "role.warehouse": "Magasinier(ère)",
@@ -1128,6 +1166,21 @@ const TRANSLATIONS = {
     "sa.clearFilter": "Effacer le filtre",
     "sa.commentPlaceholder": "Ajouter un commentaire…",
     "sa.commentBtn": "Commenter",
+    "fin.directorOnly": "Vue réservée au Directeur — non visible par l'Administrateur ni aucun autre rôle.",
+    "fin.totalStockValue": "Valeur totale du stock",
+    "fin.allBranches": "Toutes les succursales",
+    "fin.weightedPipeline": "Pipeline pondéré",
+    "fin.partsAndEquipment": "Pièces + Équipements",
+    "fin.customerOutstanding": "Solde dû par les clients",
+    "fin.totalReceivables": "Total des créances",
+    "fin.estGrossMargin": "Marge brute estimée",
+    "fin.onCurrentStock": "Sur le stock actuel, au prix de vente",
+    "fin.marginByPart": "Marge par pièce",
+    "fin.costCol": "Coût",
+    "fin.sellCol": "Vente",
+    "fin.marginPerUnitCol": "Marge/unité",
+    "fin.onHandCol": "En stock",
+    "fin.totalMarginCol": "Marge totale",
     "va.varianceDesc": "Les écarts sont signalés lorsqu'un comptage de stock en succursale ne concorde pas avec les transactions de ventes, d'achats et d'interventions de service pour cette pièce.",
     "va.idCol": "ID",
     "va.countedCol": "Compté",
@@ -1167,6 +1220,7 @@ const TRANSLATIONS = {
     "cq.taxWaivedSuffix": " (exonérée — client exonéré de taxe)",
     "cq.total": "Total",
     "cq.aboveThreshold": "Au-dessus du seuil d'approbation de {threshold} — ce devis sera soumis à validation de la direction.",
+    "cq.creditRiskHold": "Ce client est à {pct} % de sa limite de crédit — ce devis sera soumis à validation de la direction.",
     "cq.notesOptional": "Notes (facultatif)",
     "cq.notesPlaceholder": "Conditions de livraison, durée de validité, etc.",
     "cq.notListedHint": "Pièce non répertoriée ? Ajoutez-la d'abord depuis le Magasin, puis devisez-la ici. Les clients exonérés de taxe sont automatiquement exemptés.",
@@ -1302,6 +1356,7 @@ const initialEmailTemplates = {
   invoice: { subject: "Invoice {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your invoice {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" }
 };
 const initialUsers = [
+  { id: "U-00", name: "Kwesi Setrana", email: "k.setrana@setvaco.com", username: "ksetrana", role: "director", status: "Active" },
   { id: "U-01", name: "Efua Mensah", email: "e.mensah@setvaco.com", username: "emensah", role: "admin", status: "Active" },
   { id: "U-02", name: "Kwabena Owusu", email: "k.owusu@setvaco.com", username: "kowusu", role: "sales", status: "Active" },
   { id: "U-03", name: "Yaw Darko", email: "y.darko@setvaco.com", username: "ydarko", role: "warehouse", status: "Active" },
@@ -1406,6 +1461,21 @@ function statusColor(status) {
 // ---------------------------------------------------------------------------
 function Badge({ children, color, soft }) {
   return <span className="mis-badge" style={{ color, background: soft }}>{children}</span>;
+}
+function PathStepper({ stages, current }) {
+  const idx = stages.indexOf(current);
+  if (idx === -1) return null;
+  return <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+    {stages.map((stage, i) => { const done = i < idx; const active = i === idx; return <React.Fragment key={stage}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: "0 0 auto" }}>
+        <div className="mis-focus" style={{ width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: done ? "var(--safe)" : active ? "var(--ore)" : "var(--panel-alt)", color: done || active ? "#FFFFFF" : "var(--text-tertiary)", border: active ? "2px solid var(--ore)" : "1px solid var(--border)" }}>
+          {done ? <Check size={11} /> : <span className="mis-mono" style={{ fontSize: 10 }}>{i + 1}</span>}
+        </div>
+        <span style={{ fontSize: 11, color: active ? "var(--ink)" : "var(--text-tertiary)", fontWeight: active ? 600 : 400, whiteSpace: "nowrap" }}>{stage}</span>
+      </div>
+      {i < stages.length - 1 && <div style={{ flex: 1, height: 2, background: done ? "var(--safe)" : "var(--border)", margin: "0 4px 16px" }} />}
+    </React.Fragment>; })}
+  </div>;
 }
 function StatCard({ label, value, sub, icon: Ic, tint, soft }) {
   const shown = useCountUp(value, 900);
@@ -1536,7 +1606,7 @@ function groupPORows(rows) {
 function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog, lang }) {
   const label = type === "equipment" ? "Equipment" : "Part";
   const typeLabel = type === "equipment" ? t(lang, "inv.equipment") : t(lang, "inv.part");
-  const canManage = ["admin", "warehouse", "procurement"].includes(role);
+  const canManage = ["director", "admin", "warehouse", "procurement"].includes(role);
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("All");
   const [roomFilter, setRoomFilter] = useState("All");
@@ -1788,7 +1858,7 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
     const effectiveApplyTax = applyTax && !customer.taxExempt;
     const taxAmount = effectiveApplyTax ? Math.round(lineSubtotal * (Number(taxRate) || 0) / 100) : 0;
     const total = lineSubtotal + taxAmount;
-    const needsApproval = total > approvalSettings.valueThreshold || approvalSettings.flaggedCustomers.includes(customer.name);
+    const needsApproval = total > approvalSettings.valueThreshold || approvalSettings.flaggedCustomers.includes(customer.name) || isCreditRisk(customer);
     const q = {
       id: uid("QT", quotations, 4), type, customerId: customer.id, country: customer.country || "",
       lines: validLines.map(l => ({ itemId: l.itemId || "", desc: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""), qty: Number(l.qty), unitPrice: Number(l.unitPrice) || 0, newPart: !!l.newPart })),
@@ -1834,6 +1904,7 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
         <div className="mis-kv"><span>{t(lang, "cq.taxLabel")}{previewTaxExempt ? t(lang, "cq.taxWaivedSuffix") : ""}</span><b>{fmtGHS(previewTax)}</b></div>
         <div className="mis-kv" style={{ fontSize: 13 }}><span>{t(lang, "cq.total")}</span><b>{fmtGHS(subtotal + previewTax)}</b></div>
         {(subtotal + previewTax) > approvalSettings.valueThreshold && <p style={{ fontSize: 11, color: "var(--caution)" }}>{tf(lang, "cq.aboveThreshold", { threshold: fmtGHS(approvalSettings.valueThreshold) })}</p>}
+        {existingCustomer && isCreditRisk(existingCustomer) && <p style={{ fontSize: 11, color: "var(--vital)" }}>{tf(lang, "cq.creditRiskHold", { pct: Math.round(creditUtilization(existingCustomer) * 100) })}</p>}
       </div>
       <Field label={t(lang, "cq.notesOptional")}><TArea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t(lang, "cq.notesPlaceholder")} /></Field>
       <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "cq.notListedHint")}</p>
@@ -1869,7 +1940,7 @@ function printDocument(doc, customer, kind, lang) {
 }
 
 function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction, emailTemplates, onClose, onSent, lang }) {
-  const officials = users.filter(u => ["admin", "finance"].includes(u.role)).map(u => u.email);
+  const officials = users.filter(u => ["director", "admin", "finance"].includes(u.role)).map(u => u.email);
   const [ccSelected, setCcSelected] = useState(officials);
   const total = doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
   const kindLabel = kind === "invoice" ? t(lang, "doc.invoice") : t(lang, "doc.quotation");
@@ -1935,9 +2006,10 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
 }
 
 function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose, lang }) {
-  const canManage = ["admin", "service"].includes(role);
+  const canManage = ["director", "admin", "service"].includes(role);
   const draft = feedbackDraft[job.id] || "";
   return <Drawer title={tf(lang, "sj.jobDetailsTitle", { id: job.jobNumber })} onClose={onClose}>
+    {JOB_FLOW_STAGES.includes(job.status) && <div style={{ marginBottom: 16 }}><PathStepper stages={JOB_FLOW_STAGES} current={job.status} /></div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
       <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{job.customer}</b></div>
       <div className="mis-kv"><span>{t(lang, "sj.customerId")}</span><b className="mis-mono">{job.customerId}</b></div>
@@ -1969,7 +2041,7 @@ function JobDetailDrawer({ job, customer, role, currentUser, logAction, setServi
 }
 
 function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, users, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
-  const canManage = ["admin", "service"].includes(role);
+  const canManage = ["director", "admin", "service"].includes(role);
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
@@ -2051,7 +2123,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
 }
 
 function BackOrderReport({ quotations, invoices, items, purchaseOrders, role, typeFilter, lang }) {
-  const canSeeSupplyChain = ["admin", "procurement", "warehouse"].includes(role);
+  const canSeeSupplyChain = ["director", "admin", "procurement", "warehouse"].includes(role);
   const rows = [];
   [...quotations, ...invoices].forEach(d => {
     if (typeFilter !== "all" && d.type !== typeFilter) return;
@@ -2089,7 +2161,6 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   const showStats = ["all", "parts", "equipment", "service"].includes(overviewFilter);
   const showForecast = ["all", "parts", "equipment"].includes(overviewFilter);
-  const FORECAST_WEIGHTS = { "Pending Approval": 0.2, Quoted: 0.3, Sent: 0.6, Invoiced: 1 };
   const forecastPool = quotations.filter(q => q.status !== "Rejected");
   const forecastValue = forecastPool.reduce((sum, q) => sum + (q.total ?? q.subtotal ?? 0) * (FORECAST_WEIGHTS[q.status] ?? 0), 0);
   function stageValue(status) { return forecastPool.filter(q => q.status === status).reduce((s, q) => s + (q.total ?? q.subtotal ?? 0), 0); }
@@ -2154,8 +2225,8 @@ function appendManagerNote(setter, id, note, currentUser, logAction) {
 }
 function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, draft, setDraft, lang }) {
   const notes = record.managerNotes || [];
-  const canView = ["admin", "finance"].includes(role) || notes.length > 0;
-  const canComment = ["admin", "finance"].includes(role);
+  const canView = ["director", "admin", "finance"].includes(role) || notes.length > 0;
+  const canComment = ["director", "admin", "finance"].includes(role);
   if (!canView) return null;
   const text = draft[record.id] || "";
   return <React.Fragment>
@@ -2173,9 +2244,10 @@ function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, dr
   </React.Fragment>;
 }
 function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, setQuotations, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onClose, lang }) {
-  const canApprove = ["admin", "finance"].includes(role) && doc.status === "Pending Approval";
+  const canApprove = ["director", "admin", "finance"].includes(role) && doc.status === "Pending Approval";
   const draft = feedbackDraft[doc.id] || "";
   return <Drawer title={tf(lang, "common.detailsTitle", { id: doc.id })} onClose={onClose}>
+    {QUOTE_FLOW_STAGES.includes(doc.status) && <div style={{ marginBottom: 16 }}><PathStepper stages={QUOTE_FLOW_STAGES} current={doc.status} /></div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
       <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{customer ? customer.name : "—"}</b></div>
       <div className="mis-kv"><span>{t(lang, "sj.customerId")}</span><b className="mis-mono">{doc.customerId}</b></div>
@@ -2242,7 +2314,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
   return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
     <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
       {type === "equipment" && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowProducts(true)}><Boxes size={14} /> {t(lang, "sq.seeProducts")}</button>}
-      {["admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "cq.createQuotationBtn")}</button>}
+      {["director", "admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "cq.createQuotationBtn")}</button>}
     </div>
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.transactionHistory")}</h4>
     <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} lang={lang} />
@@ -2298,7 +2370,7 @@ function POLineItemsEditor({ lines, setLines, items, lang }) {
 }
 
 function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers, items, setItems, role, currentUser, logAction, pushNotification, lang }) {
-  const canManage = ["admin", "procurement"].includes(role);
+  const canManage = ["director", "admin", "procurement"].includes(role);
   const [form, setForm] = useState({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
   function setFormLines(updater) { setForm(f => ({ ...f, lines: typeof updater === "function" ? updater(f.lines) : updater })); }
   function submit(e) {
@@ -2352,7 +2424,7 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
 }
 
 function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang }) {
-  const canManage = ["admin", "procurement"].includes(role);
+  const canManage = ["director", "admin", "procurement"].includes(role);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
   const [preview, setPreview] = useState(null);
@@ -2430,7 +2502,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang })
 }
 
 function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders, role, currentUser, logAction, pushNotification, lang }) {
-  const canManage = ["admin", "procurement"].includes(role);
+  const canManage = ["director", "admin", "procurement"].includes(role);
   const [code, setCode] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [match, setMatch] = useState(null);
@@ -2563,6 +2635,9 @@ function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClos
       <div className="mis-kv"><span>{t(lang, "cust.poCodeLabel")}</span><b className="mis-mono">{customer.poCode || "—"}</b></div>
       <div className="mis-kv"><span>{t(lang, "cust.taxStatus")}</span><b>{customer.taxExempt ? t(lang, "ven.exempt") : t(lang, "ven.standardTax")}</b></div>
       <div className="mis-kv"><span>{t(lang, "cust.companyDetails")}</span><b>{customer.companyDetails}</b></div>
+      <div className="mis-divider" />
+      <div className="mis-kv"><span>{t(lang, "cust.creditLimitCol")}</span><b className="mis-mono">{fmtGHS(customer.creditLimit)}</b></div>
+      <div className="mis-kv"><span>{t(lang, "cust.outstandingCol")}</span><b className="mis-mono" style={{ color: isCreditRisk(customer) ? "var(--vital)" : "var(--text-primary)" }}>{fmtGHS(customer.outstanding)} ({Math.round(creditUtilization(customer) * 100)}%)</b></div>
     </div>
     {customer.contacts && customer.contacts.length > 0 && <React.Fragment>
       <div className="mis-divider" />
@@ -2586,7 +2661,7 @@ function CustomerDetailDrawer({ customer, quotations, invoices, auditLog, onClos
 }
 
 function Customers({ role, currentUser, customers, setCustomers, quotations, invoices, auditLog, logAction, lang }) {
-  const canCreate = ["admin", "sales"].includes(role);
+  const canCreate = ["director", "admin", "sales"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState(null);
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -2600,7 +2675,7 @@ function Customers({ role, currentUser, customers, setCustomers, quotations, inv
       { header: t(lang, "common.email"), render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.email}</span> },
       { header: t(lang, "cust.tier"), render: c => <Badge color={c.tier === "Gold" ? "var(--ore)" : c.tier === "Silver" ? "var(--info)" : "var(--text-secondary)"} soft={c.tier === "Gold" ? "var(--ore-soft)" : c.tier === "Silver" ? "var(--info-soft)" : "var(--panel-alt)"}>{c.tier === "Gold" ? t(lang, "cust.tierGold") : c.tier === "Silver" ? t(lang, "cust.tierSilver") : t(lang, "cust.tierStandard")}</Badge> },
       { header: t(lang, "cust.creditLimitCol"), render: c => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(c.creditLimit)}</span> },
-      { header: t(lang, "cust.outstandingCol"), render: c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <span className="mis-mono" style={{ fontSize: 12, color: risky ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(c.outstanding)} ({pct}%)</span>; } }
+      { header: t(lang, "cust.outstandingCol"), render: c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <span className="mis-mono" style={{ fontSize: 12, color: risky ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(c.outstanding)} ({pct}%)</span>; } }
     ]} rows={customers} rowKey={c => c.id} empty={t(lang, "cust.noCustomersYet")} />
     {showCreate && <CreateCustomerModal customers={customers} setCustomers={setCustomers} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
     {detail && <CustomerDetailDrawer customer={detail} quotations={quotations} invoices={invoices} auditLog={auditLog} onClose={() => setDetail(null)} lang={lang} />}
@@ -2638,7 +2713,7 @@ function CreateUserModal({ users, setUsers, currentUser, logAction, onClose, lan
 }
 
 function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, logAction, lang }) {
-  const isSuperUser = role === "admin";
+  const isSuperUser = ["admin", "director"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
   const [editingTemplate, setEditingTemplate] = useState(null);
@@ -2809,6 +2884,38 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
 }
 
 // ---------------------------------------------------------------------------
+// COMPANY FINANCIALS — director-only. Not visible to Administrator or any
+// other role; the one screen in the app whose visibility isn't a superset
+// of Admin's, by design.
+// ---------------------------------------------------------------------------
+function CompanyFinancials({ items, quotations, customers, lang }) {
+  const stockValue = items.reduce((s, i) => s + i.qty * i.cost, 0);
+  const weightedPipeline = quotations.filter(q => q.status !== "Rejected").reduce((sum, q) => sum + (q.total ?? q.subtotal ?? 0) * (FORECAST_WEIGHTS[q.status] ?? 0), 0);
+  const totalOutstanding = customers.reduce((s, c) => s + (c.outstanding || 0), 0);
+  const grossMargin = items.reduce((s, i) => s + i.qty * (i.sell - i.cost), 0);
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="mis-eyebrow">{t(lang, "fin.directorOnly")}</div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <StatCard label={t(lang, "fin.totalStockValue")} value={fmtGHS(stockValue)} sub={t(lang, "fin.allBranches")} icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
+      <StatCard label={t(lang, "fin.weightedPipeline")} value={fmtGHS(weightedPipeline)} sub={t(lang, "fin.partsAndEquipment")} icon={ShoppingCart} tint="var(--info)" soft="var(--info-soft)" />
+      <StatCard label={t(lang, "fin.customerOutstanding")} value={fmtGHS(totalOutstanding)} sub={t(lang, "fin.totalReceivables")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
+      <StatCard label={t(lang, "fin.estGrossMargin")} value={fmtGHS(grossMargin)} sub={t(lang, "fin.onCurrentStock")} icon={BarChart3} tint="var(--safe)" soft="var(--safe-soft)" />
+    </div>
+    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "fin.marginByPart")}</h3>
+      <DataTable columns={[
+        { header: t(lang, "inv.part"), render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
+        { header: t(lang, "fin.costCol"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(it.cost)}</span> },
+        { header: t(lang, "fin.sellCol"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(it.sell)}</span> },
+        { header: t(lang, "fin.marginPerUnitCol"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--safe)" }}>{fmtGHS(it.sell - it.cost)}</span> },
+        { header: t(lang, "fin.onHandCol"), render: it => <span className="mis-mono">{it.qty}</span> },
+        { header: t(lang, "fin.totalMarginCol"), render: it => <span className="mis-mono" style={{ color: "var(--ink)" }}>{fmtGHS(it.qty * (it.sell - it.cost))}</span> }
+      ]} rows={items} rowKey={it => it.id} empty={t(lang, "inv.emptyFilter")} />
+    </div>
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
 // NOTIFICATIONS
 // ---------------------------------------------------------------------------
 function NotificationBell({ notifications, setNotifications, currentUser, lang }) {
@@ -2923,14 +3030,14 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, aud
       <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
         <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.customerCreditRisk")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {customers.map(c => { const pct = Math.round((c.outstanding / Math.max(c.creditLimit, 1)) * 100); const risky = pct > 75; return <div key={c.id}>
+          {customers.map(c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <div key={c.id}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4, color: risky ? "var(--vital)" : "var(--text-secondary)" }}><span>{c.name}</span><span className="mis-mono">{pct}%</span></div>
             <div style={{ width: "100%", borderRadius: 999, height: 6, background: "var(--panel-alt)" }}><div style={{ height: 6, borderRadius: 999, width: `${Math.min(pct, 100)}%`, background: risky ? "var(--vital)" : "var(--ore)" }} /></div>
           </div>; })}
         </div>
       </div>
     </div>
-    {["admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+    {["director", "admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
       <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.recentActivity")}</h3>
       {recentActivity.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
@@ -3152,6 +3259,7 @@ function SetvacoBusinessSystem() {
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} logAction={logAction} lang={lang} />}
+          {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
         </div>
       </main>
     </div>
