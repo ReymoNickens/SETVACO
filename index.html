@@ -3339,7 +3339,9 @@ root.render(<SetvacoBusinessSystem />);
 
   function tryUnlock() {
     if (input.value === ACCESS_CODE) {
-      sessionStorage.setItem("setvaco_demo_ok", "1");
+      // Deliberately not persisted (no sessionStorage/localStorage) — the
+      // gate re-prompts on every page load/refresh, not just once per
+      // browser session.
       overlay.style.display = "none";
     } else {
       errorEl.textContent = (GATE_STRINGS[overlay.dataset.lang] || GATE_STRINGS.en).error;
@@ -3349,9 +3351,6 @@ root.render(<SetvacoBusinessSystem />);
   }
 
   applyLang(detectLang());
-  if (sessionStorage.getItem("setvaco_demo_ok") === "1") {
-    overlay.style.display = "none";
-  }
 
   submitBtn.addEventListener("click", tryUnlock);
   input.addEventListener("keydown", function(e) { if (e.key === "Enter") tryUnlock(); });
