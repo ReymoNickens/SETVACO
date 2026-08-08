@@ -591,7 +591,70 @@ const TRANSLATIONS = {
     "inv.onHandLabel": "On hand",
     "inv.reorderAtParen": "(reorder at {n})",
     "inv.activityWhoDidWhat": "Activity — who did what",
-    "inv.noActivityForRecord": "No recorded activity yet for this record."
+    "inv.noActivityForRecord": "No recorded activity yet for this record.",
+    "common.status": "Status",
+    "common.actions": "Actions",
+    "common.import": "Import",
+    "common.phone": "Phone",
+    "common.email": "Email",
+    "po.itemLabel": "Item",
+    "po.selectItem": "Select item…",
+    "po.qty": "Qty",
+    "po.addLineItem": "Add line item",
+    "po.vendor": "Vendor",
+    "po.selectVendor": "Select vendor…",
+    "po.expectedDeliveryDate": "Expected delivery date",
+    "po.raisePO": "Raise purchase order",
+    "po.poCol": "PO",
+    "po.vendorParty": "Vendor / Party",
+    "po.lines": "Lines",
+    "po.expected": "Expected",
+    "po.externalPoPending": "External PO {code} — pending detail",
+    "po.markInTransit": "Mark in transit",
+    "po.markReceived": "Mark received",
+    "po.noPOsYet": "No purchase orders yet.",
+    "po.customerOrderSuffix": " (customer order)",
+    "po.tabInternal": "Internal Purchase Orders",
+    "po.tabVendors": "Vendors",
+    "po.tabMatch": "Match PO Code",
+    "ven.addVendor": "Add vendor",
+    "ven.restricted": "Vendor creation is restricted to Procurement and Admin roles.",
+    "ven.dropFile": "Click or drop an Excel/CSV vendor list to bulk-upload",
+    "ven.expectedColumns": "Expected columns: Name, Code, Contact, Email, Phone, Categories",
+    "ven.previewReady": "{file}: {n} vendor record(s) ready to import.",
+    "ven.vendor": "Vendor",
+    "ven.industryCode": "Industry Code",
+    "ven.contacts": "Contacts",
+    "ven.supplies": "Supplies",
+    "ven.certificate": "Certificate",
+    "ven.tax": "Tax",
+    "ven.onFile": "On file",
+    "ven.missing": "Missing",
+    "ven.exempt": "Exempt",
+    "ven.standardTax": "Standard",
+    "ven.noVendorsYet": "No vendors yet.",
+    "ven.vendorName": "Vendor name",
+    "ven.industryStdCode": "Industry standard code",
+    "ven.industryCodeHint": "Unique code agreed between SETVACO and this vendor",
+    "ven.contactPerson": "Contact person",
+    "ven.additionalContact": "Additional contact (name, role)",
+    "ven.additionalContactPlaceholder": "e.g. Jane Doe, Accounts",
+    "ven.categoriesSupplied": "Categories supplied",
+    "ven.categoriesPlaceholder": "e.g. Wear parts, bearings",
+    "ven.businessCertificate": "Business certificate",
+    "ven.taxExemptVendor": "Tax-exempt vendor",
+    "match.intro": "External customers issue purchase orders bearing an industry-standard code unique between SETVACO and that client. Enter the code from the incoming PO to identify the client (or vendor) it belongs to, then submit the order.",
+    "match.codePlaceholder": "e.g. CHK-001",
+    "match.externalPoNumber": "External PO number (optional)",
+    "match.externalPoPlaceholder": "Customer's own PO #",
+    "match.matchCodeBtn": "Match code",
+    "match.matchedCustomer": "Matched customer: {name}",
+    "match.country": "Country",
+    "match.contact": "Contact",
+    "match.submitOrder": "Submit order for this customer",
+    "match.belongsToVendor": "This code belongs to vendor: {name}",
+    "match.raiseInternalHint": "Raise an internal purchase order to this vendor from the Internal Purchase Orders tab.",
+    "match.notFound": "No customer or vendor found with that code."
   },
   fr: {
     "nav.dashboard": "Tableau de bord",
@@ -743,7 +806,70 @@ const TRANSLATIONS = {
     "inv.onHandLabel": "En stock",
     "inv.reorderAtParen": "(seuil de réappro {n})",
     "inv.activityWhoDidWhat": "Activité — qui a fait quoi",
-    "inv.noActivityForRecord": "Aucune activité enregistrée pour cet article."
+    "inv.noActivityForRecord": "Aucune activité enregistrée pour cet article.",
+    "common.status": "Statut",
+    "common.actions": "Actions",
+    "common.import": "Importer",
+    "common.phone": "Téléphone",
+    "common.email": "E-mail",
+    "po.itemLabel": "Article",
+    "po.selectItem": "Sélectionner un article…",
+    "po.qty": "Qté",
+    "po.addLineItem": "Ajouter une ligne",
+    "po.vendor": "Fournisseur",
+    "po.selectVendor": "Sélectionner un fournisseur…",
+    "po.expectedDeliveryDate": "Date de livraison prévue",
+    "po.raisePO": "Créer le bon de commande",
+    "po.poCol": "BC",
+    "po.vendorParty": "Fournisseur / Partie",
+    "po.lines": "Lignes",
+    "po.expected": "Prévu",
+    "po.externalPoPending": "BC externe {code} — détail en attente",
+    "po.markInTransit": "Marquer en transit",
+    "po.markReceived": "Marquer reçu",
+    "po.noPOsYet": "Aucun bon de commande pour le moment.",
+    "po.customerOrderSuffix": " (commande client)",
+    "po.tabInternal": "Bons de commande internes",
+    "po.tabVendors": "Fournisseurs",
+    "po.tabMatch": "Correspondance code BC",
+    "ven.addVendor": "Ajouter un fournisseur",
+    "ven.restricted": "La création de fournisseurs est réservée aux rôles Achats et Administration.",
+    "ven.dropFile": "Cliquer ou déposer une liste de fournisseurs Excel/CSV pour import groupé",
+    "ven.expectedColumns": "Colonnes attendues : Nom, Code, Contact, E-mail, Téléphone, Catégories",
+    "ven.previewReady": "{file} : {n} fiche(s) fournisseur prête(s) à importer.",
+    "ven.vendor": "Fournisseur",
+    "ven.industryCode": "Code industrie",
+    "ven.contacts": "Contacts",
+    "ven.supplies": "Fournitures",
+    "ven.certificate": "Certificat",
+    "ven.tax": "Taxe",
+    "ven.onFile": "Enregistré",
+    "ven.missing": "Manquant",
+    "ven.exempt": "Exonéré",
+    "ven.standardTax": "Standard",
+    "ven.noVendorsYet": "Aucun fournisseur pour le moment.",
+    "ven.vendorName": "Nom du fournisseur",
+    "ven.industryStdCode": "Code standard industrie",
+    "ven.industryCodeHint": "Code unique convenu entre SETVACO et ce fournisseur",
+    "ven.contactPerson": "Personne de contact",
+    "ven.additionalContact": "Contact supplémentaire (nom, fonction)",
+    "ven.additionalContactPlaceholder": "ex. Jane Doe, Comptabilité",
+    "ven.categoriesSupplied": "Catégories fournies",
+    "ven.categoriesPlaceholder": "ex. Pièces d'usure, roulements",
+    "ven.businessCertificate": "Certificat d'entreprise",
+    "ven.taxExemptVendor": "Fournisseur exonéré de taxe",
+    "match.intro": "Les clients externes émettent des bons de commande portant un code standard industrie unique entre SETVACO et ce client. Entrez le code du BC entrant pour identifier le client (ou le fournisseur) auquel il appartient, puis soumettez la commande.",
+    "match.codePlaceholder": "ex. CHK-001",
+    "match.externalPoNumber": "N° de BC externe (facultatif)",
+    "match.externalPoPlaceholder": "N° de BC propre au client",
+    "match.matchCodeBtn": "Rechercher le code",
+    "match.matchedCustomer": "Client correspondant : {name}",
+    "match.country": "Pays",
+    "match.contact": "Contact",
+    "match.submitOrder": "Soumettre la commande pour ce client",
+    "match.belongsToVendor": "Ce code appartient au fournisseur : {name}",
+    "match.raiseInternalHint": "Créez un bon de commande interne pour ce fournisseur depuis l'onglet Bons de commande internes.",
+    "match.notFound": "Aucun client ou fournisseur trouvé avec ce code."
   }
 };
 function t(lang, key) {
@@ -1765,24 +1891,24 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
 // ---------------------------------------------------------------------------
 // PURCHASING (internal POs, vendors, industry-code PO matching)
 // ---------------------------------------------------------------------------
-function POLineItemsEditor({ lines, setLines, items }) {
+function POLineItemsEditor({ lines, setLines, items, lang }) {
   function updateLine(idx, patch) { setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l)); }
   function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
   function addLine() { setLines(ls => [...ls, { itemId: "", itemName: "", qty: 1 }]); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
     {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-      <Field label="Item"><TSelect value={line.itemId} onChange={e => { const it = items.find(x => x.id === e.target.value); updateLine(idx, { itemId: e.target.value, itemName: it ? it.name : "" }); }} style={{ minWidth: 220 }}>
-        <option value="">Select item…</option>
+      <Field label={t(lang, "po.itemLabel")}><TSelect value={line.itemId} onChange={e => { const it = items.find(x => x.id === e.target.value); updateLine(idx, { itemId: e.target.value, itemName: it ? it.name : "" }); }} style={{ minWidth: 220 }}>
+        <option value="">{t(lang, "po.selectItem")}</option>
         {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id})</option>)}
       </TSelect></Field>
-      <Field label="Qty"><TInput type="number" min="1" value={line.qty} onChange={e => updateLine(idx, { qty: e.target.value })} style={{ width: 90 }} /></Field>
+      <Field label={t(lang, "po.qty")}><TInput type="number" min="1" value={line.qty} onChange={e => updateLine(idx, { qty: e.target.value })} style={{ width: 90 }} /></Field>
       <button type="button" className="mis-btn-danger" onClick={() => removeLine(idx)}><Trash2 size={12} /></button>
     </div>)}
-    <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={addLine}><Plus size={14} /> Add line item</button>
+    <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={addLine}><Plus size={14} /> {t(lang, "po.addLineItem")}</button>
   </div>;
 }
 
-function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers, items, setItems, role, currentUser, logAction, pushNotification }) {
+function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers, items, setItems, role, currentUser, logAction, pushNotification, lang }) {
   const canManage = ["admin", "procurement"].includes(role);
   const [form, setForm] = useState({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
   function setFormLines(updater) { setForm(f => ({ ...f, lines: typeof updater === "function" ? updater(f.lines) : updater })); }
@@ -1811,32 +1937,32 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
   function poParty(p) {
     if (p.vendorNameRaw) return p.vendorNameRaw;
     if (p.vendorId) { const v = vendors.find(x => x.id === p.vendorId); if (v) return v.name; }
-    if (p.customerId) { const c = customers.find(x => x.id === p.customerId); if (c) return `${c.name} (customer order)`; }
-    return "Unspecified vendor";
+    if (p.customerId) { const c = customers.find(x => x.id === p.customerId); if (c) return c.name + t(lang, "po.customerOrderSuffix"); }
+    return t(lang, "inv.unspecifiedVendor");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="mis-grid-2">
-        <Field label="Vendor"><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
-          <option value="">Select vendor…</option>{vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+        <Field label={t(lang, "po.vendor")}><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
+          <option value="">{t(lang, "po.selectVendor")}</option>{vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
         </TSelect></Field>
-        <Field label="Expected delivery date"><TInput type="date" value={form.expected} onChange={e => setForm(f => ({ ...f, expected: e.target.value }))} /></Field>
+        <Field label={t(lang, "po.expectedDeliveryDate")}><TInput type="date" value={form.expected} onChange={e => setForm(f => ({ ...f, expected: e.target.value }))} /></Field>
       </div>
-      <POLineItemsEditor lines={form.lines} setLines={setFormLines} items={items} />
-      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> Raise purchase order</button>
+      <POLineItemsEditor lines={form.lines} setLines={setFormLines} items={items} lang={lang} />
+      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {t(lang, "po.raisePO")}</button>
     </form>}
     <DataTable columns={[
-      { header: "PO", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.id}</span> },
-      { header: "Vendor / Party", render: p => <span style={{ color: "var(--text-primary)" }}>{poParty(p)}</span> },
-      { header: "Lines", render: p => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.lines.length ? p.lines.map(l => `${l.itemName || l.itemId} x${l.qty}`).join(", ") : (p.externalPoNumber ? `External PO ${p.externalPoNumber} — pending detail` : "—")}</span> },
-      { header: "Expected", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.expected || "—"}</span> },
-      { header: "Status", render: p => { const cs = statusColor(p.status); return <Badge color={cs[0]} soft={cs[1]}>{p.status}</Badge>; } },
-      { header: "Actions", render: p => canManage && p.status !== "Received" ? <button type="button" className="mis-link-btn" onClick={() => advance(p)}>Mark {p.status === "Ordered" ? "in transit" : "received"}</button> : null }
-    ]} rows={purchaseOrders} rowKey={p => p.id} empty="No purchase orders yet." />
+      { header: t(lang, "po.poCol"), render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.id}</span> },
+      { header: t(lang, "po.vendorParty"), render: p => <span style={{ color: "var(--text-primary)" }}>{poParty(p)}</span> },
+      { header: t(lang, "po.lines"), render: p => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.lines.length ? p.lines.map(l => `${l.itemName || l.itemId} x${l.qty}`).join(", ") : (p.externalPoNumber ? tf(lang, "po.externalPoPending", { code: p.externalPoNumber }) : "—")}</span> },
+      { header: t(lang, "po.expected"), render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.expected || "—"}</span> },
+      { header: t(lang, "common.status"), render: p => { const cs = statusColor(p.status); return <Badge color={cs[0]} soft={cs[1]}>{p.status}</Badge>; } },
+      { header: t(lang, "common.actions"), render: p => canManage && p.status !== "Received" ? <button type="button" className="mis-link-btn" onClick={() => advance(p)}>{p.status === "Ordered" ? t(lang, "po.markInTransit") : t(lang, "po.markReceived")}</button> : null }
+    ]} rows={purchaseOrders} rowKey={p => p.id} empty={t(lang, "po.noPOsYet")} />
   </div>;
 }
 
-function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
+function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang }) {
   const canManage = ["admin", "procurement"].includes(role);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
@@ -1870,51 +1996,51 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction }) {
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     {canManage && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add vendor</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> {t(lang, "ven.addVendor")}</button>
     </div>}
-    {!canManage && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Vendor creation is restricted to Procurement and Admin roles.</p>}
-    {canManage && <FileDrop label="Click or drop an Excel/CSV vendor list to bulk-upload" accept=".xlsx,.xls,.csv" onFile={handleUpload} hint="Expected columns: Name, Code, Contact, Email, Phone, Categories" />}
+    {!canManage && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "ven.restricted")}</p>}
+    {canManage && <FileDrop label={t(lang, "ven.dropFile")} accept=".xlsx,.xls,.csv" onFile={handleUpload} hint={t(lang, "ven.expectedColumns")} />}
     {preview && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-      <p style={{ fontSize: 13 }}>{preview.fileName}: {preview.rows.length} vendor record(s) ready to import.</p>
+      <p style={{ fontSize: 13 }}>{tf(lang, "ven.previewReady", { file: preview.fileName, n: preview.rows.length })}</p>
       <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>Cancel</button>
-        <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> Import</button>
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "common.cancel")}</button>
+        <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {t(lang, "common.import")}</button>
       </div>
     </div>}
     <DataTable columns={[
-      { header: "Vendor", render: v => <span style={{ color: "var(--text-primary)" }}>{v.name}</span> },
-      { header: "Industry Code", render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.code || "—"}</span> },
-      { header: "Contacts", render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.contact} · {v.email}<br />{v.phone}{v.altContact ? ` · ${v.altContact}` : ""}</span> },
-      { header: "Supplies", render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.categories}</span> },
-      { header: "Certificate", render: v => <Badge color={v.certificateFile ? "var(--safe)" : "var(--vital)"} soft={v.certificateFile ? "var(--safe-soft)" : "var(--vital-soft)"}>{v.certificateFile ? "On file" : "Missing"}</Badge> },
-      { header: "Tax", render: v => v.taxExempt ? <Badge color="var(--safe)" soft="var(--safe-soft)">Exempt</Badge> : <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Standard</span> }
-    ]} rows={vendors} rowKey={v => v.id} empty="No vendors yet." />
-    {showAdd && <Modal title="Add vendor" onClose={() => setShowAdd(false)} footer={<React.Fragment>
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(false)}>Cancel</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={submit}>Add vendor</button>
+      { header: t(lang, "ven.vendor"), render: v => <span style={{ color: "var(--text-primary)" }}>{v.name}</span> },
+      { header: t(lang, "ven.industryCode"), render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.code || "—"}</span> },
+      { header: t(lang, "ven.contacts"), render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.contact} · {v.email}<br />{v.phone}{v.altContact ? ` · ${v.altContact}` : ""}</span> },
+      { header: t(lang, "ven.supplies"), render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.categories}</span> },
+      { header: t(lang, "ven.certificate"), render: v => <Badge color={v.certificateFile ? "var(--safe)" : "var(--vital)"} soft={v.certificateFile ? "var(--safe-soft)" : "var(--vital-soft)"}>{v.certificateFile ? t(lang, "ven.onFile") : t(lang, "ven.missing")}</Badge> },
+      { header: t(lang, "ven.tax"), render: v => v.taxExempt ? <Badge color="var(--safe)" soft="var(--safe-soft)">{t(lang, "ven.exempt")}</Badge> : <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "ven.standardTax")}</span> }
+    ]} rows={vendors} rowKey={v => v.id} empty={t(lang, "ven.noVendorsYet")} />
+    {showAdd && <Modal title={t(lang, "ven.addVendor")} onClose={() => setShowAdd(false)} footer={<React.Fragment>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(false)}>{t(lang, "common.cancel")}</button>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={submit}>{t(lang, "ven.addVendor")}</button>
     </React.Fragment>}>
       <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <Field label="Vendor name"><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
-        <Field label="Industry standard code" hint="Unique code agreed between SETVACO and this vendor"><TInput value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} /></Field>
+        <Field label={t(lang, "ven.vendorName")}><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
+        <Field label={t(lang, "ven.industryStdCode")} hint={t(lang, "ven.industryCodeHint")}><TInput value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} /></Field>
         <div className="mis-grid-2">
-          <Field label="Contact person"><TInput value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></Field>
-          <Field label="Phone"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
+          <Field label={t(lang, "ven.contactPerson")}><TInput value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></Field>
+          <Field label={t(lang, "common.phone")}><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
         </div>
         <div className="mis-grid-2">
-          <Field label="Email"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
-          <Field label="Additional contact (name, role)"><TInput value={form.altContact} onChange={e => setForm(f => ({ ...f, altContact: e.target.value }))} placeholder="e.g. Jane Doe, Accounts" /></Field>
+          <Field label={t(lang, "common.email")}><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+          <Field label={t(lang, "ven.additionalContact")}><TInput value={form.altContact} onChange={e => setForm(f => ({ ...f, altContact: e.target.value }))} placeholder={t(lang, "ven.additionalContactPlaceholder")} /></Field>
         </div>
-        <Field label="Categories supplied"><TInput value={form.categories} onChange={e => setForm(f => ({ ...f, categories: e.target.value }))} placeholder="e.g. Wear parts, bearings" /></Field>
+        <Field label={t(lang, "ven.categoriesSupplied")}><TInput value={form.categories} onChange={e => setForm(f => ({ ...f, categories: e.target.value }))} placeholder={t(lang, "ven.categoriesPlaceholder")} /></Field>
         <div className="mis-grid-2">
-          <Field label="Business certificate"><input type="file" onChange={e => setForm(f => ({ ...f, certificateFile: e.target.files[0] ? e.target.files[0].name : null }))} style={{ fontSize: 12 }} /></Field>
-          <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 8 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> Tax-exempt vendor</label></Field>
+          <Field label={t(lang, "ven.businessCertificate")}><input type="file" onChange={e => setForm(f => ({ ...f, certificateFile: e.target.files[0] ? e.target.files[0].name : null }))} style={{ fontSize: 12 }} /></Field>
+          <Field label=" "><label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 8 }}><input type="checkbox" checked={form.taxExempt} onChange={e => setForm(f => ({ ...f, taxExempt: e.target.checked }))} /> {t(lang, "ven.taxExemptVendor")}</label></Field>
         </div>
       </form>
     </Modal>}
   </div>;
 }
 
-function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders, role, currentUser, logAction, pushNotification }) {
+function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders, role, currentUser, logAction, pushNotification, lang }) {
   const canManage = ["admin", "procurement"].includes(role);
   const [code, setCode] = useState("");
   const [poNumber, setPoNumber] = useState("");
@@ -1938,38 +2064,38 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
     setCode(""); setPoNumber(""); setMatch(null);
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>External customers issue purchase orders bearing an industry-standard code unique between SETVACO and that client. Enter the code from the incoming PO to identify the client (or vendor) it belongs to, then submit the order.</p>
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>{t(lang, "match.intro")}</p>
     <form onSubmit={search} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-      <Field label="Industry standard code"><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CHK-001" style={{ width: 200 }} /></Field>
-      <Field label="External PO number (optional)"><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder="Customer's own PO #" style={{ width: 200 }} /></Field>
-      <button type="submit" className="mis-btn-primary mis-focus"><Search size={14} /> Match code</button>
+      <Field label={t(lang, "ven.industryStdCode")}><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder={t(lang, "match.codePlaceholder")} style={{ width: 200 }} /></Field>
+      <Field label={t(lang, "match.externalPoNumber")}><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder={t(lang, "match.externalPoPlaceholder")} style={{ width: 200 }} /></Field>
+      <button type="submit" className="mis-btn-primary mis-focus"><Search size={14} /> {t(lang, "match.matchCodeBtn")}</button>
     </form>
     {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>Matched customer: {match.record.name}</b></div>
-      <div className="mis-kv"><span>Country</span><b>{match.record.country}</b></div>
-      <div className="mis-kv"><span>Contact</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
-      {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> Submit order for this customer</button>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.matchedCustomer", { name: match.record.name })}</b></div>
+      <div className="mis-kv"><span>{t(lang, "match.country")}</span><b>{match.record.country}</b></div>
+      <div className="mis-kv"><span>{t(lang, "match.contact")}</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
+      {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> {t(lang, "match.submitOrder")}</button>}
     </div>}
     {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>This code belongs to vendor: {match.record.name}</b></div>
-      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Raise an internal purchase order to this vendor from the Internal Purchase Orders tab.</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.belongsToVendor", { name: match.record.name })}</b></div>
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "match.raiseInternalHint")}</p>
     </div>}
-    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>No customer or vendor found with that code.</span></div>}
+    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>{t(lang, "match.notFound")}</span></div>}
   </div>;
 }
 
-function Purchasing({ role, currentUser, purchaseOrders, setPurchaseOrders, vendors, setVendors, items, setItems, customers, logAction, pushNotification }) {
+function Purchasing({ role, currentUser, purchaseOrders, setPurchaseOrders, vendors, setVendors, items, setItems, customers, logAction, pushNotification, lang }) {
   const subTabsAll = [
-    { key: "pos", label: "Internal Purchase Orders" },
-    { key: "vendors", label: "Vendors" },
-    { key: "match", label: "Match PO Code" }
+    { key: "pos", label: t(lang, "po.tabInternal") },
+    { key: "vendors", label: t(lang, "po.tabVendors") },
+    { key: "match", label: t(lang, "po.tabMatch") }
   ];
   const [sub, setSub] = useState("pos");
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={subTabsAll} active={sub} onChange={setSub} />
-    {sub === "pos" && <InternalPOsTab purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} customers={customers} items={items} setItems={setItems} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
-    {sub === "vendors" && <VendorsTab vendors={vendors} setVendors={setVendors} role={role} currentUser={currentUser} logAction={logAction} />}
-    {sub === "match" && <MatchPOCodeTab customers={customers} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} />}
+    {sub === "pos" && <InternalPOsTab purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} customers={customers} items={items} setItems={setItems} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+    {sub === "vendors" && <VendorsTab vendors={vendors} setVendors={setVendors} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
+    {sub === "match" && <MatchPOCodeTab customers={customers} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -2538,7 +2664,7 @@ function SetvacoBusinessSystem() {
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} users={users} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
-          {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} />}
+          {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} quotations={quotations} invoices={invoices} auditLog={auditLog} logAction={logAction} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} logAction={logAction} />}
