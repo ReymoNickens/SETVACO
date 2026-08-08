@@ -1,0 +1,18 @@
+# Environment / secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+dist/
+build/
+
+# Supabase local dev
+supabase/.branches
+supabase/.temp
+
+# OS / editor
+.DS_Store
+*.log
