@@ -187,26 +187,43 @@ block building any of the deferred pieces, it just doesn't pre-build them.
 
 ## Frontend i18n (EN/FR) — scope
 
-`index.html` has a translation dictionary (`TRANSLATIONS`) and `t(lang, key)`
-helper, a language toggle in the header, and the choice persists via the
-existing `localStorage` mechanism (`lang` field alongside the rest of the
-app state; will move to `profiles.locale` once real auth lands). Wired
-scope: sidebar navigation, header/sidebar chrome (signed-in-as, search
-prompt, footer), and the customer-facing quotation/invoice **documents and
-emails** (`printDocument`, `SendDocumentModal`) — the two things a
-francophone branch or customer actually needs day-to-day.
+`index.html` has a translation dictionary (`TRANSLATIONS`), a `t(lang, key)`
+helper, a `tf(lang, key, vars)` variant for strings needing interpolated
+values (counts, filenames, dates — `{token}` substitution), a language
+toggle in the header (and its own toggle on the login/gate screens, which
+render before the main app), and the choice persists via the existing
+`localStorage` mechanism (`lang` field; will move to `profiles.locale` once
+real auth lands).
 
-**Not yet wired**: the internal screens themselves — Inventory tables,
-Purchasing, Customers, Users & Access, Variance & Audit, and all their forms
-— plus dynamically-built strings (audit log entries, toast messages,
-`window.alert`/`window.confirm` text). Those are a different, harder class
-of work: extracting variables out of business-logic template literals into
-parametrized translation strings, not just relabeling static JSX. Translating
-them requires wiring `t(lang, …)` through each of those components (most
-don't currently receive a `lang` prop) using the same pattern already
-established in `SalesQuotations`/`ServiceJobsTab` → `SendDocumentModal`.
-Do this screen-by-screen rather than all at once, and re-run the Babel+jsdom
-role/nav sweep after each screen — don't ship a mixed-language UI.
+**Wired scope (complete):** every screen — navigation, header/sidebar
+chrome, Dashboard, Sales Overview (including the Weighted Forecast Value
+KPI), Stock Room/Equipment Inventory, Purchasing (all three sub-tabs),
+Customers, Users & Access (including the email-templates editor), Variance
+& Audit, Staff Activity, Service Jobs, Sales/Quotations (create-quotation
+flow, documents table, detail drawers, manager comments), the notification
+bell, the command palette, and the customer-facing quotation/invoice
+documents and emails. Business-logic data values that happen to be
+translated for display (customer tier, branch filter "All") keep their
+underlying canonical English value in state — only the label shown changes
+— so comparisons like `c.tier === "Gold"` keep working regardless of UI
+language.
+
+Admin-authored free text is a separate, deliberate exception to the above:
+email template subject/body (`emailTemplates` state, editable in Users &
+Access) and staff-activity messages/comments are content admins write
+themselves, not UI labels — they are not run through `t()`/`tf()` and stay
+in whatever language the admin types them, the same way a customer's name
+or a manager's comment note already does.
+
+**Still not wired (deliberate, documented exception):** dynamically-built
+strings inside business-logic handlers — audit log entries, toast messages,
+`window.alert`/`window.confirm` text. Translating those means extracting
+variables out of template literals into parametrized translation strings,
+a different and harder class of work than relabeling static JSX (which is
+what the rest of this section covers). If/when that's tackled, follow the
+same `t(lang, …)` / `tf(lang, key, vars)` pattern already established
+throughout, and re-run the Babel+jsdom role/nav sweep afterward — don't
+ship a mixed-language UI.
 
 ## Frontend login gate — prototype-level, not real auth
 
@@ -259,3 +276,54 @@ shared demo link and poking around; it does not replace `LoginScreen`,
 doesn't replace making the GitHub repo private, and doesn't replace real
 backend authorization. Change `ACCESS_CODE` before sharing a link, and treat
 it as a doorbell, not a lock.
+
+## Salesforce-inspired additions — what was adopted and what wasn't
+
+The client's team has a Salesforce background, so a review pass was done
+against Salesforce's feature set to pull in what's genuinely useful here,
+without turning this into a Salesforce clone the way the earlier "Pan-African
+mining ERP" pitch would have turned it into a full mining ERP. Adopted:
+
+- **Path** (`PathStepper`, `index.html`): the numbered-circle stage tracker
+  Salesforce shows on Opportunity/Case records, reimplemented against this
+  app's actual status flow. Shown on the quotation detail drawer
+  (`Quoted → Sent → Invoiced`) and the service job detail drawer
+  (`Open → In Progress → Completed`) — only when the record's status is
+  actually one of those three; `Pending Approval` and `Rejected` are
+  exception branches, not points on the path, matching how Salesforce Path
+  only tracks the "happy path" stages too.
+- **Credit-risk-gated approval**: `creditLimit`/`outstanding` per customer
+  already existed (Customers table, Dashboard "Customer Credit Risk"
+  widget) but weren't wired into anything — the equivalent Salesforce
+  pattern is a validation rule on Opportunity that blocks progress based on
+  a rollup from the Account. `needsApproval` in `CreateQuotationModal` now
+  also holds a quotation for sign-off when the customer is over
+  `CREDIT_RISK_THRESHOLD` (75%) of their credit limit, not just over the
+  value threshold or on the manually-maintained flagged list.
+- **Director role + Company Financials** (`ROLES`, `CompanyFinancials` in
+  `index.html`): Salesforce's Role Hierarchy plus profile-restricted
+  report/dashboard folders — an executive sees a rollup nobody else does.
+  `director` has the same nav access as `admin` everywhere (added to every
+  `NAV` roles array and permission check `admin` appears in) plus one
+  exclusive page: total stock value, weighted pipeline, total customer
+  outstanding, and estimated gross margin by part, company-wide.
+
+**Deliberately not adopted** (would be over-building for a parts/equipment
+sales-and-inventory business, the same call made in "Deferred scope"
+above): Leads and lead conversion (sales here starts directly as a
+quotation against a known customer, there's no separate prospecting
+funnel), Campaigns, Territory Management, Opportunity Splits/forecasting
+categories beyond the single weighted-pipeline number already shown,
+Chatter (the existing Staff Activity module already covers
+comment/mention-style staff communication for this app's scale), and
+Duplicate Rules (the existing customer-lookup-by-name flow hasn't shown a
+duplicate-data problem worth a rules engine yet).
+
+**Known gap:** `director` is a frontend-only role for now. The Supabase
+`roles` lookup table and the `has_role(...)` arrays throughout
+`supabase/migrations/20260807000500_rls_policies.sql` still list only the
+original six roles — harmless today since the frontend isn't cut over to
+real Supabase Auth yet (see "Frontend login gate" above), but add
+`director` to both when Phase 1 auth cutover happens, or a director-role
+account will pass the frontend's login screen and then fail every RLS
+check.
