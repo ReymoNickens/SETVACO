@@ -15,6 +15,14 @@
 // in Postgres (see supabase/migrations/), not in keeping this key secret.
 window.SUPABASE_URL = "https://wemcdhkivyyflrapqkpp.supabase.co";
 window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWNkaGtpdnl5ZmxyYXBxa3BwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMDQ5NDEsImV4cCI6MjEwMTc4MDk0MX0.HvfpMk2BxmvBhXw81MXTY4hUJlTop_Yp9-iXqcv0dJY";
+// Captured here, synchronously, before supabase-js's own background
+// processing of this URL has a chance to clear it (createClient() below
+// kicks off async session-detection-from-URL immediately, which strips
+// the #access_token=...&type=recovery hash — racing against React's own
+// later check of window.location.hash and sometimes winning). Reading it
+// into a plain global first, before the client exists at all, means the
+// recovery flow is never missed regardless of how that race resolves.
+window.__RECOVERY_MODE__ = window.location.hash.includes("type=recovery");
 window.sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4200,7 +4208,7 @@ function SetvacoBusinessSystem() {
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState("");
   // A Supabase password-recovery link lands here as #access_token=...&type=recovery.
-  const [recoveryMode, setRecoveryMode] = useState(() => window.location.hash.includes("type=recovery"));
+  const [recoveryMode, setRecoveryMode] = useState(() => window.__RECOVERY_MODE__ || window.location.hash.includes("type=recovery"));
 
   useEffect(() => {
     window.sb.auth.getSession().then(({ data }) => { setSession(data.session); setAuthLoading(false); });
