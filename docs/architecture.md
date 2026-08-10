@@ -145,15 +145,24 @@ admin can escalate it.
   movement ledger" panel. The Excel bulk-upload path writes real rows and
   real ledger adjustments (not a local-state replace).
 - Customers: real CRUD, real country lookup, real contacts.
+- Quotations / Invoices (Parts Sales, Equipment Sales): `create_quotation`
+  derives currency and tax rate authoritatively from the customer's
+  `country_code` — the client only ever previews that number, never sets
+  it. `convert_quotation_to_invoice` deducts real stock through
+  `adjust_stock` (reason `sale`) and updates `customers.outstanding`;
+  `mark_invoice_paid` reverses the balance. The two-stage credit-risk
+  approval workflow from the original prototype was **not** carried
+  over — every quotation goes straight to `Quoted` (see
+  `20260810000100_quotations_invoices.sql`'s header comment). Inline
+  "create a new customer while quoting" was also dropped; a customer has
+  to exist first (via Customers) before they can be quoted.
 
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): quotations, invoices, purchase orders, service jobs, vendors,
-assets, service contracts, reports, price books, users & access management,
-notifications, variance/audit. These need their own migrations (roughly:
-`quotations`/`invoices`/`purchase_orders` + line tables, `service_jobs`,
-`vendors`, plus RPCs for anything with a status workflow + stock side
-effect — `convert_quotation_to_invoice` in particular needs to call
-`adjust_stock` instead of touching a quantity field) before they're real.
+this schema): purchase orders, service jobs, vendors, assets, service
+contracts, reports, price books, users & access management, notifications,
+variance/audit. These need their own migrations (`purchase_orders` + line
+tables, `service_jobs`, `vendors`, an `adjust_stock` call with reason
+`purchase_receipt` when a PO is received) before they're real.
 `nav_permissions` (server-side mirror of the role→nav-item matrix) also
 doesn't exist yet in this schema.
 
