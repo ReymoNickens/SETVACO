@@ -1748,6 +1748,63 @@ async function fetchCountries() {
   if (error) throw error;
   return data;
 }
+async function fetchTaxProfiles() {
+  const { data, error } = await window.sb.from("tax_profiles").select("*");
+  if (error) throw error;
+  return data;
+}
+
+// Quotations/invoices: the frontend keeps working with the exact same
+// field shape it always has (id, customerId, lines[], subtotal, ...) so
+// none of the existing display components needed rewriting — only the
+// mapping layer here changes. `id` stays the human-readable display code
+// (what every screen already shows); the real database uuid a mutation
+// needs is carried separately as `realId`, used only by the RPC-calling
+// handlers in SalesQuotations.
+function mapQuotationFromDb(row) {
+  return {
+    id: row.display_code,
+    realId: row.id,
+    type: row.type,
+    customerId: row.customer_id,
+    currencyCode: row.currency_code,
+    lines: (row.quotation_lines || []).slice().sort((a, b) => a.line_no - b.line_no).map(l => ({
+      itemId: l.item_id || "", desc: l.description, qty: Number(l.qty), unitPrice: Number(l.unit_price), newPart: !l.item_id
+    })),
+    subtotal: Number(row.subtotal), applyTax: Number(row.tax_rate) > 0, taxRate: Number(row.tax_rate),
+    taxAmount: Number(row.tax_amount), total: Number(row.total),
+    leadTimeDays: row.lead_time_days, eta: row.eta || "", preparedBy: row.prepared_by_name || "",
+    feedbackLog: [], status: row.status, approvalStage: 0,
+    date: (row.created_at || "").slice(0, 10), createdBy: row.prepared_by_name || ""
+  };
+}
+function mapInvoiceFromDb(row) {
+  return {
+    id: row.display_code,
+    realId: row.id,
+    quotationId: row.quotation_id,
+    type: row.type,
+    customerId: row.customer_id,
+    currencyCode: row.currency_code,
+    lines: (row.invoice_lines || []).slice().sort((a, b) => a.line_no - b.line_no).map(l => ({
+      itemId: l.item_id || "", desc: l.description, qty: Number(l.qty), unitPrice: Number(l.unit_price), newPart: !l.item_id
+    })),
+    subtotal: Number(row.subtotal), applyTax: Number(row.tax_rate) > 0, taxRate: Number(row.tax_rate),
+    taxAmount: Number(row.tax_amount), total: Number(row.total),
+    status: row.status, preparedBy: row.prepared_by_name || "",
+    date: (row.created_at || "").slice(0, 10), createdBy: row.prepared_by_name || ""
+  };
+}
+async function fetchQuotations() {
+  const { data, error } = await window.sb.from("quotations").select("*, quotation_lines(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchInvoices() {
+  const { data, error } = await window.sb.from("invoices").select("*, invoice_lines(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 
 function exportRowsToExcel(filename, rows, sheetName) {
   if (!window.XLSX || !rows || !rows.length) return false;
@@ -2317,56 +2374,67 @@ function resolveOrCreateCustomer({ isNew, newFields, customerId, customers, setC
   return customer;
 }
 
-function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, quotations, setQuotations, currentUser, logAction, pushNotification, approvalSettings, priceBooks, priceBookEntries, onClose, onCreated, defaultCustomerId, defaultLines, lang }) {
+function CreateQuotationModal({ type, customers, inventoryItems, taxProfiles, reloadSales, currentUser, logAction, pushNotification, onClose, onCreated, defaultCustomerId, defaultLines, lang }) {
   const [customerId, setCustomerId] = useState(defaultCustomerId || "");
-  const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
   const [lines, setLines] = useState(defaultLines && defaultLines.length ? defaultLines : [{ itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: false }]);
-  const [notes, setNotes] = useState("");
   const [leadTimeDays, setLeadTimeDays] = useState(7);
   const [eta, setEta] = useState("");
-  const [preparedBy, setPreparedBy] = useState(currentUser);
-  const [applyTax, setApplyTax] = useState(true);
-  const [taxRate, setTaxRate] = useState(15);
-  const existingCustomer = !isNewCustomer ? customers.find(c => c.id === customerId) : null;
-  const typeLabel = type === "part" ? "parts" : type === "equipment" ? "equipment" : "service";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const existingCustomer = customers.find(c => c.id === customerId);
+  const typeLabel = type === "equipment" ? "equipment" : "parts";
   const subtotal = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
+  // Preview only — the real tax rate/currency are looked up server-side
+  // from the customer's own country when the quotation is actually
+  // created, exactly like this, so a client that lied about the rate
+  // couldn't change what gets charged.
   const previewTaxExempt = existingCustomer ? existingCustomer.taxExempt : false;
-  const previewTax = applyTax && !previewTaxExempt ? Math.round(subtotal * (Number(taxRate) || 0) / 100) : 0;
+  const previewTaxRate = (!existingCustomer || previewTaxExempt) ? 0 : (() => {
+    const tp = taxProfiles.find(x => x.country_code === existingCustomer.countryCode);
+    return tp ? Number(tp.rate_pct) : 0;
+  })();
+  const previewTax = Math.round(subtotal * previewTaxRate) / 100;
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
+    if (busy) return;
     const validLines = lines.filter(l => (l.itemId || l.desc) && Number(l.qty) > 0);
-    if (!validLines.length) return;
-    const customer = resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId, customers, setCustomers, logAction, currentUser });
-    if (!customer) return;
-    const lineSubtotal = validLines.reduce((s, l) => s + Number(l.qty) * (Number(l.unitPrice) || 0), 0);
-    const effectiveApplyTax = applyTax && !customer.taxExempt;
-    const taxAmount = effectiveApplyTax ? Math.round(lineSubtotal * (Number(taxRate) || 0) / 100) : 0;
-    const total = lineSubtotal + taxAmount;
-    const needsApproval = total > approvalSettings.valueThreshold || approvalSettings.flaggedCustomers.includes(customer.name) || isCreditRisk(customer);
-    const q = {
-      id: uid("QT", quotations, 4), type, customerId: customer.id, country: customer.country || "",
-      lines: validLines.map(l => ({ itemId: l.itemId || "", desc: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""), qty: Number(l.qty), unitPrice: Number(l.unitPrice) || 0, newPart: !!l.newPart })),
-      notes, subtotal: lineSubtotal, applyTax: effectiveApplyTax, taxRate: Number(taxRate) || 0, taxAmount, total,
-      leadTimeDays: Number(leadTimeDays) || 0, eta, preparedBy: preparedBy || currentUser, feedbackLog: [],
-      status: needsApproval ? "Pending Approval" : "Quoted", approvalStage: needsApproval ? 1 : 0, date: todayISO(), createdBy: currentUser
-    };
-    setQuotations(qs => [q, ...qs]);
-    logAction(currentUser, `Created ${typeLabel} quotation ${q.id} for ${customer.name}${needsApproval ? " — held for management approval" : ""}`, "Sales");
-    pushNotification("quote", `${q.id} created for ${customer.name}${needsApproval ? " (pending approval)" : ""}`);
+    if (!customerId || !validLines.length) return;
+    setBusy(true);
+    setError("");
+    const { data: newId, error: rpcError } = await window.sb.rpc("create_quotation", {
+      p_customer_id: customerId,
+      p_type: type,
+      p_lines: validLines.map(l => ({
+        item_id: l.itemId || null,
+        description: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""),
+        qty: Number(l.qty), unit_price: Number(l.unitPrice) || 0
+      })),
+      p_lead_time_days: Number(leadTimeDays) || null,
+      p_eta: eta || null
+    });
+    if (rpcError) { setBusy(false); setError(rpcError.message); return; }
+    const fresh = await reloadSales();
+    logAction(currentUser, `Created ${typeLabel} quotation for ${existingCustomer.name}`, "Sales");
+    pushNotification("quote", `New quotation created for ${existingCustomer.name}`);
+    setBusy(false);
     onClose();
-    onCreated && onCreated(q);
+    const created = fresh.quotations.find(q => q.realId === newId);
+    onCreated && created && onCreated(created);
   }
 
-  const typeLabelTranslated = type === "part" ? t(lang, "cq.typeParts") : type === "equipment" ? t(lang, "cq.typeEquipment") : t(lang, "cq.typeService");
+  const typeLabelTranslated = type === "equipment" ? t(lang, "cq.typeEquipment") : t(lang, "cq.typeParts");
   return <Modal title={tf(lang, "cq.createQuotationTitle", { type: typeLabelTranslated })} wide onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
-    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {t(lang, "cq.createQuotationBtn")}</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {busy ? t(lang, "login.loading") : t(lang, "cq.createQuotationBtn")}</button>
   </React.Fragment>}>
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
       <div className="mis-grid-2">
-        <CustomerPickerField customerId={customerId} setCustomerId={setCustomerId} isNew={isNewCustomer} setIsNew={setIsNewCustomer} newFields={newCustomerFields} setNewFields={setNewCustomerFields} customers={customers} lang={lang} />
+        <Field label={t(lang, "cq.customerLabel")}><TSelect required value={customerId} onChange={e => setCustomerId(e.target.value)}>
+          <option value="">{t(lang, "cq.selectCustomer")}</option>
+          {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
+        </TSelect></Field>
         {existingCustomer && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
           <div>{existingCustomer.contactPerson} · {existingCustomer.email}</div>
           <div>{existingCustomer.phone}</div>
@@ -2374,25 +2442,18 @@ function CreateQuotationModal({ type, customers, setCustomers, inventoryItems, q
           {existingCustomer.taxExempt && <Badge color="var(--safe)" soft="var(--safe-soft)">{t(lang, "cq.taxExemptBadge")}</Badge>}
         </div>}
       </div>
-      <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} resolvePrice={it => resolveUnitPrice(it, existingCustomer, priceBooks, priceBookEntries)} lang={lang} />
+      <LineItemsEditor lines={lines} setLines={setLines} inventoryItems={inventoryItems} lang={lang} />
       <div className="mis-grid-3">
         <Field label={t(lang, "cq.leadTimeDays")}><TInput type="number" min="0" value={leadTimeDays} onChange={e => setLeadTimeDays(e.target.value)} /></Field>
         <Field label={t(lang, "cq.eta")}><TInput type="date" value={eta} onChange={e => setEta(e.target.value)} /></Field>
-        <Field label={t(lang, "cq.preparedBy")}><TInput value={preparedBy} onChange={e => setPreparedBy(e.target.value)} placeholder={currentUser} /></Field>
+        <Field label={t(lang, "cq.preparedBy")}><TInput value={currentUser} disabled /></Field>
       </div>
       <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-          <input type="checkbox" checked={applyTax} onChange={e => setApplyTax(e.target.checked)} /> {t(lang, "cq.applyTax")}
-          {applyTax && <TInput type="number" min="0" max="100" value={taxRate} onChange={e => setTaxRate(e.target.value)} style={{ width: 70 }} />}
-          {applyTax && <span style={{ color: "var(--text-tertiary)" }}>%</span>}
-        </label>
         <div className="mis-kv"><span>{t(lang, "cq.subtotal")}</span><b>{fmtGHS(subtotal)}</b></div>
-        <div className="mis-kv"><span>{t(lang, "cq.taxLabel")}{previewTaxExempt ? t(lang, "cq.taxWaivedSuffix") : ""}</span><b>{fmtGHS(previewTax)}</b></div>
+        <div className="mis-kv"><span>{t(lang, "cq.taxLabel")} ({previewTaxRate}%){previewTaxExempt ? t(lang, "cq.taxWaivedSuffix") : ""}</span><b>{fmtGHS(previewTax)}</b></div>
         <div className="mis-kv" style={{ fontSize: 13 }}><span>{t(lang, "cq.total")}</span><b>{fmtGHS(subtotal + previewTax)}</b></div>
-        {(subtotal + previewTax) > approvalSettings.valueThreshold && <p style={{ fontSize: 11, color: "var(--caution)" }}>{tf(lang, "cq.aboveThreshold", { threshold: fmtGHS(approvalSettings.valueThreshold) })}</p>}
-        {existingCustomer && isCreditRisk(existingCustomer) && <p style={{ fontSize: 11, color: "var(--vital)" }}>{tf(lang, "cq.creditRiskHold", { pct: Math.round(creditUtilization(existingCustomer) * 100) })}</p>}
+        {!existingCustomer && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "cq.selectCustomer")} — {t(lang, "cq.taxLabel").toLowerCase()}/currency are set from the customer's country.</p>}
       </div>
-      <Field label={t(lang, "cq.notesOptional")}><TArea value={notes} onChange={e => setNotes(e.target.value)} placeholder={t(lang, "cq.notesPlaceholder")} /></Field>
       <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "cq.notListedHint")}</p>
     </form>
   </Modal>;
@@ -2787,7 +2848,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
   </Drawer>;
 }
 
-function SalesQuotations({ page, role, currentUser, customers, setCustomers, items, setItems, quotations, setQuotations, invoices, setInvoices, approvalSettings, priceBooks, priceBookEntries, users, logAction, pushNotification, emailTemplates, lang }) {
+function SalesQuotations({ page, role, currentUser, customers, items, taxProfiles, reloadSales, reloadCustomers, reloadStock, quotations, setQuotations, invoices, approvalSettings, users, logAction, pushNotification, emailTemplates, lang }) {
   const type = page === "equipmentsales" ? "equipment" : "part";
   const [showCreate, setShowCreate] = useState(false);
   const [sendDoc, setSendDoc] = useState(null);
@@ -2795,25 +2856,33 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
   const [showProducts, setShowProducts] = useState(false);
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [managerDraft, setManagerDraft] = useState({});
+  const [busyDocId, setBusyDocId] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
 
-  function convertQuotationToInvoice(q) {
-    const inv = { id: uid("INV", invoices, 4), quotationId: q.id, type: q.type, customerId: q.customerId, lines: q.lines, subtotal: q.subtotal, applyTax: q.applyTax, taxRate: q.taxRate, taxAmount: q.taxAmount, total: q.total, status: "Issued", date: todayISO(), createdBy: currentUser };
-    setInvoices(is => [inv, ...is]);
-    setQuotations(qs => qs.map(x => x.id === q.id ? { ...x, status: "Invoiced" } : x));
-    setItems(its => its.map(it => {
-      const line = q.lines.find(l => l.itemId === it.id);
-      return line ? { ...it, qty: Math.max(0, it.qty - line.qty) } : it;
-    }));
-    setCustomers(cs => cs.map(c => c.id === q.customerId ? { ...c, outstanding: (c.outstanding || 0) + inv.total } : c));
-    logAction(currentUser, `Converted ${q.id} to invoice ${inv.id} for ${custName(q.customerId)} — stock updated, added ${fmtGHS(inv.total)} to outstanding balance`, "Sales");
-    pushNotification("invoice", `${inv.id} issued to ${custName(q.customerId)}`);
+  // Both actions below call the RPCs that do the real work (stock
+  // deduction via adjust_stock, customer.outstanding) — this just re-fetches
+  // afterward so every affected panel (Sales, Customers, Stock Room) shows
+  // the result, instead of trying to keep three copies of local state in sync.
+  async function convertQuotationToInvoice(q) {
+    setBusyDocId(q.realId);
+    setActionError("");
+    const { error } = await window.sb.rpc("convert_quotation_to_invoice", { p_quotation_id: q.realId });
+    setBusyDocId(null);
+    if (error) { setActionError(error.message); return; }
+    await Promise.all([reloadSales(), reloadCustomers(), reloadStock()]);
+    logAction(currentUser, `Converted ${q.id} to an invoice for ${custName(q.customerId)} — stock updated`, "Sales");
+    pushNotification("invoice", `Invoice issued to ${custName(q.customerId)}`);
   }
-  function markInvoicePaid(inv) {
-    setInvoices(is => is.map(x => x.id === inv.id ? { ...x, status: "Paid" } : x));
-    setCustomers(cs => cs.map(c => c.id === inv.customerId ? { ...c, outstanding: Math.max(0, (c.outstanding || 0) - inv.total) } : c));
-    logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)} — removed ${fmtGHS(inv.total)} from outstanding balance`, "Sales");
+  async function markInvoicePaid(inv) {
+    setBusyDocId(inv.realId);
+    setActionError("");
+    const { error } = await window.sb.rpc("mark_invoice_paid", { p_invoice_id: inv.realId });
+    setBusyDocId(null);
+    if (error) { setActionError(error.message); return; }
+    await Promise.all([reloadSales(), reloadCustomers()]);
+    logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)}`, "Sales");
   }
 
   const partsList = items.filter(i => i.type === "part");
@@ -2823,6 +2892,7 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
   const pageInvoices = invoices.filter(i => i.type === type);
 
   return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {actionError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{actionError}</p>}
     <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
       {type === "equipment" && <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowProducts(true)}><Boxes size={14} /> {t(lang, "sq.seeProducts")}</button>}
       {["director", "admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "cq.createQuotationBtn")}</button>}
@@ -2834,17 +2904,19 @@ function SalesQuotations({ page, role, currentUser, customers, setCustomers, ite
 
     {showCreate && <CreateQuotationModal
       type={type}
-      customers={customers} setCustomers={setCustomers}
+      customers={customers}
       inventoryItems={inventoryItems}
-      quotations={quotations} setQuotations={setQuotations}
+      taxProfiles={taxProfiles} reloadSales={reloadSales}
       currentUser={currentUser} logAction={logAction} pushNotification={pushNotification}
-      approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries}
       onClose={() => setShowCreate(false)}
       onCreated={q => setSendDoc({ doc: q, kind: "quotation" })}
       lang={lang}
     />}
-    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} emailTemplates={emailTemplates} onClose={() => setSendDoc(null)} lang={lang} onSent={() => {
-      if (sendDoc.kind === "quotation") setQuotations(qs => qs.map(x => x.id === sendDoc.doc.id && x.status === "Quoted" ? { ...x, status: "Sent" } : x));
+    {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} emailTemplates={emailTemplates} onClose={() => setSendDoc(null)} lang={lang} onSent={async () => {
+      if (sendDoc.kind === "quotation" && sendDoc.doc.status === "Quoted") {
+        await window.sb.rpc("mark_quotation_sent", { p_quotation_id: sendDoc.doc.realId });
+        await reloadSales();
+      }
       setSendDoc(null);
     }} />}
     {detailDoc && <QuotationDetailDrawer doc={detailDoc} customer={customers.find(c => c.id === detailDoc.customerId)} role={role} currentUser={currentUser} logAction={logAction} setQuotations={setQuotations} approvalSettings={approvalSettings} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onClose={() => setDetailDoc(null)} lang={lang} />}
@@ -4249,23 +4321,34 @@ function SetvacoBusinessSystem() {
     const itemRows = await fetchItems();
     setItems(itemRows.map(r => mapItemFromDb(r, roomsById)));
   }
+  async function reloadSales() {
+    const [quotationRows, invoiceRows] = await Promise.all([fetchQuotations(), fetchInvoices()]);
+    const mappedQuotations = quotationRows.map(mapQuotationFromDb);
+    const mappedInvoices = invoiceRows.map(mapInvoiceFromDb);
+    setQuotations(mappedQuotations);
+    setInvoices(mappedInvoices);
+    return { quotations: mappedQuotations, invoices: mappedInvoices };
+  }
 
-  // Loads real Customers/Stock Room data once we know who's signed in (RLS
-  // needs an authenticated session to return any rows at all).
+  // Loads real Customers/Stock Room/Sales data once we know who's signed in
+  // (RLS needs an authenticated session to return any rows at all).
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
     setDataLoading(true);
     setDataError("");
-    Promise.all([fetchCountries(), fetchBranches()])
-      .then(([countryRows, branchRows]) => {
+    Promise.all([fetchCountries(), fetchBranches(), fetchTaxProfiles()])
+      .then(([countryRows, branchRows, taxProfileRows]) => {
         if (cancelled) return;
         setCountries(countryRows);
         setRealBranches(branchRows);
-        return Promise.all([fetchCustomers(), fetchStockRooms()]).then(([customerRows, roomRows]) => {
+        setTaxProfiles(taxProfileRows);
+        const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices()]).then(([customerRows, roomRows, quotationRows, invoiceRows]) => {
           if (cancelled) return;
-          const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
+          setQuotations(quotationRows.map(mapQuotationFromDb));
+          setInvoices(invoiceRows.map(mapInvoiceFromDb));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -4289,12 +4372,15 @@ function SetvacoBusinessSystem() {
   const [items, setItems] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [taxProfiles, setTaxProfiles] = useState([]);
   const [realBranches, setRealBranches] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState("");
   const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
-  const [quotations, setQuotations] = useState(() => (persisted && persisted.quotations) || initialQuotations);
-  const [invoices, setInvoices] = useState(() => (persisted && persisted.invoices) || initialInvoices);
+  // Quotations/invoices load from the real database (see the data-fetching
+  // useEffect below) — no local demo fallback, same as customers/stock.
+  const [quotations, setQuotations] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState(() => (persisted && persisted.purchaseOrders) || initialPurchaseOrders);
   const [serviceJobs, setServiceJobs] = useState(() => (persisted && persisted.serviceJobs) || initialServiceJobs);
   const [assets, setAssets] = useState(() => (persisted && persisted.assets) || initialAssets);
@@ -4442,7 +4528,7 @@ function SetvacoBusinessSystem() {
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
-          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} items={items} setItems={setItems} quotations={quotations} setQuotations={setQuotations} invoices={invoices} setInvoices={setInvoices} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} items={items} taxProfiles={taxProfiles} reloadSales={reloadSales} reloadCustomers={reloadCustomers} reloadStock={reloadStock} quotations={quotations} setQuotations={setQuotations} invoices={invoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
           {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} setContracts={setServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
