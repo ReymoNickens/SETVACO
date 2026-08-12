@@ -4322,8 +4322,13 @@ function LoginScreen({ lang, setLang }) {
     // fallback. Still requires this URL to be in Supabase's Redirect URLs
     // allowlist (Dashboard → Authentication → URL Configuration) — Supabase
     // silently falls back to the Site URL again otherwise.
-    await window.sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.href.split("#")[0] });
+    setError("");
+    const { error: resetError } = await window.sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.href.split("#")[0] });
     setBusy(false);
+    // Previously this result was discarded entirely — a rejected request
+    // (e.g. rate-limited) looked identical to a successful one, since
+    // resetSent was set unconditionally either way.
+    if (resetError) { setError(resetError.message); return; }
     setResetSent(true);
   }
 
