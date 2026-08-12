@@ -4314,7 +4314,15 @@ function LoginScreen({ lang, setLang }) {
   async function forgotPassword() {
     if (!email.trim()) { setError(t(lang, "login.email") + " ?"); return; }
     setBusy(true);
-    await window.sb.auth.resetPasswordForEmail(email.trim());
+    // Without an explicit redirectTo, Supabase falls back to the project's
+    // configured Auth "Site URL" — which doesn't necessarily match wherever
+    // this page is actually being served from (e.g. a GitHub Pages PROJECT
+    // site lives at <user>.github.io/<repo>/, not the account root). Always
+    // point back at exactly this page's own URL instead of trusting that
+    // fallback. Still requires this URL to be in Supabase's Redirect URLs
+    // allowlist (Dashboard → Authentication → URL Configuration) — Supabase
+    // silently falls back to the Site URL again otherwise.
+    await window.sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.href.split("#")[0] });
     setBusy(false);
     setResetSent(true);
   }
