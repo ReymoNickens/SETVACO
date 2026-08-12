@@ -330,6 +330,8 @@ const Tag = p => <Icon {...p} paths={<><path d="M20.6 12.6L12.7 20.5a2 2 0 0 1-2
 const FileSignature = p => <Icon {...p} paths={<><path d="M6 3h9l5 5v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h5"/><path d="M8 15c1-1.5 2-1.5 3 0s2 1.5 3 0"/></>} />;
 const Sliders = p => <Icon {...p} paths={<><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="var(--panel)" stroke="currentColor"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="16" cy="12" r="2" fill="var(--panel)" stroke="currentColor"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="11" cy="18" r="2" fill="var(--panel)" stroke="currentColor"/></>} />;
 const Tags = p => <Icon {...p} paths={<><path d="M14 3h5v5L9 18l-6-6L14 3z"/><circle cx="16" cy="6" r="1" fill="currentColor" stroke="none"/></>} />;
+const Receipt = p => <Icon {...p} paths={<><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></>} />;
+const CalendarDays = p => <Icon {...p} paths={<><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7" y1="13" x2="7" y2="13.01"/><line x1="12" y1="13" x2="12" y2="13.01"/><line x1="17" y1="13" x2="17" y2="13.01"/></>} />;
 
 // Core-sample mark: drill-core cylinder with layered strata, recolored per item.
 function CoreSample({ layers, size = 40 }) {
@@ -466,6 +468,9 @@ const NAV = [
   { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"], feature: "service_jobs" },
   { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"], feature: "service_jobs" },
   { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"], feature: "purchasing" },
+  { key: "employees", label: "Employee Records", icon: Users, roles: ["admin", "hr", "finance"], feature: "hr" },
+  { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]), feature: "hr" },
+  { key: "expenses", label: "Expenses", icon: Receipt, roles: ALL_ROLES.concat(["hr"]), feature: "finance" },
   { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
   { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
   { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
@@ -1767,6 +1772,48 @@ async function fetchTenantFeatures() {
   return data.map(r => r.feature_key);
 }
 
+// HR/Finance: both panels fetch their own data on mount rather than
+// joining the central data-loading effect — neither module shares state
+// with Stock Room/Sales/Customers, so there's nothing to gain from
+// centralizing it (see docs/architecture.md's module-boundary note).
+async function fetchEmployeeDetails() {
+  const { data, error } = await window.sb.from("employee_details").select("*, profiles(name, email, role, status)").order("created_at");
+  if (error) throw error;
+  return data;
+}
+async function fetchProfilesWithoutEmployeeDetails() {
+  // Only an active company's own roster minus whoever already has an
+  // employee_details row — used to populate "add HR details for" pickers.
+  const [{ data: profiles, error: pErr }, { data: existing, error: eErr }] = await Promise.all([
+    window.sb.from("profiles").select("id, name, email, role").order("name"),
+    window.sb.from("employee_details").select("profile_id"),
+  ]);
+  if (pErr) throw pErr;
+  if (eErr) throw eErr;
+  const have = new Set((existing || []).map(r => r.profile_id));
+  return (profiles || []).filter(p => !have.has(p.id));
+}
+async function fetchLeaveTypes() {
+  const { data, error } = await window.sb.from("leave_types").select("*");
+  if (error) throw error;
+  return data;
+}
+async function fetchLeaveRequests() {
+  const { data, error } = await window.sb.from("leave_requests").select("*, profiles!leave_requests_employee_id_fkey(name)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchExpenseCategories() {
+  const { data, error } = await window.sb.from("expense_categories").select("*");
+  if (error) throw error;
+  return data;
+}
+async function fetchExpenses() {
+  const { data, error } = await window.sb.from("expenses").select("*, profiles!expenses_submitted_by_fkey(name)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 // Quotations/invoices: the frontend keeps working with the exact same
 // field shape it always has (id, customerId, lines[], subtotal, ...) so
 // none of the existing display components needed rewriting — only the
@@ -1873,7 +1920,9 @@ function statusColor(status) {
     "Pending Approval": ["var(--caution)", "var(--caution-soft)"],
     Rejected: ["var(--vital)", "var(--vital-soft)"],
     "Expiring Soon": ["var(--caution)", "var(--caution-soft)"],
-    Expired: ["var(--vital)", "var(--vital-soft)"]
+    Expired: ["var(--vital)", "var(--vital-soft)"],
+    Pending: ["var(--caution)", "var(--caution-soft)"],
+    Approved: ["var(--safe)", "var(--safe-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
@@ -4325,6 +4374,384 @@ function SetPasswordScreen({ lang, setLang, onDone }) {
 }
 
 // ---------------------------------------------------------------------------
+// HR — Employee Records. Admin/HR/Finance manage the whole roster (matches
+// employee_details_select's RLS: those three roles see everyone, anyone
+// else sees only their own row — this panel is gated to those three roles
+// at the nav level too, since a bare "your own HR file" view isn't built
+// in this first pass). Real Supabase data, fetched on its own mount rather
+// than joining the central data-loading effect (see fetchEmployeeDetails).
+// ---------------------------------------------------------------------------
+function EmployeesPanel({ currentUser, logAction, pushNotification, lang }) {
+  const [rows, setRows] = useState([]);
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [details, unlinked] = await Promise.all([fetchEmployeeDetails(), fetchProfilesWithoutEmployeeDetails()]);
+      setRows(details);
+      setCandidates(unlinked);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  if (loading) return <div className="mis-empty">Loading employee records…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add Employee Details</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Employee", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> },
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        { header: "Department", render: r => <span style={{ fontSize: 12 }}>{r.department || "—"}</span> },
+        { header: "Job Title", render: r => <span style={{ fontSize: 12 }}>{r.job_title || "—"}</span> },
+        { header: "Employment Type", render: r => <span style={{ fontSize: 12 }}>{r.employment_type}</span> },
+        { header: "Hire Date", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.hire_date || "—"}</span> },
+        { header: "Role", render: r => r.profiles ? <RolePill role={r.profiles.role} lang={lang} /> : "—" },
+      ]}
+      rows={rows}
+      rowKey={r => r.profile_id}
+      empty="No employee records yet."
+    />
+    {showAdd && <AddEmployeeDetailsModal candidates={candidates} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} onClose={() => setShowAdd(false)} onSaved={async () => { setShowAdd(false); await reload(); }} />}
+  </div>;
+}
+function AddEmployeeDetailsModal({ candidates, currentUser, logAction, pushNotification, onClose, onSaved }) {
+  const [form, setForm] = useState({ profileId: "", department: "", jobTitle: "", employmentType: "Full-time", hireDate: "", dateOfBirth: "", phone: "", emergencyContactName: "", emergencyContactPhone: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.profileId || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("employee_details").insert({
+        profile_id: form.profileId,
+        department: form.department || null,
+        job_title: form.jobTitle || null,
+        employment_type: form.employmentType,
+        hire_date: form.hireDate || null,
+        date_of_birth: form.dateOfBirth || null,
+        phone: form.phone || null,
+        emergency_contact_name: form.emergencyContactName || null,
+        emergency_contact_phone: form.emergencyContactPhone || null,
+      });
+      if (insertError) throw insertError;
+      const person = candidates.find(c => c.id === form.profileId);
+      logAction(currentUser, `Added HR record for ${person ? person.name : "a staff member"}`, "HR");
+      pushNotification("hr", `HR record added for ${person ? person.name : "a staff member"}`);
+      onSaved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Add Employee Details" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy || !form.profileId} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Staff member">
+        <TSelect required value={form.profileId} onChange={e => setForm(f => ({ ...f, profileId: e.target.value }))}>
+          <option value="">—</option>
+          {candidates.map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
+        </TSelect>
+      </Field>
+      {candidates.length === 0 && <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Every current login already has an HR record.</p>}
+      <div className="mis-grid-2">
+        <Field label="Department"><TInput value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} /></Field>
+        <Field label="Job Title"><TInput value={form.jobTitle} onChange={e => setForm(f => ({ ...f, jobTitle: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Employment Type"><TSelect value={form.employmentType} onChange={e => setForm(f => ({ ...f, employmentType: e.target.value }))}>
+          <option>Full-time</option><option>Part-time</option><option>Contract</option>
+        </TSelect></Field>
+        <Field label="Hire Date"><TInput type="date" value={form.hireDate} onChange={e => setForm(f => ({ ...f, hireDate: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Date of Birth"><TInput type="date" value={form.dateOfBirth} onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))} /></Field>
+        <Field label="Phone"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Emergency Contact Name"><TInput value={form.emergencyContactName} onChange={e => setForm(f => ({ ...f, emergencyContactName: e.target.value }))} /></Field>
+        <Field label="Emergency Contact Phone"><TInput value={form.emergencyContactPhone} onChange={e => setForm(f => ({ ...f, emergencyContactPhone: e.target.value }))} /></Field>
+      </div>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
+// HR — Leave Requests. Self-service for everyone (file your own, see your
+// own); admin/hr additionally see the whole company and can approve/reject
+// — matches leave_requests' RLS exactly (leave_requests_select/_insert/
+// _update in 20260812000200_hr_finance.sql).
+// ---------------------------------------------------------------------------
+function LeaveRequestsPanel({ profile, role, currentUser, logAction, pushNotification, lang }) {
+  const canManage = ["admin", "hr"].includes(role);
+  const [rows, setRows] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [busyId, setBusyId] = useState(null);
+  const [showFile, setShowFile] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [reqs, types] = await Promise.all([fetchLeaveRequests(), fetchLeaveTypes()]);
+      setRows(reqs);
+      setLeaveTypes(types);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function decide(row, status) {
+    if (busyId) return;
+    setBusyId(row.id);
+    setActionError("");
+    try {
+      const { error } = await window.sb.from("leave_requests").update({ status, decided_by: profile.id, decided_at: new Date().toISOString() }).eq("id", row.id);
+      if (error) throw error;
+      await reload();
+      logAction(currentUser, `${status} leave request for ${row.profiles ? row.profiles.name : "a staff member"}`, "HR");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const visibleRows = canManage ? rows : rows.filter(r => r.employee_id === profile.id);
+  const leaveTypeLabel = key => { const t = leaveTypes.find(x => x.key === key); return t ? t.label : key; };
+
+  if (loading) return <div className="mis-empty">Loading leave requests…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {actionError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{actionError}</p>}
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowFile(true)}><Plus size={14} /> File Leave Request</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        ...(canManage ? [{ header: "Employee", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> }] : []),
+        { header: "Type", render: r => <span style={{ fontSize: 12 }}>{leaveTypeLabel(r.leave_type)}</span> },
+        { header: "Dates", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.start_date} → {r.end_date}</span> },
+        { header: "Reason", render: r => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{r.reason || "—"}</span> },
+        { header: "Status", render: r => { const cs = statusColor(r.status); return <Badge color={cs[0]} soft={cs[1]}>{r.status}</Badge>; } },
+        { header: "Actions", render: r => (canManage && r.status === "Pending") ? <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" disabled={!!busyId} className="mis-link-btn" onClick={() => decide(r, "Approved")}>Approve</button>
+          <button type="button" disabled={!!busyId} className="mis-link-btn" onClick={() => decide(r, "Rejected")}>Reject</button>
+        </div> : null },
+      ]}
+      rows={visibleRows}
+      rowKey={r => r.id}
+      empty="No leave requests yet."
+    />
+    {showFile && <FileLeaveRequestModal profile={profile} leaveTypes={leaveTypes} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} onClose={() => setShowFile(false)} onFiled={async () => { setShowFile(false); await reload(); }} />}
+  </div>;
+}
+function FileLeaveRequestModal({ profile, leaveTypes, currentUser, logAction, pushNotification, onClose, onFiled }) {
+  const [form, setForm] = useState({ leaveType: leaveTypes[0] ? leaveTypes[0].key : "", startDate: "", endDate: "", reason: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.leaveType || !form.startDate || !form.endDate || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("leave_requests").insert({
+        employee_id: profile.id,
+        leave_type: form.leaveType,
+        start_date: form.startDate,
+        end_date: form.endDate,
+        reason: form.reason || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, "Filed a leave request", "HR");
+      pushNotification("hr", `${currentUser} filed a leave request`);
+      onFiled();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="File Leave Request" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Filing…" : "Submit"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Leave Type">
+        <TSelect required value={form.leaveType} onChange={e => setForm(f => ({ ...f, leaveType: e.target.value }))}>
+          {leaveTypes.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+        </TSelect>
+      </Field>
+      <div className="mis-grid-2">
+        <Field label="Start Date"><TInput required type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} /></Field>
+        <Field label="End Date"><TInput required type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} /></Field>
+      </div>
+      <Field label="Reason (optional)"><TArea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
+// Finance — Expenses. Same self-service + admin/finance-manage shape as
+// Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
+// in 20260812000200_hr_finance.sql — note the submitter can't approve
+// their own expense, enforced server-side, not just hidden here).
+// ---------------------------------------------------------------------------
+function ExpensesPanel({ profile, role, currentUser, logAction, pushNotification, lang }) {
+  const canManage = ["admin", "finance"].includes(role);
+  const [rows, setRows] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [busyId, setBusyId] = useState(null);
+  const [showSubmit, setShowSubmit] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [expenseRows, cats] = await Promise.all([fetchExpenses(), fetchExpenseCategories()]);
+      setRows(expenseRows);
+      setCategories(cats);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function decide(row, status) {
+    if (busyId) return;
+    setBusyId(row.id);
+    setActionError("");
+    try {
+      const patch = { status };
+      if (status === "Approved" || status === "Paid") { patch.approved_by = profile.id; patch.approved_at = new Date().toISOString(); }
+      const { error } = await window.sb.from("expenses").update(patch).eq("id", row.id);
+      if (error) throw error;
+      await reload();
+      logAction(currentUser, `${status} expense ${row.display_code}`, "Finance");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const visibleRows = canManage ? rows : rows.filter(r => r.submitted_by === profile.id);
+  const categoryLabel = key => { const c = categories.find(x => x.key === key); return c ? c.label : key; };
+
+  if (loading) return <div className="mis-empty">Loading expenses…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {actionError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{actionError}</p>}
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowSubmit(true)}><Plus size={14} /> Submit Expense</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        ...(canManage ? [{ header: "Submitted By", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> }] : []),
+        { header: "Category", render: r => <span style={{ fontSize: 12 }}>{categoryLabel(r.category)}</span> },
+        { header: "Description", render: r => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{r.description || "—"}</span> },
+        { header: "Amount", render: r => <span className="mis-mono">{r.currency_code} {Number(r.amount).toLocaleString()}</span> },
+        { header: "Date", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.expense_date}</span> },
+        { header: "Status", render: r => { const cs = statusColor(r.status); return <Badge color={cs[0]} soft={cs[1]}>{r.status}</Badge>; } },
+        { header: "Actions", render: r => (canManage && r.status === "Pending" && r.submitted_by !== profile.id) ? <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" disabled={!!busyId} className="mis-link-btn" onClick={() => decide(r, "Approved")}>Approve</button>
+          <button type="button" disabled={!!busyId} className="mis-link-btn" onClick={() => decide(r, "Rejected")}>Reject</button>
+        </div> : (canManage && r.status === "Approved" && r.submitted_by !== profile.id) ? <button type="button" disabled={!!busyId} className="mis-link-btn" onClick={() => decide(r, "Paid")}>Mark Paid</button> : null },
+      ]}
+      rows={visibleRows}
+      rowKey={r => r.id}
+      empty="No expenses yet."
+    />
+    {showSubmit && <SubmitExpenseModal profile={profile} categories={categories} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} onClose={() => setShowSubmit(false)} onSubmitted={async () => { setShowSubmit(false); await reload(); }} />}
+  </div>;
+}
+function SubmitExpenseModal({ profile, categories, currentUser, logAction, pushNotification, onClose, onSubmitted }) {
+  const [form, setForm] = useState({ category: categories[0] ? categories[0].key : "", description: "", amount: "", currencyCode: "GHS", expenseDate: new Date().toISOString().slice(0, 10) });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.category || !(Number(form.amount) > 0) || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("expenses").insert({
+        submitted_by: profile.id,
+        category: form.category,
+        description: form.description || null,
+        amount: Number(form.amount),
+        currency_code: form.currencyCode,
+        expense_date: form.expenseDate,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, "Submitted an expense", "Finance");
+      pushNotification("finance", `${currentUser} submitted an expense`);
+      onSubmitted();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Submit Expense" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Submitting…" : "Submit"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Category">
+        <TSelect required value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+          {categories.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+        </TSelect>
+      </Field>
+      <Field label="Description"><TArea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></Field>
+      <div className="mis-grid-2">
+        <Field label="Amount"><TInput required type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} /></Field>
+        <Field label="Currency"><TSelect value={form.currencyCode} onChange={e => setForm(f => ({ ...f, currencyCode: e.target.value }))}>
+          <option value="GHS">GHS</option><option value="XOF">XOF</option><option value="ZAR">ZAR</option><option value="USD">USD</option>
+        </TSelect></Field>
+      </div>
+      <Field label="Date"><TInput required type="date" value={form.expenseDate} onChange={e => setForm(f => ({ ...f, expenseDate: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
 // MAIN APP
 // ---------------------------------------------------------------------------
 function SetvacoBusinessSystem() {
@@ -4607,6 +5034,9 @@ function SetvacoBusinessSystem() {
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
