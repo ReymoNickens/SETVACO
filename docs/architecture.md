@@ -112,6 +112,77 @@ Every RLS policy on a tenant table is `company_id = current_company_id()
 and has_role(array[...])` — role alone is never enough, since that would
 let one company's warehouse clerk see another company's stock.
 
+## Platform admin (cross-company, read-only)
+
+`is_platform_admin` is a boolean flag on `profiles`, not a `role` value.
+Kept deliberately orthogonal to `role`/`has_role()`: a platform-admin login
+is still, mechanically, a profile belonging to one `companies` row (the
+`evolveit` row, inserted for this purpose — not SETVACO's), the same as
+every other login. The flag only widens what that specific login's SELECT
+policies allow:
+
+```sql
+create function is_platform_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from profiles
+    where id = auth.uid() and status = 'Active' and is_platform_admin = true
+  )
+$$;
+```
+
+Every SELECT policy across the schema is `(company_id = current_company_id()
+and has_role(...)) or is_platform_admin()`. Deliberately SELECT-only:
+`is_platform_admin()` is never OR'd into a `_write`/`for all` policy
+anywhere. A platform admin can look across tenants for support/monitoring,
+but can't mutate another tenant's rows through client-side RLS-gated
+writes — actual cross-tenant writes (onboarding a new company) go through a
+service-role path (the `admin-manage-user` Edge Function), the same
+posture that already applies to account provisioning.
+
+No profile has this flag set yet — provisioning the first platform-admin
+login is a manual step (create the auth user under the `evolveit` company,
+same shape as the SETVACO bootstrap admin, then flip the flag by hand).
+
+## Per-tenant feature gating and branding
+
+`tenant_features` gates which modules a company can see — the mechanism
+behind "don't hardcode `if SETVACO then show HR`" anywhere in the app.
+Shaped like `roles`: a global `features` lookup table (module keys: 
+`stock_room`, `sales`, `purchasing`, `service_jobs`, `hr`, `finance`) plus
+a per-company join (`company_id`, `feature_key`, `enabled`). **Absence of a
+row means disabled** — a new tenant starts with zero modules until an
+operator explicitly enables them; SETVACO was backfilled with the four
+modules already live (`stock_room`, `sales`, `purchasing`, `service_jobs`)
+so the migration didn't hide anything for the existing tenant.
+
+```sql
+create function company_has_feature(feature text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select enabled from tenant_features
+     where company_id = current_company_id() and feature_key = feature),
+    false
+  )
+$$;
+```
+
+Enabling/disabling a company's modules is a platform-admin-only write (an
+onboarding/upsell action), not something a company's own admin can
+self-serve.
+
+The frontend (`index.html`) reads this at login: `fetchTenantFeatures()`
+loads the caller's enabled feature keys, and `NAV` items tagged with a
+`feature` key are filtered against it. That filter fails **open** — if the
+fetch errors (e.g. run against a database that predates this migration),
+gating is treated as inactive rather than hiding every module, so this
+degrades safely rather than locking anyone out.
+
+`companies` also carries branding (`logo_url`, `primary_color`,
+`accent_color`, hex-validated) and a `plan` field (plain `text`, default
+`'standard'`, deliberately unconstrained — no `plans` table yet since
+billing isn't designed).
+
 ## Passwords and login
 
 Entirely Supabase Auth's job — nothing custom. `auth.users.encrypted_password`
@@ -156,6 +227,11 @@ admin can escalate it.
   `20260810000100_quotations_invoices.sql`'s header comment). Inline
   "create a new customer while quoting" was also dropped; a customer has
   to exist first (via Customers) before they can be quoted.
+- Per-tenant feature gating (`tenant_features`/`company_has_feature()`),
+  branding + plan fields on `companies`, and a read-only cross-company
+  platform-admin path (`is_platform_admin()`) — see "Per-tenant feature
+  gating and branding" and "Platform admin" above. No profile has the
+  platform-admin flag set yet (provisioning is a manual step, not done).
 
 **Still local demo state in `index.html`** (untouched, not yet migrated to
 this schema): purchase orders, service jobs, vendors, assets, service
@@ -164,7 +240,10 @@ variance/audit. These need their own migrations (`purchase_orders` + line
 tables, `service_jobs`, `vendors`, an `adjust_stock` call with reason
 `purchase_receipt` when a PO is received) before they're real.
 `nav_permissions` (server-side mirror of the role→nav-item matrix) also
-doesn't exist yet in this schema.
+doesn't exist yet in this schema. HR and Finance are gated in
+`tenant_features` (keys exist) but have no tables of their own yet — the
+multi-tenant foundation (this migration) was deliberately built first so
+those modules don't have to retrofit tenant scoping later.
 
 ## Migrations
 
@@ -191,13 +270,36 @@ Dashboard → Authentication → Policies (or Providers → Email) → turn on
 signup/password-change). Off by default on a new project; no schema or
 Edge Function change needed, just a toggle.
 
-## Known gap: `admin-manage-user` Edge Function not yet updated
+## `admin-manage-user` Edge Function
 
-`supabase/functions/admin-manage-user/index.ts` still targets the old
-schema's role list and doesn't set `company_id` in `app_metadata` when
-creating a user — needed before it can be used as the real "create a staff
-account" path against the new schema. Right now, the only account created
-is the bootstrap admin, provisioned by hand directly against the database
-during setup and left to set its own password via a genuine Supabase
-password-recovery email (nobody, including the person who built this,
-ever knew or stored that password in plaintext).
+`supabase/functions/admin-manage-user/index.ts` now targets the current
+schema: `create` sets `company_id` in `app_metadata` from the *caller's
+own* `profiles.company_id` (never client-suppliable, so an admin can only
+provision accounts inside their own tenant), and validates the requested
+role against the live `roles` table instead of a hardcoded list — so a new
+role added later (e.g. an `hr` role for the HR module) doesn't require
+editing this function to become assignable.
+
+Also fixed in the same pass, both pre-existing bugs that would have hit
+the first real call: `suspend`/`reactivate` update `profiles` via the
+service-role client, which bypasses RLS entirely — without an explicit
+check, an admin from one company could suspend a login belonging to a
+*different* company by `userId` alone. It now verifies the target profile's
+`company_id` matches the caller's before touching it. Separately, every
+`audit_log` insert wrote a nonexistent `actor_name` column and omitted the
+required `company_id`, which would have errored on any actual invocation.
+
+Not yet deployed to the live project (Edge Functions aren't part of a SQL
+migration and are deployed separately), and not yet called by the
+frontend — "Users & Access" in `index.html` is still local demo state (see
+"What's built vs. not yet built"). The only account that exists today is
+still the bootstrap admin, provisioned by hand directly against the
+database during setup and left to set its own password via a genuine
+Supabase password-recovery email (nobody, including the person who built
+this, ever knew or stored that password in plaintext). Because `create`
+always provisions under the *caller's own* company, this function can only
+ever add staff to a company that already has an active admin — it can't
+bootstrap the very first admin of a brand new company (SETVACO's own
+bootstrap admin or the first `evolveit` platform-admin login). That first
+account per company still has to be created by hand, directly against the
+database/Auth Admin API, same as SETVACO's was.

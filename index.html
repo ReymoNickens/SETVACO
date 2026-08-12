@@ -450,17 +450,22 @@ const ROLES = {
   finance: { label: "Finance / Audit" }
 };
 const ALL_ROLES = Object.keys(ROLES);
+// `feature` maps a nav item to a supabase.tenant_features.feature_key —
+// omit it for items that are core/cross-cutting (Dashboard, Customers) or
+// not yet backed by a real feature key, and it's never gated. See
+// company_has_feature() / tenant_features in
+// 20260812000100_tenant_features_branding_platform_admin.sql.
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
-  { key: "partsInventory", label: "Stock Room", icon: Package, roles: ALL_ROLES },
-  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["director", "admin", "sales", "warehouse", "procurement", "finance"] },
-  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"] },
-  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"] },
-  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"] },
-  { key: "assets", label: "Installed Base", icon: Tag, roles: ["director", "admin", "sales", "service", "finance"] },
-  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"] },
-  { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"] },
-  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"] },
+  { key: "partsInventory", label: "Stock Room", icon: Package, roles: ALL_ROLES, feature: "stock_room" },
+  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["director", "admin", "sales", "warehouse", "procurement", "finance"], feature: "stock_room" },
+  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"], feature: "sales" },
+  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"], feature: "sales" },
+  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"], feature: "sales" },
+  { key: "assets", label: "Installed Base", icon: Tag, roles: ["director", "admin", "sales", "service", "finance"], feature: "service_jobs" },
+  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"], feature: "service_jobs" },
+  { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"], feature: "service_jobs" },
+  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"], feature: "purchasing" },
   { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
   { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
   { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
@@ -468,7 +473,6 @@ const NAV = [
   { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
   { key: "financials", label: "Company Financials", icon: BarChart3, roles: ["director"] }
 ];
-const BRANCHES = ["Accra HQ", "Kumasi Branch", "Tema Warehouse"];
 // Linear happy-path stage sequences for PathStepper. "Pending Approval" and
 // "Rejected" (quotations) are exception branches, not points on this path —
 // PathStepper is only shown when the record's status is actually on it.
@@ -1753,6 +1757,15 @@ async function fetchTaxProfiles() {
   if (error) throw error;
   return data;
 }
+// tenant_features doesn't exist on every database yet (migration
+// 20260812000100 hasn't necessarily been applied) — callers treat a thrown
+// error as "gating not active" rather than a hard failure, so this doesn't
+// break the app on a database that predates the table.
+async function fetchTenantFeatures() {
+  const { data, error } = await window.sb.from("tenant_features").select("feature_key").eq("enabled", true);
+  if (error) throw error;
+  return data.map(r => r.feature_key);
+}
 
 // Quotations/invoices: the frontend keeps working with the exact same
 // field shape it always has (id, customerId, lines[], subtotal, ...) so
@@ -1997,7 +2010,7 @@ function mergeInventoryRows(rows, type, items, stockRooms, branchFallback) {
     const id = String(r.Code || r.ID || r.SKU || r.id || "").trim();
     const name = String(r.Name || r.Part || r.Description || r.name || "").trim();
     if (!id && !name) return;
-    const branch = String(r.Branch || branchFallback || BRANCHES[0]).trim();
+    const branch = String(r.Branch || branchFallback || "").trim();
     const roomName = String(r["Stock Room"] || r.StockRoom || r.Room || "Main Store").trim();
     let room = newRooms.find(sr => sr.name === roomName && sr.branch === branch);
     if (!room) { room = { id: uid("SR", newRooms, 2), name: roomName, branch, isNewRoom: true }; newRooms = [...newRooms, room]; }
@@ -2085,7 +2098,16 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
   const [historyItem, setHistoryItem] = useState(null);
   const [preview, setPreview] = useState(null);
   const [poPreview, setPoPreview] = useState(null);
-  const [newRoomForm, setNewRoomForm] = useState({ name: "", branch: BRANCHES[0] });
+  const [newRoomForm, setNewRoomForm] = useState({ name: "", branch: "" });
+  // realBranches loads asynchronously after mount, so the default can't be
+  // picked at useState-init time — set it reactively once real data is in,
+  // and only while the form is still on its unset default (don't stomp a
+  // branch the user already picked).
+  useEffect(() => {
+    if (!newRoomForm.branch && realBranches.length) {
+      setNewRoomForm(f => (f.branch ? f : { ...f, branch: realBranches[0].name }));
+    }
+  }, [realBranches]);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [roomBusy, setRoomBusy] = useState(false);
@@ -2102,7 +2124,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
 
   function handleUploadFile(file) {
     parseExcelFile(file).then(rows => {
-      const result = mergeInventoryRows(rows, type, items, stockRooms, branchFilter !== "All" ? branchFilter : BRANCHES[0]);
+      const result = mergeInventoryRows(rows, type, items, stockRooms, branchFilter !== "All" ? branchFilter : (realBranches[0] ? realBranches[0].name : ""));
       setPreview({ ...result, fileName: file.name });
     }).catch(err => window.alert("Could not read file: " + err.message));
   }
@@ -2180,13 +2202,18 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
     setRoomError("");
     const branchRow = realBranches.find(b => b.name === newRoomForm.branch);
     if (!branchRow) { setRoomBusy(false); setRoomError(`No branch named "${newRoomForm.branch}" exists yet.`); return; }
-    const { error } = await window.sb.from("stock_rooms").insert({ branch_id: branchRow.id, name: newRoomForm.name.trim() });
-    if (error) { setRoomBusy(false); setRoomError(error.message); return; }
-    await reloadStock();
-    logAction(currentUser, `Created stock room "${newRoomForm.name.trim()}" at ${newRoomForm.branch}`, "Inventory");
-    setNewRoomForm({ name: "", branch: BRANCHES[0] });
-    setRoomBusy(false);
-    setShowAddRoom(false);
+    try {
+      const { error } = await window.sb.from("stock_rooms").insert({ branch_id: branchRow.id, name: newRoomForm.name.trim() });
+      if (error) throw error;
+      await reloadStock();
+      logAction(currentUser, `Created stock room "${newRoomForm.name.trim()}" at ${newRoomForm.branch}`, "Inventory");
+      setNewRoomForm({ name: "", branch: realBranches[0] ? realBranches[0].name : "" });
+      setShowAddRoom(false);
+    } catch (err) {
+      setRoomError(err.message);
+    } finally {
+      setRoomBusy(false);
+    }
   }
   function handleUploadPO(file) {
     parseExcelFile(file).then(rows => setPoPreview({ groups: groupPORows(rows), fileName: file.name })).catch(err => window.alert("Could not read file: " + err.message));
@@ -2224,7 +2251,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <MapPin size={14} style={{ color: "var(--text-tertiary)" }} />
           <TSelect value={branchFilter} onChange={e => { setBranchFilter(e.target.value); setRoomFilter("All"); }} style={{ width: 170 }}>
-            <option value="All">{t(lang, "inv.all")}</option>{BRANCHES.map(b => <option key={b}>{b}</option>)}
+            <option value="All">{t(lang, "inv.all")}</option>{realBranches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
           </TSelect>
         </div>
         <TSelect value={roomFilter} onChange={e => setRoomFilter(e.target.value)} style={{ width: 190 }}>
@@ -2266,7 +2293,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
       <form onSubmit={addRoom} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {roomError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{roomError}</p>}
         <Field label={t(lang, "inv.roomName")}><TInput required value={newRoomForm.name} onChange={e => setNewRoomForm(f => ({ ...f, name: e.target.value }))} placeholder={t(lang, "inv.roomNamePlaceholder")} /></Field>
-        <Field label={t(lang, "common.branch")}><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{BRANCHES.map(b => <option key={b}>{b}</option>)}</TSelect></Field>
+        <Field label={t(lang, "common.branch")}><TSelect value={newRoomForm.branch} onChange={e => setNewRoomForm(f => ({ ...f, branch: e.target.value }))}>{realBranches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}</TSelect></Field>
       </form>
     </Modal>}
 
@@ -2402,25 +2429,30 @@ function CreateQuotationModal({ type, customers, inventoryItems, taxProfiles, re
     if (!customerId || !validLines.length) return;
     setBusy(true);
     setError("");
-    const { data: newId, error: rpcError } = await window.sb.rpc("create_quotation", {
-      p_customer_id: customerId,
-      p_type: type,
-      p_lines: validLines.map(l => ({
-        item_id: l.itemId || null,
-        description: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""),
-        qty: Number(l.qty), unit_price: Number(l.unitPrice) || 0
-      })),
-      p_lead_time_days: Number(leadTimeDays) || null,
-      p_eta: eta || null
-    });
-    if (rpcError) { setBusy(false); setError(rpcError.message); return; }
-    const fresh = await reloadSales();
-    logAction(currentUser, `Created ${typeLabel} quotation for ${existingCustomer.name}`, "Sales");
-    pushNotification("quote", `New quotation created for ${existingCustomer.name}`);
-    setBusy(false);
-    onClose();
-    const created = fresh.quotations.find(q => q.realId === newId);
-    onCreated && created && onCreated(created);
+    try {
+      const { data: newId, error: rpcError } = await window.sb.rpc("create_quotation", {
+        p_customer_id: customerId,
+        p_type: type,
+        p_lines: validLines.map(l => ({
+          item_id: l.itemId || null,
+          description: l.desc || ((inventoryItems.find(i => i.id === l.itemId) || {}).name || ""),
+          qty: Number(l.qty), unit_price: Number(l.unitPrice) || 0
+        })),
+        p_lead_time_days: Number(leadTimeDays) || null,
+        p_eta: eta || null
+      });
+      if (rpcError) throw rpcError;
+      const fresh = await reloadSales();
+      logAction(currentUser, `Created ${typeLabel} quotation for ${existingCustomer.name}`, "Sales");
+      pushNotification("quote", `New quotation created for ${existingCustomer.name}`);
+      onClose();
+      const created = fresh.quotations.find(q => q.realId === newId);
+      onCreated && created && onCreated(created);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   const typeLabelTranslated = type === "equipment" ? t(lang, "cq.typeEquipment") : t(lang, "cq.typeParts");
@@ -2527,7 +2559,7 @@ function SendDocumentModal({ doc, kind, customer, users, currentUser, logAction,
   </Modal>;
 }
 
-function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, onMarkPaid, lang }) {
+function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onDetails, onMarkPaid, busyDocId, lang }) {
   function custName(id) { const c = customers.find(x => x.id === id); return c ? c.name : "—"; }
   function total(doc) { return typeof doc.total === "number" ? doc.total : doc.lines.reduce((s, l) => s + l.qty * l.unitPrice, 0); }
   return <DataTable
@@ -2543,8 +2575,8 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
         {onDetails && <button type="button" className="mis-link-btn" onClick={() => onDetails(d)}>{t(lang, "dt.details")}</button>}
         <button type="button" className="mis-link-btn" onClick={() => onPrint(d)}>{t(lang, "dt.print")}</button>
         {d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onSend(d)}>{t(lang, "dt.send")}</button>}
-        {kind === "quotation" && d.status !== "Invoiced" && d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" className="mis-link-btn" onClick={() => onConvert(d)}>{t(lang, "dt.convertToInvoice")}</button>}
-        {kind === "invoice" && d.status === "Issued" && onMarkPaid && <button type="button" className="mis-link-btn" onClick={() => onMarkPaid(d)}>{t(lang, "dt.markPaid")}</button>}
+        {kind === "quotation" && d.status !== "Invoiced" && d.status !== "Pending Approval" && d.status !== "Rejected" && <button type="button" disabled={!!busyDocId} className="mis-link-btn" onClick={() => onConvert(d)}>{t(lang, "dt.convertToInvoice")}</button>}
+        {kind === "invoice" && d.status === "Issued" && onMarkPaid && <button type="button" disabled={!!busyDocId} className="mis-link-btn" onClick={() => onMarkPaid(d)}>{t(lang, "dt.markPaid")}</button>}
       </div> }
     ]}
     rows={docs}
@@ -2866,23 +2898,35 @@ function SalesQuotations({ page, role, currentUser, customers, items, taxProfile
   // afterward so every affected panel (Sales, Customers, Stock Room) shows
   // the result, instead of trying to keep three copies of local state in sync.
   async function convertQuotationToInvoice(q) {
+    if (busyDocId) return;
     setBusyDocId(q.realId);
     setActionError("");
-    const { error } = await window.sb.rpc("convert_quotation_to_invoice", { p_quotation_id: q.realId });
-    setBusyDocId(null);
-    if (error) { setActionError(error.message); return; }
-    await Promise.all([reloadSales(), reloadCustomers(), reloadStock()]);
-    logAction(currentUser, `Converted ${q.id} to an invoice for ${custName(q.customerId)} — stock updated`, "Sales");
-    pushNotification("invoice", `Invoice issued to ${custName(q.customerId)}`);
+    try {
+      const { error } = await window.sb.rpc("convert_quotation_to_invoice", { p_quotation_id: q.realId });
+      if (error) throw error;
+      await Promise.all([reloadSales(), reloadCustomers(), reloadStock()]);
+      logAction(currentUser, `Converted ${q.id} to an invoice for ${custName(q.customerId)} — stock updated`, "Sales");
+      pushNotification("invoice", `Invoice issued to ${custName(q.customerId)}`);
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusyDocId(null);
+    }
   }
   async function markInvoicePaid(inv) {
+    if (busyDocId) return;
     setBusyDocId(inv.realId);
     setActionError("");
-    const { error } = await window.sb.rpc("mark_invoice_paid", { p_invoice_id: inv.realId });
-    setBusyDocId(null);
-    if (error) { setActionError(error.message); return; }
-    await Promise.all([reloadSales(), reloadCustomers()]);
-    logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)}`, "Sales");
+    try {
+      const { error } = await window.sb.rpc("mark_invoice_paid", { p_invoice_id: inv.realId });
+      if (error) throw error;
+      await Promise.all([reloadSales(), reloadCustomers()]);
+      logAction(currentUser, `Marked ${inv.id} as paid for ${custName(inv.customerId)}`, "Sales");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusyDocId(null);
+    }
   }
 
   const partsList = items.filter(i => i.type === "part");
@@ -2898,9 +2942,9 @@ function SalesQuotations({ page, role, currentUser, customers, items, taxProfile
       {["director", "admin", "sales"].includes(role) && <button type="button" className="mis-btn-primary mis-focus" style={{ marginLeft: "auto" }} onClick={() => setShowCreate(true)}><Plus size={14} /> {t(lang, "cq.createQuotationBtn")}</button>}
     </div>
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.transactionHistory")}</h4>
-    <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} lang={lang} />
+    <DocumentsTable docs={pageQuotations} customers={customers} kind="quotation" onDetails={d => setDetailDoc(d)} onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "quotation", lang)} onSend={d => setSendDoc({ doc: d, kind: "quotation" })} onConvert={convertQuotationToInvoice} busyDocId={busyDocId} lang={lang} />
     <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "sq.invoicesHeading")}</h4>
-    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} onMarkPaid={["director", "admin", "finance"].includes(role) ? markInvoicePaid : undefined} lang={lang} />
+    <DocumentsTable docs={pageInvoices} customers={customers} kind="invoice" onPrint={d => printDocument(d, customers.find(c => c.id === d.customerId), "invoice", lang)} onSend={d => setSendDoc({ doc: d, kind: "invoice" })} onConvert={() => {}} onMarkPaid={["director", "admin", "finance"].includes(role) ? markInvoicePaid : undefined} busyDocId={busyDocId} lang={lang} />
 
     {showCreate && <CreateQuotationModal
       type={type}
@@ -2914,8 +2958,16 @@ function SalesQuotations({ page, role, currentUser, customers, items, taxProfile
     />}
     {sendDoc && <SendDocumentModal doc={sendDoc.doc} kind={sendDoc.kind} customer={customers.find(c => c.id === sendDoc.doc.customerId)} users={users} currentUser={currentUser} logAction={logAction} emailTemplates={emailTemplates} onClose={() => setSendDoc(null)} lang={lang} onSent={async () => {
       if (sendDoc.kind === "quotation" && sendDoc.doc.status === "Quoted") {
-        await window.sb.rpc("mark_quotation_sent", { p_quotation_id: sendDoc.doc.realId });
-        await reloadSales();
+        // The email itself already sent by this point (SendDocumentModal
+        // only calls onSent after that succeeds) — a failure here is just
+        // the follow-up status bump, so it's surfaced rather than silently
+        // dropped, but doesn't block closing the modal.
+        const { error } = await window.sb.rpc("mark_quotation_sent", { p_quotation_id: sendDoc.doc.realId });
+        if (error) {
+          setActionError(`Sent, but couldn't update quotation status: ${error.message}`);
+        } else {
+          await reloadSales();
+        }
       }
       setSendDoc(null);
     }} />}
@@ -3172,20 +3224,25 @@ function CreateCustomerModal({ customers, setCustomers, countries, reloadCustome
     if (!form.name.trim() || busy) return;
     setBusy(true);
     setError("");
-    const { data: created, error: insertError } = await window.sb.from("customers")
-      .insert(customerToDbFields(form))
-      .select()
-      .single();
-    if (insertError) { setBusy(false); setError(insertError.message); return; }
-    if (contacts.length) {
-      const { error: contactsError } = await window.sb.from("customer_contacts")
-        .insert(contacts.map(c => ({ customer_id: created.id, name: c.name, role: c.role || null, email: c.email || null, phone: c.phone || null })));
-      if (contactsError) { setBusy(false); setError(contactsError.message); return; }
+    try {
+      const { data: created, error: insertError } = await window.sb.from("customers")
+        .insert(customerToDbFields(form))
+        .select()
+        .single();
+      if (insertError) throw insertError;
+      if (contacts.length) {
+        const { error: contactsError } = await window.sb.from("customer_contacts")
+          .insert(contacts.map(c => ({ customer_id: created.id, name: c.name, role: c.role || null, email: c.email || null, phone: c.phone || null })));
+        if (contactsError) throw contactsError;
+      }
+      await reloadCustomers();
+      logAction(currentUser, `Created customer record for ${form.name}`, "Customers");
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
     }
-    await reloadCustomers();
-    logAction(currentUser, `Created customer record for ${form.name}`, "Customers");
-    setBusy(false);
-    onClose();
   }
   return <Modal title={t(lang, "cust.createCustomer")} wide onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
@@ -4081,7 +4138,7 @@ function CommandPalette({ open, onClose, allowedNav, setNav, customers, items, q
 // ---------------------------------------------------------------------------
 // DASHBOARD
 // ---------------------------------------------------------------------------
-function Dashboard({ items, quotations, invoices, purchaseOrders, customers, serviceContracts, auditLog, role, lang }) {
+function Dashboard({ items, quotations, invoices, purchaseOrders, customers, serviceContracts, auditLog, realBranches, role, lang }) {
   const [dashboardBranchFilter, setDashboardBranchFilter] = useState("All");
   const dashboardItems = dashboardBranchFilter === "All" ? items : items.filter(i => i.branch === dashboardBranchFilter);
   const stockValue = dashboardItems.reduce((s, i) => s + i.qty * i.cost, 0);
@@ -4098,7 +4155,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
       <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "dash.focusOn")}</span>
       <TSelect value={dashboardBranchFilter} onChange={e => setDashboardBranchFilter(e.target.value)} style={{ width: 200 }}>
         <option value="All">{t(lang, "dash.allBranches")}</option>
-        {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+        {realBranches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
       </TSelect>
     </div>
     <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
@@ -4376,6 +4433,11 @@ function SetvacoBusinessSystem() {
   const [realBranches, setRealBranches] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState("");
+  // null = gating not active (feature not loaded yet, or the
+  // tenant_features table doesn't exist on this database yet) — nav items
+  // with a `feature` tag are treated as allowed rather than hidden, so this
+  // stays backward-compatible with a database that predates the migration.
+  const [companyFeatures, setCompanyFeatures] = useState(null);
   const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
   // Quotations/invoices load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
@@ -4399,11 +4461,22 @@ function SetvacoBusinessSystem() {
   const navRefs = useRef({});
   const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
 
+  useEffect(() => {
+    if (!profile) { setCompanyFeatures(null); return; }
+    let cancelled = false;
+    fetchTenantFeatures()
+      .then(keys => { if (!cancelled) setCompanyFeatures(keys); })
+      .catch(() => { if (!cancelled) setCompanyFeatures(null); });
+    return () => { cancelled = true; };
+  }, [profile]);
+
   const role = profile ? profile.role : null;
   const currentUser = profile ? profile.name : null;
-  const allowedNav = NAV.filter(n => n.roles.includes(role));
+  const allowedNav = NAV.filter(n =>
+    n.roles.includes(role) && (!n.feature || !companyFeatures || companyFeatures.includes(n.feature))
+  );
 
-  useEffect(() => { if (profile && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role]);
+  useEffect(() => { if (profile && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role, companyFeatures]);
   useEffect(() => {
     savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang });
   }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang]);
@@ -4524,7 +4597,7 @@ function SetvacoBusinessSystem() {
       </header>
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
         <div key={nav} className="mis-view-enter">
-          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} serviceContracts={serviceContracts} auditLog={auditLog} role={role} lang={lang} />}
+          {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} serviceContracts={serviceContracts} auditLog={auditLog} realBranches={realBranches} role={role} lang={lang} />}
           {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
