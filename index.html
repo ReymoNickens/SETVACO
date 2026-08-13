@@ -133,7 +133,7 @@ button{cursor:pointer;}
 // STYLE — design tokens + component classes
 // ---------------------------------------------------------------------------
 const Style = () => <style>{`
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600&display=swap');
   /* Design direction: technical drawing / blueprint. Every token below
      traces back to an actual engineering-drawing convention (drafting-pen
      ink blue, drawing-sheet white, a faint grid line color) rather than a
@@ -308,6 +308,40 @@ const Style = () => <style>{`
     .mis-auth-shell { flex-direction: column; }
     .mis-auth-hero { flex: 0 0 auto; min-width: 0; padding: 32px 28px; }
     .mis-auth-tagline { max-width: none; }
+  }
+
+  /* Staff sign-in register — the login screen's own artifact, distinct
+     from the blueprint drawings inside the app: staff sign a physical
+     register at the office door before they start work, so the login
+     screen is styled as that ruled sheet rather than a generic form.
+     See docs/design-system.md. */
+  .mis-register-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; background: var(--paper); position: relative; }
+  .mis-register-page {
+    width: 100%; max-width: 460px; position: relative; padding: 36px 40px 36px 56px;
+    background-image: repeating-linear-gradient(var(--paper) 0px, var(--paper) 37px, var(--grid-line) 38px);
+  }
+  .mis-register-margin { position: absolute; top: 0; bottom: 0; left: 40px; width: 1px; background: var(--coral); opacity: 0.55; }
+  .mis-register-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; padding-bottom: 14px; border-bottom: 2px solid var(--brand); }
+  .mis-ghost-row { display: grid; grid-template-columns: 1fr 90px 90px; gap: 10px; padding: 9px 0; opacity: 0.32; font-size: 12px; }
+  .mis-ghost-row span { border-bottom: 1px dotted var(--ink-faint); padding-bottom: 4px; color: var(--ink-faint); }
+  .mis-ghost-cols { display: grid; grid-template-columns: 1fr 90px 90px; gap: 10px; padding: 10px 0 4px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  .mis-signin-field { margin-bottom: 26px; }
+  .mis-signin-label { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .mis-signin-input { width: 100%; border: none; border-bottom: 1.5px solid var(--brand); background: transparent; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: var(--ink); padding: 4px 2px 8px; outline: none; }
+  .mis-signin-input::placeholder { color: var(--ink-faint); font-style: italic; }
+  .mis-signin-signature::placeholder { font-family: 'Caveat', cursive; font-size: 17px; font-style: normal; }
+  .mis-stamp-btn {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 6px;
+    background: transparent; border: 2px solid var(--brand); color: var(--brand);
+    font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 13px;
+    padding: 10px 22px; border-radius: 3px; cursor: pointer; transform: rotate(-1deg); transition: background 0.15s ease, color 0.15s ease;
+  }
+  .mis-stamp-btn:hover:not(:disabled) { background: var(--brand); color: #FFFFFF; }
+  .mis-stamp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mis-time-chip { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--brand); background: var(--grid-line); padding: 2px 8px; border-radius: 2px; text-transform: none; letter-spacing: 0; }
+  @media (max-width: 860px) {
+    .mis-register-page { padding: 28px 24px 28px 40px; }
+    .mis-register-margin { left: 24px; }
   }
 `}</style>;
 
@@ -637,6 +671,17 @@ const TRANSLATIONS = {
     "login.logout": "Log out",
     "login.forgotPassword": "Forgot your password?",
     "login.resetSent": "Check your email for a link to reset your password.",
+    "login.registerTitle": "Staff Sign-In Register",
+    "login.registerColStaff": "Staff Name",
+    "login.registerColTime": "Time In",
+    "login.registerColStatus": "Status",
+    "login.registerSignedIn": "Signed in",
+    "login.registerStaffEmail": "Staff Email",
+    "login.registerSignature": "Signature (your password)",
+    "login.registerTimeIn": "Time in:",
+    "login.registerSignHere": "sign here",
+    "login.registerSignIn": "Sign In",
+    "login.registerForgotSignature": "Forgot your signature? (reset password)",
     "login.setNewPassword": "Set your password",
     "login.setNewPasswordHint": "Choose a password for your SETVACO account.",
     "login.newPassword": "New password",
@@ -1157,6 +1202,17 @@ const TRANSLATIONS = {
     "login.logout": "Se déconnecter",
     "login.forgotPassword": "Mot de passe oublié ?",
     "login.resetSent": "Consultez votre e-mail pour réinitialiser votre mot de passe.",
+    "login.registerTitle": "Registre de présence du personnel",
+    "login.registerColStaff": "Nom",
+    "login.registerColTime": "Heure d'arrivée",
+    "login.registerColStatus": "Statut",
+    "login.registerSignedIn": "Connecté(e)",
+    "login.registerStaffEmail": "E-mail professionnel",
+    "login.registerSignature": "Signature (votre mot de passe)",
+    "login.registerTimeIn": "Heure d'arrivée :",
+    "login.registerSignHere": "signez ici",
+    "login.registerSignIn": "Se connecter",
+    "login.registerForgotSignature": "Signature oubliée ? (réinitialiser le mot de passe)",
     "login.setNewPassword": "Définir votre mot de passe",
     "login.setNewPasswordHint": "Choisissez un mot de passe pour votre compte SETVACO.",
     "login.newPassword": "Nouveau mot de passe",
@@ -4402,6 +4458,22 @@ function LoginScreen({ lang, setLang }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [ghostTimes, setGhostTimes] = useState([]);
+  const mosaicColors = ["var(--coral)", "var(--teal)", "var(--sky)", "var(--sky)", "var(--coral)", "var(--teal)", "var(--teal)", "var(--sky)", "var(--coral)"];
+
+  // Two real recent sign-in timestamps (never names/emails — see
+  // recent_signin_times() in 20260813000100_recent_signin_times.sql),
+  // shown as the register's "already signed today" rows. Hardcoded to the
+  // one real tenant for now — there's no subdomain-based tenant routing
+  // yet to resolve a company before login (see docs/architecture.md).
+  // Fails open to an empty (purely decorative) list on any error.
+  useEffect(() => {
+    let cancelled = false;
+    window.sb.rpc("recent_signin_times", { p_company_slug: "setvaco", p_limit: 2 })
+      .then(({ data, error }) => { if (!cancelled && !error && data) setGhostTimes(data.map(r => r.signed_in_at)); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -4433,19 +4505,61 @@ function LoginScreen({ lang, setLang }) {
     setResetSent(true);
   }
 
-  return <AuthShell lang={lang} setLang={setLang}>
-    <div className="mis-eyebrow" style={{ marginBottom: 6 }}>{t(lang, "login.title")}</div>
-    <div className="mis-display" style={{ fontSize: 24, color: "var(--ink)", marginBottom: 22 }}>{t(lang, "login.subtitle")}</div>
-    {resetSent
-      ? <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "login.resetSent")}</p>
-      : <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Field label={t(lang, "login.email")}><TInput autoFocus type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@setvaco.com" /></Field>
-          <Field label={t(lang, "login.password")}><TInput type="password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
-          {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
-          <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center", padding: "11px 16px" }}>{busy ? t(lang, "login.loading") : t(lang, "login.signIn")}</button>
-          <button type="button" className="mis-link-btn" style={{ fontSize: 12, textAlign: "center" }} onClick={forgotPassword}>{t(lang, "login.forgotPassword")}</button>
-        </form>}
-  </AuthShell>;
+  const todayLabel = new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
+  const nowLabel = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const fmtGhostTime = iso => { try { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch (e) { return "—"; } };
+
+  return <div className="mis-root mis-auth-shell">
+    <Style />
+    <div className="mis-auth-hero">
+      <div className="mis-auth-hero-gear"><GearMark size={340} spin mosaic={false} /></div>
+      <div className="mis-auth-mosaic">{mosaicColors.map((c, i) => <span key={i} style={{ background: c }} />)}</div>
+      <div>
+        <div className="mis-eyebrow" style={{ color: "rgba(255,255,255,0.6)", marginBottom: 14 }}>{t(lang, "login.eyebrow")}</div>
+        <div className="mis-display" style={{ fontSize: 34, color: "#FFFFFF", lineHeight: 1.08 }}>SETVACO</div>
+        <StrataRule className="mt-1.5" />
+      </div>
+      <p className="mis-auth-tagline">{t(lang, "login.tagline")}</p>
+    </div>
+    <div className="mis-register-wrap">
+      <div className="mis-auth-lang">
+        <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 4, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
+          <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--brand)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
+          <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--brand)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
+        </div>
+      </div>
+      <div className="mis-register-page mis-view-enter">
+        <div className="mis-register-margin" />
+        <div className="mis-register-head">
+          <span className="mis-display" style={{ fontSize: 18, color: "var(--brand)" }}>{t(lang, "login.registerTitle")}</span>
+          <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{todayLabel}</span>
+        </div>
+
+        <div className="mis-ghost-cols">
+          <span>{t(lang, "login.registerColStaff")}</span><span>{t(lang, "login.registerColTime")}</span><span>{t(lang, "login.registerColStatus")}</span>
+        </div>
+        {(ghostTimes.length ? ghostTimes.map(fmtGhostTime) : ["", ""]).map((tm, i) => <div className="mis-ghost-row" key={i}>
+          <span>••••••••••••••</span><span>{tm || "•••••"}</span><span>{t(lang, "login.registerSignedIn")}</span>
+        </div>)}
+
+        {resetSent
+          ? <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 20 }}>{t(lang, "login.resetSent")}</p>
+          : <form onSubmit={submit} style={{ marginTop: 18 }}>
+              <div className="mis-signin-field">
+                <div className="mis-signin-label">{t(lang, "login.registerStaffEmail")}</div>
+                <input className="mis-signin-input mis-focus" autoFocus type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@setvaco.com" required />
+              </div>
+              <div className="mis-signin-field">
+                <div className="mis-signin-label">{t(lang, "login.registerSignature")} <span className="mis-time-chip">{t(lang, "login.registerTimeIn")} {nowLabel}</span></div>
+                <input className="mis-signin-input mis-signin-signature mis-focus" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={t(lang, "login.registerSignHere")} required />
+              </div>
+              {error && <p style={{ fontSize: 12, color: "var(--vital)", marginBottom: 14 }}>{error}</p>}
+              <button type="submit" disabled={busy} className="mis-stamp-btn mis-focus">{busy ? t(lang, "login.loading") : t(lang, "login.registerSignIn")} ▸</button>
+              <button type="button" className="mis-link-btn" style={{ display: "block", fontSize: 11.5, marginTop: 16, color: "var(--text-tertiary)" }} onClick={forgotPassword}>{t(lang, "login.registerForgotSignature")}</button>
+            </form>}
+      </div>
+    </div>
+  </div>;
 }
 
 // Shown when the URL carries a Supabase password-recovery link
