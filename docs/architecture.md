@@ -235,10 +235,18 @@ admin can escalate it.
 - HR Office: Employee Records (`employee_details`, 1:1 extension of
   `profiles`), Leave Requests (self-service file + admin/hr approve),
   Attendance (self-service clock in/out, `attendance_records`, one row per
-  employee per day — see `20260813170205_attendance.sql`).
+  employee per day — see `20260813170205_attendance.sql`), Payroll Setup
+  (admin/hr sets each active employee's `employee_compensation` — current
+  salary only, not a history ledger).
 - Finance Office: Expenses (self-service submit + admin/finance
   approve/reject/mark-paid; submitter can't approve their own, enforced
-  server-side).
+  server-side), Payroll (admin/finance run a pay period through
+  `run_payroll()` — a SECURITY DEFINER RPC that's the *only* way
+  `payroll_runs`/`payslips` rows are created; direct INSERT/UPDATE/DELETE
+  on both tables is revoked from `authenticated`, same posture as
+  quotations/invoices. SSNIT/PAYE figures use the standard Ghana bands as
+  of 2024 — a best-effort calculation, not a certified tax engine; see
+  `20260813173638_payroll.sql`'s header comment).
 - Users & Access: real `profiles` roster, real account creation/
   suspend/reactivate through `admin-manage-user` (see above). Changing an
   existing user's role isn't wired to a backend action yet — the "Access
@@ -250,10 +258,7 @@ contracts, reports, price books, notifications, variance/audit. These need
 their own migrations (`purchase_orders` + line tables, `service_jobs`,
 `vendors`, an `adjust_stock` call with reason `purchase_receipt` when a PO
 is received) before they're real. `nav_permissions` (server-side mirror of
-the role→nav-item matrix) also doesn't exist yet in this schema. Payroll
-(salary setup in HR, pay-run disbursement in Finance) is scoped but not
-yet built — deliberately deferred as its own pass given the added weight
-of Ghana SSNIT/PAYE deduction compliance.
+the role→nav-item matrix) also doesn't exist yet in this schema.
 
 ## Migrations
 

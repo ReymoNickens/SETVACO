@@ -552,9 +552,11 @@ const ROOMS = [
     { key: "employees", label: "Employee Records", icon: Users, roles: ["admin", "hr", "finance"] },
     { key: "attendance", label: "Attendance", icon: Clock, feature: "attendance", roles: ALL_ROLES.concat(["hr"]) },
     { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]) },
+    { key: "payrollSetup", label: "Payroll Setup", icon: Banknote, feature: "payroll", roles: ["admin", "hr"] },
   ] },
   { tag: "FN", name: "Finance Office", feature: "finance", stations: [
     { key: "expenses", label: "Expenses", icon: Receipt, roles: ALL_ROLES.concat(["hr"]) },
+    { key: "payroll", label: "Payroll", icon: Banknote, feature: "payroll", roles: ["director", "admin", "finance"] },
     { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
     { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
   ] },
@@ -624,6 +626,8 @@ const TRANSLATIONS = {
     "nav.attendance": "Attendance",
     "nav.leaverequests": "Leave Requests",
     "nav.expenses": "Expenses",
+    "nav.payrollSetup": "Payroll Setup",
+    "nav.payroll": "Payroll",
     "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -1162,6 +1166,8 @@ const TRANSLATIONS = {
     "nav.attendance": "Présence",
     "nav.leaverequests": "Demandes de congé",
     "nav.expenses": "Dépenses",
+    "nav.payrollSetup": "Configuration de la paie",
+    "nav.payroll": "Paie",
     "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -1946,6 +1952,21 @@ async function fetchLeaveRequests() {
 }
 async function fetchAttendanceRecords() {
   const { data, error } = await window.sb.from("attendance_records").select("*, profiles!attendance_records_employee_id_fkey(name)").order("work_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchCompensation() {
+  const { data, error } = await window.sb.from("employee_compensation").select("*, profiles!employee_compensation_profile_id_fkey(name, email, status)").order("updated_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchPayrollRuns() {
+  const { data, error } = await window.sb.from("payroll_runs").select("*").order("run_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchPayslips(payrollRunId) {
+  const { data, error } = await window.sb.from("payslips").select("*, profiles!payslips_employee_id_fkey(name)").eq("payroll_run_id", payrollRunId).order("net_pay", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -4984,6 +5005,212 @@ function AttendancePanel({ profile, role, currentUser, logAction, lang }) {
 }
 
 // ---------------------------------------------------------------------------
+// HR — Payroll Setup. Admin/hr only (not self-service — an employee sees
+// their own number here, not a form to change it). One row per active
+// employee; editing writes an upsert to employee_compensation, matching
+// its RLS (employee_compensation_write in 20260813173638_payroll.sql).
+// ---------------------------------------------------------------------------
+function PayrollSetupPanel({ currentUser, logAction, lang }) {
+  const [profiles, setProfiles] = useState([]);
+  const [comp, setComp] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [editing, setEditing] = useState(null);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [p, c] = await Promise.all([fetchProfiles(), fetchCompensation()]);
+      setProfiles(p.filter(x => x.status === "Active"));
+      setComp(c);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  const compByProfile = {};
+  comp.forEach(c => { compByProfile[c.profile_id] = c; });
+
+  if (loading) return <div className="mis-empty">Loading payroll setup…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Set each active employee's basic salary and allowances. Finance uses these figures the next time payroll is run — a change here doesn't retroactively affect a run that's already been processed.</p>
+    <DataTable
+      columns={[
+        { header: "Employee", render: p => <span style={{ color: "var(--text-primary)" }}>{p.name}</span> },
+        { header: "Basic Salary", render: p => <span className="mis-mono" style={{ fontSize: 12 }}>{compByProfile[p.id] ? fmtGHS(compByProfile[p.id].basic_salary) : "—"}</span> },
+        { header: "Allowances", render: p => <span className="mis-mono" style={{ fontSize: 12 }}>{compByProfile[p.id] ? fmtGHS(compByProfile[p.id].allowances) : "—"}</span> },
+        { header: "Effective", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{compByProfile[p.id] ? compByProfile[p.id].effective_date : "—"}</span> },
+        { header: "Actions", render: p => <button type="button" className="mis-link-btn" onClick={() => setEditing(p)}>{compByProfile[p.id] ? "Edit" : "Set Salary"}</button> },
+      ]}
+      rows={profiles}
+      rowKey={p => p.id}
+      empty="No active employees."
+    />
+    {editing && <SetCompensationModal profile={editing} existing={compByProfile[editing.id]} currentUser={currentUser} logAction={logAction} onClose={() => setEditing(null)} onSaved={async () => { setEditing(null); await reload(); }} />}
+  </div>;
+}
+function SetCompensationModal({ profile, existing, currentUser, logAction, onClose, onSaved }) {
+  const [basicSalary, setBasicSalary] = useState(existing ? String(existing.basic_salary) : "");
+  const [allowances, setAllowances] = useState(existing ? String(existing.allowances) : "0");
+  const [effectiveDate, setEffectiveDate] = useState(existing ? existing.effective_date : todayISO());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!basicSalary || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: upsertError } = await window.sb.from("employee_compensation").upsert({
+        profile_id: profile.id,
+        basic_salary: Number(basicSalary),
+        allowances: Number(allowances) || 0,
+        effective_date: effectiveDate,
+      });
+      if (upsertError) throw upsertError;
+      logAction(currentUser, `Set compensation for ${profile.name}`, "HR");
+      onSaved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title={`Compensation — ${profile.name}`} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <div className="mis-grid-2">
+        <Field label="Basic Salary (GH₵/month)"><TInput required type="number" min="0" step="0.01" value={basicSalary} onChange={e => setBasicSalary(e.target.value)} /></Field>
+        <Field label="Allowances (GH₵/month)"><TInput type="number" min="0" step="0.01" value={allowances} onChange={e => setAllowances(e.target.value)} /></Field>
+      </div>
+      <Field label="Effective Date"><TInput required type="date" value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)} /></Field>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
+// Finance — Payroll. Admin/finance run a payroll for a period; the money
+// math itself happens server-side in run_payroll() (SECURITY DEFINER,
+// direct table writes revoked from authenticated — see
+// 20260813173638_payroll.sql), never computed client-side.
+// ---------------------------------------------------------------------------
+function PayrollPanel({ currentUser, logAction, lang }) {
+  const [runs, setRuns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showRun, setShowRun] = useState(false);
+  const [viewRun, setViewRun] = useState(null);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setRuns(await fetchPayrollRuns());
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  if (loading) return <div className="mis-empty">Loading payroll…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowRun(true)}><Plus size={14} /> Run Payroll</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Run", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        { header: "Period", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.period_start} → {r.period_end}</span> },
+        { header: "Employees", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.employee_count}</span> },
+        { header: "Gross", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(r.total_gross)}</span> },
+        { header: "Net", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--safe)" }}>{fmtGHS(r.total_net)}</span> },
+        { header: "Run At", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtDateTime(r.run_at)}</span> },
+        { header: "Actions", render: r => <button type="button" className="mis-link-btn" onClick={() => setViewRun(r)}>View Payslips</button> },
+      ]}
+      rows={runs}
+      rowKey={r => r.id}
+      empty="No payroll runs yet."
+    />
+    {showRun && <RunPayrollModal currentUser={currentUser} logAction={logAction} onClose={() => setShowRun(false)} onRun={async () => { setShowRun(false); await reload(); }} />}
+    {viewRun && <PayslipsModal run={viewRun} onClose={() => setViewRun(null)} />}
+  </div>;
+}
+function RunPayrollModal({ currentUser, logAction, onClose, onRun }) {
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!periodStart || !periodEnd || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: rpcError } = await window.sb.rpc("run_payroll", { p_period_start: periodStart, p_period_end: periodEnd });
+      if (rpcError) throw rpcError;
+      logAction(currentUser, `Ran payroll for ${periodStart} to ${periodEnd}`, "Finance");
+      onRun();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Run Payroll" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Running…" : "Run Payroll"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Computes pay for every active employee with a salary set up in HR Office's Payroll Setup. SSNIT and PAYE figures are a best-effort calculation, not certified tax advice — verify against current GRA guidance before disbursing.</p>
+      <div className="mis-grid-2">
+        <Field label="Period Start"><TInput required type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} /></Field>
+        <Field label="Period End"><TInput required type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} /></Field>
+      </div>
+    </form>
+  </Modal>;
+}
+function PayslipsModal({ run, onClose }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    fetchPayslips(run.id).then(r => { if (!cancelled) setRows(r); }).catch(err => { if (!cancelled) setLoadError(err.message); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [run.id]);
+  return <Modal title={`Payslips — ${run.display_code} (${run.period_start} → ${run.period_end})`} onClose={onClose} footer={<button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Close</button>}>
+    {loading && <div className="mis-empty">Loading payslips…</div>}
+    {loadError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>}
+    {!loading && !loadError && <DataTable
+      columns={[
+        { header: "Employee", render: p => <span style={{ color: "var(--text-primary)" }}>{p.profiles ? p.profiles.name : "—"}</span> },
+        { header: "Gross", render: p => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(p.gross_pay)}</span> },
+        { header: "SSNIT (Emp.)", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(p.ssnit_employee)}</span> },
+        { header: "PAYE", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(p.paye)}</span> },
+        { header: "Net Pay", render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--safe)" }}>{fmtGHS(p.net_pay)}</span> },
+      ]}
+      rows={rows}
+      rowKey={p => p.id}
+      empty="No payslips in this run."
+    />}
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance — Expenses. Same self-service + admin/finance-manage shape as
 // Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
 // in 20260812000200_hr_finance.sql — note the submitter can't approve
@@ -5515,6 +5742,8 @@ function SetvacoBusinessSystem() {
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "attendance" && <AttendancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "payrollSetup" && <PayrollSetupPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "payroll" && <PayrollPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
