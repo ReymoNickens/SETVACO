@@ -174,7 +174,7 @@ const Style = () => <style>{`
     transition: width 0.22s cubic-bezier(.4,0,.2,1);
     position: relative;
   }
-  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 16px; box-shadow: var(--shadow-sm); }
+  .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 2px; box-shadow: var(--shadow-sm); }
   .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
   /* Sheet-index sidebar — rooms and stations, not icon-and-label nav
      items. See ROOMS/NAV and Part 3 of docs/design-system.md. */
@@ -191,22 +191,22 @@ const Style = () => <style>{`
   .mis-station.active { color: #FFFFFF; background: rgba(255,255,255,0.09); border-left-color: #8FB4F0; }
   .mis-station-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8FB4F0; flex-shrink: 0; }
   .mis-row:hover { background: var(--panel-alt); }
-  .mis-btn-primary { background: linear-gradient(135deg, var(--brand) 0%, #3A4EC0 100%); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease, box-shadow 0.14s ease; border-radius:10px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
+  .mis-btn-primary { background: linear-gradient(135deg, var(--brand) 0%, #3A4EC0 100%); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease, box-shadow 0.14s ease; border-radius:3px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
   .mis-btn-primary:hover { filter: brightness(1.1); box-shadow: 0 6px 16px rgba(42,59,148,0.32); transform: translateY(-1px); }
   .mis-btn-primary:active { transform: translateY(0); }
   .mis-btn-primary:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:var(--shadow-sm); }
-  .mis-btn-accent { background: var(--teal); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease; border-radius:10px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
+  .mis-btn-accent { background: var(--teal); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease; border-radius:3px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
   .mis-btn-accent:hover { filter: brightness(1.08); }
   .mis-btn-accent:active { transform: translateY(1px); }
-  .mis-btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--ink); transition: background 0.14s ease, border-color 0.14s ease, transform 0.08s ease; border-radius:10px; padding:8px 15px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .mis-btn-ghost { background: var(--panel); border: 1px solid var(--border); color: var(--ink); transition: background 0.14s ease, border-color 0.14s ease, transform 0.08s ease; border-radius:3px; padding:8px 15px; font-size:13px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
   .mis-btn-ghost:hover { background: var(--panel-alt); border-color: var(--brand); }
   .mis-btn-ghost:active { transform: translateY(1px); }
   .mis-btn-ghost:disabled { opacity:0.4; cursor:not-allowed; }
-  .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:10px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; transition: background 0.14s ease; }
+  .mis-btn-danger { background: transparent; border:1px solid var(--vital); color: var(--vital); border-radius:3px; padding:6px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; transition: background 0.14s ease; }
   .mis-btn-danger:hover { background: var(--vital-soft); }
   .mis-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
   .mis-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; padding:3px 8px; border-radius:6px; display:inline-block; }
+  .mis-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; padding:3px 8px; border-radius:2px; display:inline-block; }
   .mis-focus:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .mis-strata-seg { transition: opacity 0.15s ease; }
   .mis-card-hover { transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease; }
@@ -228,13 +228,13 @@ const Style = () => <style>{`
   @keyframes mis-pop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
   .mis-pop-in { animation: mis-pop 0.4s cubic-bezier(.3,1.4,.4,1) both; }
   .mis-cmdk-overlay { position: fixed; inset: 0; background: rgba(15,19,48,0.55); backdrop-filter: blur(2px); display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; z-index: 95; }
-  .mis-cmdk { width: 100%; max-width: 560px; background: var(--panel); border-radius: 16px; box-shadow: 0 30px 70px rgba(15,19,48,0.4); border: 1px solid var(--border-soft); overflow: hidden; animation: mis-fade-up 0.18s ease both; }
+  .mis-cmdk { width: 100%; max-width: 560px; background: var(--panel); border-radius: 3px; box-shadow: 0 30px 70px rgba(15,19,48,0.4); border: 1px solid var(--border-soft); overflow: hidden; animation: mis-fade-up 0.18s ease both; }
   .mis-cmdk-item { display:flex; align-items:center; gap:10px; padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--ink); }
   .mis-cmdk-item.active, .mis-cmdk-item:hover { background: var(--panel-alt); }
   .mis-kbd { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-faint); background: var(--panel-alt); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
   .mis-field { display:flex; flex-direction:column; gap:5px; }
   .mis-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-tertiary); }
-  .mis-input, .mis-select, .mis-textarea { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 100%; }
+  .mis-input, .mis-select, .mis-textarea { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-primary); border-radius: 2px; padding: 8px 10px; font-size: 13px; width: 100%; }
   .mis-input:focus, .mis-select:focus, .mis-textarea:focus { outline: 2px solid var(--ore); outline-offset:1px; }
   .mis-textarea { resize: vertical; min-height: 64px; font-family: inherit; }
   .mis-table { width: 100%; font-size: 13px; border-collapse: collapse; }
@@ -243,7 +243,7 @@ const Style = () => <style>{`
   .mis-table tbody tr:hover { background: var(--panel-alt); }
   .mis-table-wrap { overflow-x: auto; }
   .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:flex-start; justify-content:center; padding: 5vh 16px; overflow-y:auto; z-index: 80; }
-  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 640px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 640px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
   .mis-modal.wide { max-width: 940px; }
   .mis-modal-head { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); }
   .mis-modal-body { padding: 20px; display:flex; flex-direction:column; gap:14px; max-height: 72vh; overflow-y:auto; }
@@ -252,9 +252,9 @@ const Style = () => <style>{`
   .mis-tab { padding: 9px 14px; font-size: 13px; color: var(--text-secondary); cursor:pointer; border-bottom: 2px solid transparent; background:none; border-left:none; border-right:none; border-top:none; }
   .mis-tab:hover { color: var(--text-primary); }
   .mis-tab.active { color: var(--ore); border-bottom-color: var(--ore); }
-  .mis-dropzone { border: 1.5px dashed var(--border); border-radius: 8px; padding: 22px; text-align:center; color: var(--text-tertiary); font-size:13px; cursor:pointer; }
+  .mis-dropzone { border: 1.5px dashed var(--border); border-radius: 2px; padding: 22px; text-align:center; color: var(--text-tertiary); font-size:13px; cursor:pointer; }
   .mis-dropzone:hover { background: var(--panel-alt); border-color: var(--ore); }
-  .mis-chip { display:inline-flex; align-items:center; gap:5px; background: var(--panel-alt); border:1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+  .mis-chip { display:inline-flex; align-items:center; gap:5px; background: var(--panel-alt); border:1px solid var(--border); border-radius: 3px; padding: 4px 10px; font-size: 12px; }
   .mis-kv { display:flex; justify-content:space-between; gap:12px; font-size:12px; padding: 4px 0; color: var(--text-secondary); }
   .mis-kv b { color: var(--text-primary); font-weight:500; }
   .mis-divider { border-top: 1px solid var(--border-soft); margin: 4px 0; }
@@ -266,7 +266,7 @@ const Style = () => <style>{`
      (which is sized for a form), narrower than edge-to-edge so the app
      chrome behind it stays visible as context. */
   .mis-sheet-overlay { position:fixed; inset:0; background: rgba(10,11,12,0.6); z-index: 85; display:flex; align-items:flex-start; justify-content:center; padding: 3vh 16px; overflow-y:auto; }
-  .mis-sheet { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 980px; min-height: 90vh; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+  .mis-sheet { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 980px; min-height: 90vh; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
   .mis-sheet-head { display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border-soft); }
   .mis-sheet-body { padding: 24px; display:flex; flex-direction:column; gap: 22px; }
   @media (max-width: 720px) { .mis-sheet-overlay { padding: 0; } .mis-sheet { border-radius: 0; min-height: 100vh; } }
@@ -2158,7 +2158,7 @@ function Tabs({ tabs, active, onChange }) {
   </div>;
 }
 function DataTable({ columns, rows, rowKey, empty }) {
-  return <div className="mis-panel mis-table-wrap" style={{ borderRadius: 16, overflow: "hidden" }}>
+  return <div className="mis-panel mis-table-wrap" style={{ borderRadius: 2, overflow: "hidden" }}>
     <table className="mis-table">
       <thead><tr>{columns.map((c, i) => <th key={c.key || i}>{c.header}</th>)}</tr></thead>
       <tbody>
@@ -2431,7 +2431,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
     {dataLoading && <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "login.loading")}</p>}
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 12px", width: 260 }}>
+        <div className="mis-panel-alt" style={{ display: "flex", alignItems: "center", gap: 8, borderRadius: 2, padding: "8px 12px", width: 260 }}>
           <Search size={14} style={{ color: "var(--text-tertiary)" }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t(lang, "inv.searchPlaceholder")} style={{ background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", fontSize: 13, width: "100%" }} />
         </div>
@@ -2505,7 +2505,7 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
         <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "inv.uploadPOHint")}</p>
       </React.Fragment>}
       {poPreview && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10 }}>
+        {poPreview.groups.map(g => <div key={g.poNumber} className="mis-panel-alt" style={{ borderRadius: 2, padding: 10 }}>
           <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{g.poNumber} — {g.vendor || t(lang, "inv.unspecifiedVendor")}</div>
           <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{tf(lang, "inv.lineItems", { n: g.lines.length })}{g.expected ? tf(lang, "inv.expectedDate", { date: g.expected }) : ""}</div>
         </div>)}
@@ -2541,7 +2541,7 @@ function LineItemsEditor({ lines, setLines, inventoryItems, resolvePrice, lang }
   function addCustomLine() { setLines(ls => [...ls, { itemId: "", desc: "", qty: 1, unitPrice: 0, newPart: true }]); }
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitPrice) || 0), 0);
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 2, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       {!line.newPart ? <Field label={t(lang, "po.itemLabel")}><TSelect value={line.itemId} onChange={e => {
         const it = inventoryItems.find(x => x.id === e.target.value);
         updateLine(idx, { itemId: e.target.value, desc: it ? it.name : "", unitPrice: it ? (resolvePrice ? resolvePrice(it) : it.sell) : 0 });
@@ -2668,7 +2668,7 @@ function CreateQuotationModal({ type, customers, inventoryItems, taxProfiles, re
           <option value="">{t(lang, "cq.selectCustomer")}</option>
           {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.country}</option>)}
         </TSelect></Field>
-        {existingCustomer && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
+        {existingCustomer && <div className="mis-panel-alt" style={{ borderRadius: 2, padding: 10, fontSize: 12, color: "var(--text-secondary)" }}>
           <div>{existingCustomer.contactPerson} · {existingCustomer.email}</div>
           <div>{existingCustomer.phone}</div>
           <div>{existingCustomer.address}</div>
@@ -2681,7 +2681,7 @@ function CreateQuotationModal({ type, customers, inventoryItems, taxProfiles, re
         <Field label={t(lang, "cq.eta")}><TInput type="date" value={eta} onChange={e => setEta(e.target.value)} /></Field>
         <Field label={t(lang, "cq.preparedBy")}><TInput value={currentUser} disabled /></Field>
       </div>
-      <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="mis-panel-alt" style={{ borderRadius: 2, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         <div className="mis-kv"><span>{t(lang, "cq.subtotal")}</span><b>{fmtGHS(subtotal)}</b></div>
         <div className="mis-kv"><span>{t(lang, "cq.taxLabel")} ({previewTaxRate}%){previewTaxExempt ? t(lang, "cq.taxWaivedSuffix") : ""}</span><b>{fmtGHS(previewTax)}</b></div>
         <div className="mis-kv" style={{ fontSize: 13 }}><span>{t(lang, "cq.total")}</span><b>{fmtGHS(subtotal + previewTax)}</b></div>
@@ -2866,7 +2866,7 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
   }
 
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="mis-grid-2">
         <CustomerPickerField customerId={form.customerId} setCustomerId={id => setForm(f => ({ ...f, customerId: id }))} isNew={isNewCustomer} setIsNew={setIsNewCustomer} newFields={newCustomerFields} setNewFields={setNewCustomerFields} customers={customers} lang={lang} />
         <Field label={t(lang, "sj.jobType")}><TInput required value={form.jobType} onChange={e => setForm(f => ({ ...f, jobType: e.target.value }))} placeholder={t(lang, "sj.jobTypePlaceholder")} /></Field>
@@ -2975,7 +2975,7 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
         <option value="backorder">{t(lang, "salesov.backordersOnly")}</option>
       </TSelect>
     </div>
-    {showForecast && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+    {showForecast && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
       <div>
         <div className="mis-eyebrow">{t(lang, "salesov.forecastValue")}</div>
         <div className="mis-display" style={{ fontSize: 30, color: "var(--ink)" }}>{fmtGHS(forecastValue)}</div>
@@ -2995,8 +2995,8 @@ function SalesOverview({ quotations, invoices, serviceJobs, customers, items, pu
       {overviewFilter === "all" && <StatCard label={t(lang, "salesov.backOrderedLines")} value={backOrderLines} sub={t(lang, "salesov.qtyExceedsStock")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />}
     </div>}
     {(overviewFilter === "all" || overviewFilter === "backorder") && <BackOrderReport quotations={quotations} invoices={invoices} items={items} purchaseOrders={purchaseOrders} role={role} typeFilter="all" lang={lang} />}
-    {overviewFilter === "all" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "salesov.recentQuotations")}</h3>
+    {overviewFilter === "all" && <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "salesov.recentQuotations")}</h3>
       {recent.length === 0 && <div className="mis-empty">{t(lang, "salesov.noQuotationsYet")}</div>}
       {recent.map(q => { const cs = statusColor(q.status); return <div key={q.id} className="mis-row" style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px", borderBottom: "1px solid var(--border-soft)" }}>
         <span style={{ fontSize: 13 }}>{q.id} · {custName(q.customerId)} <span style={{ color: "var(--text-tertiary)" }}>({q.type})</span></span>
@@ -3070,7 +3070,7 @@ function QuotationDetailDrawer({ doc, customer, role, currentUser, logAction, se
       <div className="mis-kv"><span>{t(lang, "cq.taxLabel")}</span><b>{fmtGHS(doc.taxAmount || 0)}</b></div>
       <div className="mis-kv" style={{ fontSize: 13 }}><span>{t(lang, "cq.total")}</span><b>{fmtGHS(doc.total ?? doc.subtotal ?? 0)}</b></div>
     </div>
-    {doc.status === "Pending Approval" && <div className="mis-panel-alt" style={{ borderRadius: 10, padding: 12, marginBottom: 14 }}>
+    {doc.status === "Pending Approval" && <div className="mis-panel-alt" style={{ borderRadius: 2, padding: 12, marginBottom: 14 }}>
       <div style={{ fontSize: 12, color: "var(--caution)", marginBottom: 8 }}>{t(lang, "qd.heldForApproval")}</div>
       {canApprove ? <div style={{ display: "flex", gap: 8 }}>
         <button type="button" className="mis-btn-primary mis-focus" onClick={() => { approveOrder(setQuotations, doc, currentUser, logAction, approvalSettings); onClose(); }}><Check size={14} /> {stage === 2 ? t(lang, "qd.signOffBtn") : t(lang, "qd.approveBtn")}</button>
@@ -3204,7 +3204,7 @@ function POLineItemsEditor({ lines, setLines, items, lang }) {
   function removeLine(idx) { setLines(ls => ls.filter((_, i) => i !== idx)); }
   function addLine() { setLines(ls => [...ls, { itemId: "", itemName: "", qty: 1 }]); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {lines.map((line, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 2, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label={t(lang, "po.itemLabel")}><TSelect value={line.itemId} onChange={e => { const it = items.find(x => x.id === e.target.value); updateLine(idx, { itemId: e.target.value, itemName: it ? it.name : "" }); }} style={{ minWidth: 220 }}>
         <option value="">{t(lang, "po.selectItem")}</option>
         {items.map(it => <option key={it.id} value={it.id}>{it.name} ({it.id})</option>)}
@@ -3249,7 +3249,7 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
     return t(lang, "inv.unspecifiedVendor");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="mis-grid-2">
         <Field label={t(lang, "po.vendor")}><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
           <option value="">{t(lang, "po.selectVendor")}</option>{vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
@@ -3308,7 +3308,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang })
     </div>}
     {!canManage && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "ven.restricted")}</p>}
     {canManage && <FileDrop label={t(lang, "ven.dropFile")} accept=".xlsx,.xls,.csv" onFile={handleUpload} hint={t(lang, "ven.expectedColumns")} />}
-    {preview && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+    {preview && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
       <p style={{ fontSize: 13 }}>{tf(lang, "ven.previewReady", { file: preview.fileName, n: preview.rows.length })}</p>
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "common.cancel")}</button>
@@ -3373,22 +3373,22 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>{t(lang, "match.intro")}</p>
-    <form onSubmit={search} className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+    <form onSubmit={search} className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label={t(lang, "ven.industryStdCode")}><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder={t(lang, "match.codePlaceholder")} style={{ width: 200 }} /></Field>
       <Field label={t(lang, "match.externalPoNumber")}><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder={t(lang, "match.externalPoPlaceholder")} style={{ width: 200 }} /></Field>
       <button type="submit" className="mis-btn-primary mis-focus"><Search size={14} /> {t(lang, "match.matchCodeBtn")}</button>
     </form>
-    {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+    {match && match.kind === "customer" && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.matchedCustomer", { name: match.record.name })}</b></div>
       <div className="mis-kv"><span>{t(lang, "match.country")}</span><b>{match.record.country}</b></div>
       <div className="mis-kv"><span>{t(lang, "match.contact")}</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
       {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> {t(lang, "match.submitOrder")}</button>}
     </div>}
-    {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+    {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.belongsToVendor", { name: match.record.name })}</b></div>
       <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "match.raiseInternalHint")}</p>
     </div>}
-    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>{t(lang, "match.notFound")}</span></div>}
+    {match && match.kind === "none" && <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}><span style={{ color: "var(--vital)", fontSize: 13 }}>{t(lang, "match.notFound")}</span></div>}
   </div>;
 }
 
@@ -3414,7 +3414,7 @@ function ContactsEditor({ contacts, setContacts, lang }) {
   function remove(idx) { setContacts(cs => cs.filter((_, i) => i !== idx)); }
   function add() { setContacts(cs => [...cs, { name: "", role: "", email: "", phone: "" }]); }
   return <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-    {contacts.map((c, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 10, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+    {contacts.map((c, idx) => <div key={idx} className="mis-panel-alt" style={{ borderRadius: 2, padding: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label={t(lang, "common.name")}><TInput value={c.name} onChange={e => update(idx, { name: e.target.value })} style={{ minWidth: 150 }} /></Field>
       <Field label={t(lang, "cust.role")}><TInput value={c.role} onChange={e => update(idx, { role: e.target.value })} style={{ minWidth: 130 }} /></Field>
       <Field label={t(lang, "common.email")}><TInput type="email" value={c.email} onChange={e => update(idx, { email: e.target.value })} style={{ minWidth: 170 }} /></Field>
@@ -3789,8 +3789,8 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
   function deleteReport(id) { setSavedReports(rs => rs.filter(r => r.id !== id)); }
 
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "report.builder")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <h3 className="mis-eyebrow">{t(lang, "report.builder")}</h3>
       <div className="mis-grid-3">
         <Field label={t(lang, "report.source")}>
           <TSelect value={source} onChange={e => changeSource(e.target.value)}>
@@ -3813,8 +3813,8 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
         <button type="button" className="mis-btn-ghost mis-focus" onClick={saveReport}><Plus size={14} /> {t(lang, "report.saveReport")}</button>
       </div>
     </div>
-    {savedReports.length > 0 && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "report.savedReports")}</h3>
+    {savedReports.length > 0 && <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "report.savedReports")}</h3>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {savedReports.map(r => <div key={r.id} className="mis-panel-alt" style={{ borderRadius: 999, padding: "6px 6px 6px 12px", display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
           <button type="button" className="mis-link-btn" onClick={() => loadReport(r)}>{r.name}</button>
@@ -3822,8 +3822,8 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
         </div>)}
       </div>
     </div>}
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{tf(lang, "report.resultsFor", { groupBy: t(lang, "report.field." + groupBy) })}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{tf(lang, "report.resultsFor", { groupBy: t(lang, "report.field." + groupBy) })}</h3>
       {results.length === 0 && <div className="mis-empty">{t(lang, "report.noData")}</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {results.map(r => <div key={r.key}>
@@ -3899,8 +3899,8 @@ function PriceBooksPanel({ priceBooks, setPriceBooks, priceBookEntries, setPrice
     setEntryForm({ itemId: "", price: "" });
   }
   function removeEntry(id) { setPriceBookEntries(es => es.filter(e => e.id !== id)); }
-  return <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-    <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "pb.priceBooks")}</h3>
+  return <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+    <h3 className="mis-eyebrow">{t(lang, "pb.priceBooks")}</h3>
     <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "pb.priceBooksDesc")}</p>
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {priceBooks.map(b => <button key={b.id} type="button" className={b.id === selectedBookId ? "mis-btn-primary mis-focus" : "mis-btn-ghost mis-focus"} onClick={() => setSelectedBookId(b.id)}>{b.name}{b.isStandard ? ` (${t(lang, "pb.standard")})` : ""}</button>)}
@@ -3965,8 +3965,8 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
     logAction(currentUser, `Updated approval rules — threshold ${fmtGHS(approvalSettings.valueThreshold)}, director sign-off above ${fmtGHS(approvalSettings.directorThreshold)}, flagged: ${list.join(", ") || "none"}`, "Users & Access");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.approvalRules")}</h3>
+    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <h3 className="mis-eyebrow">{t(lang, "ua.approvalRules")}</h3>
       <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "ua.approvalRulesDesc")}</p>
       <div className="mis-grid-2">
         <Field label={t(lang, "ua.valueThreshold")}><TInput type="number" min="0" value={approvalSettings.valueThreshold} onChange={e => updateThreshold(e.target.value)} onBlur={commitFlagged} /></Field>
@@ -3975,10 +3975,10 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
       <Field label={t(lang, "ua.directorThreshold")} hint={t(lang, "ua.directorThresholdHint")}><TInput type="number" min="0" value={approvalSettings.directorThreshold} onChange={e => updateDirectorThreshold(e.target.value)} onBlur={commitFlagged} /></Field>
       <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={commitFlagged}>{t(lang, "ua.saveApprovalRules")}</button>
     </div>}
-    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.emailTemplates")}</h3>
+    {isSuperUser && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <h3 className="mis-eyebrow">{t(lang, "ua.emailTemplates")}</h3>
       <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "ua.emailTemplatesDesc")}</p>
-      {Object.entries(emailTemplates).map(([key, tpl]) => <div key={key} className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      {Object.entries(emailTemplates).map(([key, tpl]) => <div key={key} className="mis-panel-alt" style={{ borderRadius: 2, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-tertiary)" }}>{t(lang, key === "invoice" ? "doc.invoice" : "doc.quotation")}</span>
           <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setEditingTemplate(editingTemplate === key ? null : key)}>{editingTemplate === key ? t(lang, "ua.hideBtn") : t(lang, "ua.editBtn")}</button>
@@ -3993,7 +3993,7 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
     {isSuperUser && <PriceBooksPanel priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} currentUser={currentUser} logAction={logAction} lang={lang} />}
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "ua.userAccounts")}</h3>
+        <h3 className="mis-eyebrow">{t(lang, "ua.userAccounts")}</h3>
         {isSuperUser && <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowCreate(true)}><UserPlus size={14} /> {t(lang, "ua.createUserBtn")}</button>}
       </div>
       <DataTable columns={[
@@ -4005,8 +4005,8 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
       ]} rows={users} rowKey={u => u.id} empty={t(lang, "ua.noUsersYet")} />
     </div>
     <div>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "ua.moduleAccessByRole")}</h3>
-      <div className="mis-panel mis-table-wrap" style={{ borderRadius: 16, overflow: "hidden" }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "ua.moduleAccessByRole")}</h3>
+      <div className="mis-panel mis-table-wrap" style={{ borderRadius: 2, overflow: "hidden" }}>
         <table className="mis-table">
           <thead><tr><th>{t(lang, "ua.roleCol")}</th>{NAV.map(n => <th key={n.key} style={{ textAlign: "center" }}>{t(lang, "nav." + n.key)}</th>)}</tr></thead>
           <tbody>{Object.keys(ROLES).map(key => <tr key={key} className="mis-row">
@@ -4028,7 +4028,7 @@ function VarianceAudit({ auditLog, lang }) {
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={[{ key: "variance", label: t(lang, "va.stockVariance") }, { key: "audit", label: t(lang, "va.auditLog") }]} active={sub} onChange={setSub} />
     {sub === "variance" && <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="mis-panel" style={{ borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
         <TrendingDown size={18} style={{ color: "var(--vital)" }} />
         <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "va.varianceDesc")}</p>
       </div>
@@ -4102,7 +4102,7 @@ function ActivityByDayChart({ entries, lang }) {
     {hover !== null && <div style={{
       position: "absolute", pointerEvents: "none",
       left: `${(hover + 0.5) / days * 100}%`, top: 0, transform: "translate(-50%, -100%)",
-      background: "var(--ink)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 6, whiteSpace: "nowrap", zIndex: 5
+      background: "var(--ink)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 2, whiteSpace: "nowrap", zIndex: 5
     }}>
       <b>{buckets[hover].count}</b> {tf(lang, "sa.actionsOn", { date: fmtDateTime(buckets[hover].date).split(",")[0] })}
     </div>}
@@ -4153,7 +4153,7 @@ function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSen
       <MessageSquare size={14} /> {t(lang, "sa.messageBtn")}
     </button>}
   >
-    {messageDraft !== null && <div className="mis-panel-alt" style={{ borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+    {messageDraft !== null && <div className="mis-panel-alt" style={{ borderRadius: 2, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
       <TArea rows={2} value={messageDraft} onChange={e => setMessageDraft(e.target.value)} placeholder={t(lang, "sa.messagePlaceholder")} />
       <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={() => { onSendMessage(staffUser.name, messageDraft); setMessageDraft(null); }}>{t(lang, "sa.sendBtn")}</button>
     </div>}
@@ -4165,18 +4165,18 @@ function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSen
       <StatCard label={t(lang, "sa.activeSince")} value={firstEntry ? fmtDateTime(firstEntry.ts).split(",")[0] : "—"} sub={t(lang, "sa.firstLoggedAction")} icon={HistoryIcon} tint="var(--coral)" soft="var(--coral-soft)" />
     </div>
 
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.activityLast14Days")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "sa.activityLast14Days")}</h3>
       <ActivityByDayChart entries={entries} lang={lang} />
     </div>
 
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.byModule")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "sa.byModule")}</h3>
       <ModuleBreakdownChart entries={entries} lang={lang} />
     </div>
 
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.fullTimeline")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "sa.fullTimeline")}</h3>
       {entries.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {entries.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -4184,7 +4184,7 @@ function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSen
           <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
-        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 8 }}>
+        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 2 }}>
           <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
           <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
         </div>)}
@@ -4205,10 +4205,10 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
   const staff = users.filter(u => u.status === "Active");
   function countFor(name) { return auditLog.filter(a => a.user === name).length; }
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.staffOverview")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "sa.staffOverview")}</h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-        {staff.map(u => <div key={u.id} className="mis-panel-alt mis-card-hover" style={{ borderRadius: 12, padding: 12, cursor: "pointer" }} onClick={() => setOpenStaff(u)}>
+        {staff.map(u => <div key={u.id} className="mis-panel-alt mis-card-hover" style={{ borderRadius: 2, padding: 12, cursor: "pointer" }} onClick={() => setOpenStaff(u)}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Avatar name={u.name} role={u.role} size={32} />
             <div style={{ minWidth: 0 }}>
@@ -4226,8 +4226,8 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
         {staff.length === 0 && <div className="mis-empty">{t(lang, "ua.noUsersYet")}</div>}
       </div>
     </div>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "sa.allActivity")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "sa.allActivity")}</h3>
       {auditLog.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {auditLog.map(a => <div key={a.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
@@ -4235,7 +4235,7 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
           <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
-        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 8 }}>
+        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 2 }}>
           <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
           <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
         </div>)}
@@ -4267,8 +4267,8 @@ function CompanyFinancials({ items, quotations, customers, lang }) {
       <StatCard label={t(lang, "fin.customerOutstanding")} value={fmtGHS(totalOutstanding)} sub={t(lang, "fin.totalReceivables")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
       <StatCard label={t(lang, "fin.estGrossMargin")} value={fmtGHS(grossMargin)} sub={t(lang, "fin.onCurrentStock")} icon={BarChart3} tint="var(--safe)" soft="var(--safe-soft)" />
     </div>
-    <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "fin.marginByPart")}</h3>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "fin.marginByPart")}</h3>
       <DataTable columns={[
         { header: t(lang, "inv.part"), render: it => <span style={{ color: "var(--text-primary)" }}>{it.name}</span> },
         { header: t(lang, "fin.costCol"), render: it => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(it.cost)}</span> },
@@ -4296,7 +4296,7 @@ function NotificationBell({ notifications, setNotifications, currentUser, lang }
       <Bell size={16} />
       {unread > 0 && <span className="mis-bell-dot" />}
     </button>
-    {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 16, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
+    {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 2, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
       <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase" }}>{t(lang, "nb.notifications")}</div>
       {visible.length === 0 && <div className="mis-empty">{t(lang, "nb.nothingYet")}</div>}
       {visible.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
@@ -4370,7 +4370,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
         {realBranches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
       </TSelect>
     </div>
-    <div className="mis-panel" style={{ borderRadius: 14, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
       <RingStat pct={healthyPct} color="var(--teal)" label={t(lang, "dash.itemsAboveReorder")} sub={`${dashboardItems.length - lowStock.length} ${t(lang, "dash.of")} ${dashboardItems.length} ${t(lang, "dash.itemsHealthy")}`} big />
       <div style={{ width: 1, alignSelf: "stretch", background: "var(--border)" }} />
       <RingStat pct={fulfilledPct} color="var(--sky)" label={t(lang, "dash.quotationsInvoiced")} sub={`${quotations.filter(q => q.status === "Invoiced").length} ${t(lang, "dash.of")} ${quotations.length} ${t(lang, "dash.quotationsClosed")}`} />
@@ -4382,7 +4382,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
       <StatCard label={t(lang, "dash.posInProgress")} value={inTransitPOs} sub={t(lang, "dash.orderedOrInTransit")} icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-      <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
         <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.itemsNearestDepletion")}</h3>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
@@ -4395,7 +4395,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
           {lowStock.length === 0 && <p style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{t(lang, "dash.allItemsAboveReorder")}</p>}
         </div>
       </div>
-      <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+      <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
         <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.customerCreditRisk")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {customers.map(c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <div key={c.id}>
@@ -4405,7 +4405,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
         </div>
       </div>
     </div>
-    {canSeeContracts && expiringContracts.length > 0 && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, borderLeft: "3px solid var(--caution)" }}>
+    {canSeeContracts && expiringContracts.length > 0 && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, borderLeft: "3px solid var(--caution)" }}>
       <h3 className="mis-eyebrow" style={{ marginBottom: 4 }}>{t(lang, "dash.contractsExpiring")}</h3>
       <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 12 }}>{t(lang, "dash.within60Days")}</p>
       {expiringContracts.map(c => { const cust = customers.find(x => x.id === c.customerId); return <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12 }}>
@@ -4413,7 +4413,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
         <span className="mis-mono" style={{ color: "var(--caution)" }}>{c.endDate}</span>
       </div>; })}
     </div>}
-    {["director", "admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
+    {["director", "admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
       <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.recentActivity")}</h3>
       {recentActivity.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
@@ -4448,7 +4448,7 @@ function AuthShell({ lang, setLang, children }) {
     </div>
     <div className="mis-auth-form-wrap">
       <div className="mis-auth-lang">
-        <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
+        <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 2, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }}>
           <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
           <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
         </div>
@@ -5392,7 +5392,7 @@ function SetvacoBusinessSystem() {
         </div>
       </main>
     </div>
-    {toast && <div key={toast.id} className="mis-panel mis-toast" style={{ position: "fixed", bottom: 24, right: 24, borderRadius: 14, fontSize: 13, overflow: "hidden", boxShadow: "0 16px 34px rgba(19,27,74,0.22)", color: "var(--text-primary)", maxWidth: 380, zIndex: 90 }}>
+    {toast && <div key={toast.id} className="mis-panel mis-toast" style={{ position: "fixed", bottom: 24, right: 24, borderRadius: 2, fontSize: 13, overflow: "hidden", boxShadow: "0 16px 34px rgba(19,27,74,0.22)", color: "var(--text-primary)", maxWidth: 380, zIndex: 90 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px" }}>
         <div className="mis-pop-in" style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--safe-soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Check size={13} style={{ color: "var(--safe)" }} />
