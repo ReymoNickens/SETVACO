@@ -554,6 +554,7 @@ const ROOMS = [
     { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]) },
     { key: "performance", label: "Performance & Discipline", icon: FileSignature, feature: "performance", roles: ALL_ROLES.concat(["hr"]) },
     { key: "certifications", label: "Training & Certifications", icon: Tags, feature: "certifications", roles: ALL_ROLES.concat(["hr"]) },
+    { key: "recruitment", label: "Recruitment", icon: UserPlus, feature: "recruitment", roles: ["admin", "hr"] },
     { key: "payrollSetup", label: "Payroll Setup", icon: Banknote, feature: "payroll", roles: ["admin", "hr"] },
   ] },
   { tag: "FN", name: "Finance Office", feature: "finance", stations: [
@@ -636,6 +637,7 @@ const TRANSLATIONS = {
     "nav.pettyCash": "Petty Cash",
     "nav.certifications": "Training & Certifications",
     "nav.budgets": "Budgets",
+    "nav.recruitment": "Recruitment",
     "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -1180,6 +1182,7 @@ const TRANSLATIONS = {
     "nav.pettyCash": "Petite caisse",
     "nav.certifications": "Formation et certifications",
     "nav.budgets": "Budgets",
+    "nav.recruitment": "Recrutement",
     "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -1999,6 +2002,16 @@ async function fetchCertifications() {
 }
 async function fetchBudgets() {
   const { data, error } = await window.sb.from("budgets").select("*").order("period_start", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchJobOpenings() {
+  const { data, error } = await window.sb.from("job_openings").select("*").order("opened_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchCandidates(openingId) {
+  const { data, error } = await window.sb.from("candidates").select("*").eq("opening_id", openingId).order("applied_date", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -5672,6 +5685,174 @@ function SetBudgetModal({ categories, currentUser, logAction, onClose, onAdded }
 }
 
 // ---------------------------------------------------------------------------
+// HR — Recruitment. Admin/hr only, end to end — no self-service side
+// (candidates aren't system users), matching job_openings'/candidates' RLS
+// exactly (20260813202006_recruitment.sql). A job opening lists its
+// candidate pipeline in a modal rather than a separate station, since a
+// candidate is meaningless without the opening it applied against.
+// ---------------------------------------------------------------------------
+function RecruitmentPanel({ currentUser, logAction, lang }) {
+  const [openings, setOpenings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [viewOpening, setViewOpening] = useState(null);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setOpenings(await fetchJobOpenings());
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  if (loading) return <div className="mis-empty">Loading openings…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> New Opening</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        { header: "Title", render: r => <span style={{ color: "var(--text-primary)" }}>{r.title}</span> },
+        { header: "Department", render: r => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{r.department || "—"}</span> },
+        { header: "Opened", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.opened_date}</span> },
+        { header: "Status", render: r => <Badge color={r.status === "Open" ? "var(--safe)" : "var(--text-tertiary)"} soft={r.status === "Open" ? "var(--safe-soft)" : "var(--panel-alt)"}>{r.status}</Badge> },
+        { header: "Actions", render: r => <button type="button" className="mis-link-btn" onClick={() => setViewOpening(r)}>View Candidates</button> },
+      ]}
+      rows={openings}
+      rowKey={r => r.id}
+      empty="No job openings yet."
+    />
+    {showAdd && <AddOpeningModal currentUser={currentUser} logAction={logAction} onClose={() => setShowAdd(false)} onAdded={async () => { setShowAdd(false); await reload(); }} />}
+    {viewOpening && <CandidatesModal opening={viewOpening} currentUser={currentUser} logAction={logAction} onClose={() => setViewOpening(null)} />}
+  </div>;
+}
+function AddOpeningModal({ currentUser, logAction, onClose, onAdded }) {
+  const [form, setForm] = useState({ title: "", department: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.title.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("job_openings").insert({ title: form.title.trim(), department: form.department.trim() || null });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Opened a new position: ${form.title}`, "HR");
+      onAdded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="New Job Opening" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Title"><TInput required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Field Service Technician" /></Field>
+      <Field label="Department (optional)"><TInput value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+function CandidatesModal({ opening, currentUser, logAction, onClose }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const STAGES = ["Applied", "Interviewing", "Offered", "Hired", "Rejected"];
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setRows(await fetchCandidates(opening.id));
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function setStage(candidate, stage) {
+    const { error } = await window.sb.from("candidates").update({ stage }).eq("id", candidate.id);
+    if (error) { setLoadError(error.message); return; }
+    logAction(currentUser, `Moved ${candidate.name} to ${stage}`, "HR");
+    await reload();
+  }
+
+  return <Modal title={`Candidates — ${opening.title}`} onClose={onClose} footer={<button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Close</button>}>
+    {loadError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>}
+    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add Candidate</button>
+    </div>
+    {loading ? <div className="mis-empty">Loading candidates…</div> : <DataTable
+      columns={[
+        { header: "Name", render: c => <span style={{ color: "var(--text-primary)" }}>{c.name}</span> },
+        { header: "Contact", render: c => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{c.email || c.phone || "—"}</span> },
+        { header: "Applied", render: c => <span className="mis-mono" style={{ fontSize: 12 }}>{c.applied_date}</span> },
+        { header: "Stage", render: c => <TSelect value={c.stage} onChange={e => setStage(c, e.target.value)} style={{ width: 150 }}>{STAGES.map(s => <option key={s} value={s}>{s}</option>)}</TSelect> },
+      ]}
+      rows={rows}
+      rowKey={c => c.id}
+      empty="No candidates yet."
+    />}
+    {showAdd && <AddCandidateModal opening={opening} currentUser={currentUser} logAction={logAction} onClose={() => setShowAdd(false)} onAdded={async () => { setShowAdd(false); await reload(); }} />}
+  </Modal>;
+}
+function AddCandidateModal({ opening, currentUser, logAction, onClose, onAdded }) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("candidates").insert({
+        opening_id: opening.id,
+        name: form.name.trim(),
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Added candidate ${form.name} for ${opening.title}`, "HR");
+      onAdded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Add Candidate" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Name"><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
+      <div className="mis-grid-2">
+        <Field label="Email (optional)"><TInput type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></Field>
+        <Field label="Phone (optional)"><TInput value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></Field>
+      </div>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance — Expenses. Same self-service + admin/finance-manage shape as
 // Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
 // in 20260812000200_hr_finance.sql — note the submitter can't approve
@@ -6209,6 +6390,7 @@ function SetvacoBusinessSystem() {
           {nav === "pettyCash" && <PettyCashPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "certifications" && <CertificationsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "budgets" && <BudgetsPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "recruitment" && <RecruitmentPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}

@@ -243,7 +243,9 @@ admin can escalate it.
   correction is a new record, not an edit to history), Training &
   Certifications (self-service view, admin/hr-only write, `certifications`
   — expiry status is computed by the frontend from `expiry_date`, not
-  stored).
+  stored), Recruitment (admin/hr only end to end — no self-service side,
+  since a candidate isn't a system user — `job_openings` + `candidates`;
+  stops at "hired," no onboarding-checklist workflow in this pass).
 - Finance Office: Expenses (self-service submit + admin/finance
   approve/reject/mark-paid; submitter can't approve their own, enforced
   server-side), Budgets (admin/finance set an amount per expense category
