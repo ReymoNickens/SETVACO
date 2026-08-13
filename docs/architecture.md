@@ -237,7 +237,10 @@ admin can escalate it.
   Attendance (self-service clock in/out, `attendance_records`, one row per
   employee per day — see `20260813170205_attendance.sql`), Payroll Setup
   (admin/hr sets each active employee's `employee_compensation` — current
-  salary only, not a history ledger).
+  salary only, not a history ledger), Performance & Discipline
+  (self-service view, admin/hr-only write, `performance_records` — reviews
+  and disciplinary write-ups in one table, no update/delete since a
+  correction is a new record, not an edit to history).
 - Finance Office: Expenses (self-service submit + admin/finance
   approve/reject/mark-paid; submitter can't approve their own, enforced
   server-side), Payroll (admin/finance run a pay period through
@@ -246,7 +249,10 @@ admin can escalate it.
   on both tables is revoked from `authenticated`, same posture as
   quotations/invoices. SSNIT/PAYE figures use the standard Ghana bands as
   of 2024 — a best-effort calculation, not a certified tax engine; see
-  `20260813173638_payroll.sql`'s header comment).
+  `20260813173638_payroll.sql`'s header comment), Petty Cash (admin/finance
+  log cash in/out against the physical cash box, no approval workflow;
+  balance is the running sum of ins minus outs, computed by the frontend
+  rather than stored).
 - Users & Access: real `profiles` roster, real account creation/
   suspend/reactivate through `admin-manage-user` (see above). Changing an
   existing user's role isn't wired to a backend action yet — the "Access
