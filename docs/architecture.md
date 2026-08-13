@@ -240,10 +240,17 @@ admin can escalate it.
   salary only, not a history ledger), Performance & Discipline
   (self-service view, admin/hr-only write, `performance_records` — reviews
   and disciplinary write-ups in one table, no update/delete since a
-  correction is a new record, not an edit to history).
+  correction is a new record, not an edit to history), Training &
+  Certifications (self-service view, admin/hr-only write, `certifications`
+  — expiry status is computed by the frontend from `expiry_date`, not
+  stored).
 - Finance Office: Expenses (self-service submit + admin/finance
   approve/reject/mark-paid; submitter can't approve their own, enforced
-  server-side), Payroll (admin/finance run a pay period through
+  server-side), Budgets (admin/finance set an amount per expense category
+  and period, `budgets` — "actual" spend is computed by the frontend from
+  Approved/Paid expenses in that category and period; deliberately scoped
+  to Expense categories only since Purchasing isn't migrated to this
+  schema yet), Payroll (admin/finance run a pay period through
   `run_payroll()` — a SECURITY DEFINER RPC that's the *only* way
   `payroll_runs`/`payslips` rows are created; direct INSERT/UPDATE/DELETE
   on both tables is revoked from `authenticated`, same posture as

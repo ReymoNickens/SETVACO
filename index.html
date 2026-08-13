@@ -553,11 +553,13 @@ const ROOMS = [
     { key: "attendance", label: "Attendance", icon: Clock, feature: "attendance", roles: ALL_ROLES.concat(["hr"]) },
     { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]) },
     { key: "performance", label: "Performance & Discipline", icon: FileSignature, feature: "performance", roles: ALL_ROLES.concat(["hr"]) },
+    { key: "certifications", label: "Training & Certifications", icon: Tags, feature: "certifications", roles: ALL_ROLES.concat(["hr"]) },
     { key: "payrollSetup", label: "Payroll Setup", icon: Banknote, feature: "payroll", roles: ["admin", "hr"] },
   ] },
   { tag: "FN", name: "Finance Office", feature: "finance", stations: [
     { key: "expenses", label: "Expenses", icon: Receipt, roles: ALL_ROLES.concat(["hr"]) },
     { key: "pettyCash", label: "Petty Cash", icon: Banknote, feature: "petty_cash", roles: ["director", "admin", "finance"] },
+    { key: "budgets", label: "Budgets", icon: Sliders, feature: "budgets", roles: ["director", "admin", "finance"] },
     { key: "payroll", label: "Payroll", icon: Banknote, feature: "payroll", roles: ["director", "admin", "finance"] },
     { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
     { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
@@ -632,6 +634,8 @@ const TRANSLATIONS = {
     "nav.payroll": "Payroll",
     "nav.performance": "Performance & Discipline",
     "nav.pettyCash": "Petty Cash",
+    "nav.certifications": "Training & Certifications",
+    "nav.budgets": "Budgets",
     "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -1174,6 +1178,8 @@ const TRANSLATIONS = {
     "nav.payroll": "Paie",
     "nav.performance": "Performance et discipline",
     "nav.pettyCash": "Petite caisse",
+    "nav.certifications": "Formation et certifications",
+    "nav.budgets": "Budgets",
     "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -1983,6 +1989,16 @@ async function fetchPerformanceRecords() {
 }
 async function fetchPettyCash() {
   const { data, error } = await window.sb.from("petty_cash_transactions").select("*").order("transaction_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchCertifications() {
+  const { data, error } = await window.sb.from("certifications").select("*, profiles!certifications_employee_id_fkey(name)").order("expiry_date", { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchBudgets() {
+  const { data, error } = await window.sb.from("budgets").select("*").order("period_start", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -5436,6 +5452,226 @@ function RecordPettyCashModal({ currentUser, logAction, onClose, onAdded }) {
 }
 
 // ---------------------------------------------------------------------------
+// HR — Training & Certifications. Self-service view, admin/hr-only write
+// (verifying the physical certificate is an HR step), matching
+// certifications' RLS exactly (certifications_select/_insert in
+// 20260813193352_certifications_budgets.sql). "Expiring soon"/"Expired"
+// status is computed here from expiry_date, not stored.
+// ---------------------------------------------------------------------------
+function certStatus(cert) {
+  if (!cert.expiry_date) return { label: "No Expiry", color: "var(--text-tertiary)", soft: "var(--panel-alt)" };
+  const days = (new Date(cert.expiry_date) - new Date(todayISO())) / 86400000;
+  if (days < 0) return { label: "Expired", color: "var(--vital)", soft: "var(--vital-soft)" };
+  if (days <= 30) return { label: "Expiring Soon", color: "var(--caution)", soft: "var(--caution-soft)" };
+  return { label: "Valid", color: "var(--safe)", soft: "var(--safe-soft)" };
+}
+function CertificationsPanel({ profile, role, currentUser, logAction, lang }) {
+  const canManage = ["admin", "hr"].includes(role);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setRows(await fetchCertifications());
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  const visibleRows = canManage ? rows : rows.filter(r => r.employee_id === profile.id);
+
+  if (loading) return <div className="mis-empty">Loading certifications…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {canManage && <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Add Certification</button>
+    </div>}
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        ...(canManage ? [{ header: "Employee", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> }] : []),
+        { header: "Certification", render: r => <span style={{ color: "var(--text-primary)" }}>{r.cert_name}</span> },
+        { header: "Issued", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.issue_date}</span> },
+        { header: "Expires", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.expiry_date || "—"}</span> },
+        { header: "Status", render: r => { const s = certStatus(r); return <Badge color={s.color} soft={s.soft}>{s.label}</Badge>; } },
+      ]}
+      rows={visibleRows}
+      rowKey={r => r.id}
+      empty="No certifications on file."
+    />
+    {showAdd && <AddCertificationModal currentUser={currentUser} logAction={logAction} onClose={() => setShowAdd(false)} onAdded={async () => { setShowAdd(false); await reload(); }} />}
+  </div>;
+}
+function AddCertificationModal({ currentUser, logAction, onClose, onAdded }) {
+  const [profiles, setProfiles] = useState([]);
+  const [form, setForm] = useState({ employeeId: "", certName: "", issuingBody: "", certNumber: "", issueDate: todayISO(), expiryDate: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { fetchProfiles().then(p => setProfiles(p.filter(x => x.status === "Active"))).catch(err => setError(err.message)); }, []);
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.employeeId || !form.certName.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("certifications").insert({
+        employee_id: form.employeeId,
+        cert_name: form.certName.trim(),
+        issuing_body: form.issuingBody.trim() || null,
+        cert_number: form.certNumber.trim() || null,
+        issue_date: form.issueDate,
+        expiry_date: form.expiryDate || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Added certification "${form.certName}"`, "HR");
+      onAdded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Add Certification" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Employee">
+        <TSelect required value={form.employeeId} onChange={e => setForm(f => ({ ...f, employeeId: e.target.value }))}>
+          <option value="">Select employee…</option>
+          {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </TSelect>
+      </Field>
+      <Field label="Certification Name"><TInput required value={form.certName} onChange={e => setForm(f => ({ ...f, certName: e.target.value }))} placeholder="e.g. Confined Space Entry" /></Field>
+      <div className="mis-grid-2">
+        <Field label="Issuing Body (optional)"><TInput value={form.issuingBody} onChange={e => setForm(f => ({ ...f, issuingBody: e.target.value }))} /></Field>
+        <Field label="Certificate Number (optional)"><TInput value={form.certNumber} onChange={e => setForm(f => ({ ...f, certNumber: e.target.value }))} /></Field>
+      </div>
+      <div className="mis-grid-2">
+        <Field label="Issue Date"><TInput required type="date" value={form.issueDate} onChange={e => setForm(f => ({ ...f, issueDate: e.target.value }))} /></Field>
+        <Field label="Expiry Date (optional)"><TInput type="date" value={form.expiryDate} onChange={e => setForm(f => ({ ...f, expiryDate: e.target.value }))} /></Field>
+      </div>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
+// Finance — Budgets. Admin/finance set a budget per expense category and
+// period; "actual" spend is computed here from Approved/Paid expenses in
+// that category and period, not stored — matching budgets' RLS exactly
+// (budgets_select/_write in 20260813193352_certifications_budgets.sql).
+// Scoped to Expense categories only — Purchasing isn't migrated to this
+// schema yet (see docs/architecture.md), so a budget can't yet cover it.
+// ---------------------------------------------------------------------------
+function BudgetsPanel({ currentUser, logAction, lang }) {
+  const [budgets, setBudgets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [b, c, e] = await Promise.all([fetchBudgets(), fetchExpenseCategories(), fetchExpenses()]);
+      setBudgets(b);
+      setCategories(c);
+      setExpenses(e);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  const categoryLabel = key => { const c = categories.find(x => x.key === key); return c ? c.label : key; };
+  function actualFor(b) {
+    return expenses
+      .filter(e => e.category === b.category && ["Approved", "Paid"].includes(e.status) && e.expense_date >= b.period_start && e.expense_date <= b.period_end)
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+  }
+
+  if (loading) return <div className="mis-empty">Loading budgets…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> Set Budget</button>
+    </div>
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        { header: "Category", render: r => <span style={{ color: "var(--text-primary)" }}>{categoryLabel(r.category)}</span> },
+        { header: "Period", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.period_start} → {r.period_end}</span> },
+        { header: "Budget", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtGHS(r.amount)}</span> },
+        { header: "Actual", render: r => { const a = actualFor(r); return <span className="mis-mono" style={{ fontSize: 12, color: a > r.amount ? "var(--vital)" : "var(--text-secondary)" }}>{fmtGHS(a)}</span>; } },
+        { header: "Remaining", render: r => { const rem = r.amount - actualFor(r); return <span className="mis-mono" style={{ fontSize: 12, color: rem < 0 ? "var(--vital)" : "var(--safe)" }}>{fmtGHS(rem)}</span>; } },
+      ]}
+      rows={budgets}
+      rowKey={r => r.id}
+      empty="No budgets set yet."
+    />
+    {showAdd && <SetBudgetModal categories={categories} currentUser={currentUser} logAction={logAction} onClose={() => setShowAdd(false)} onAdded={async () => { setShowAdd(false); await reload(); }} />}
+  </div>;
+}
+function SetBudgetModal({ categories, currentUser, logAction, onClose, onAdded }) {
+  const [form, setForm] = useState({ category: categories[0] ? categories[0].key : "", periodStart: "", periodEnd: "", amount: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.category || !form.periodStart || !form.periodEnd || !form.amount || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("budgets").insert({
+        category: form.category,
+        period_start: form.periodStart,
+        period_end: form.periodEnd,
+        amount: Number(form.amount),
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Set budget for ${form.category} (${form.periodStart} to ${form.periodEnd})`, "Finance");
+      onAdded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Set Budget" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Category">
+        <TSelect value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+          {categories.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+        </TSelect>
+      </Field>
+      <div className="mis-grid-2">
+        <Field label="Period Start"><TInput required type="date" value={form.periodStart} onChange={e => setForm(f => ({ ...f, periodStart: e.target.value }))} /></Field>
+        <Field label="Period End"><TInput required type="date" value={form.periodEnd} onChange={e => setForm(f => ({ ...f, periodEnd: e.target.value }))} /></Field>
+      </div>
+      <Field label="Budget Amount (GH₵)"><TInput required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance — Expenses. Same self-service + admin/finance-manage shape as
 // Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
 // in 20260812000200_hr_finance.sql — note the submitter can't approve
@@ -5971,6 +6207,8 @@ function SetvacoBusinessSystem() {
           {nav === "payroll" && <PayrollPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "performance" && <PerformancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "pettyCash" && <PettyCashPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "certifications" && <CertificationsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "budgets" && <BudgetsPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
