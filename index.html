@@ -1756,14 +1756,6 @@ const initialQuotations = [
 const initialInvoices = [
   { id: "INV-6001", quotationId: "QT-9003", type: "part", customerId: "C-03", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], subtotal: 850, applyTax: false, taxRate: 15, taxAmount: 0, total: 850, status: "Paid", date: "2026-08-01", createdBy: "Kwabena Owusu" }
 ];
-const initialServiceJobs = [
-  { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, eta: "2026-08-12", preparedBy: "K. Boateng", feedbackLog: [], status: "In Progress", date: "2026-08-05", assetId: "AS-1001" },
-  { id: "SJ-208", jobNumber: "SJ-208", customer: "Akwatia Gold Ltd", customerId: "C-02", type: "Feeder Repair", country: "Ghana", description: "Vibrating feeder grizzly bar replacement.", technician: "E. Adonoo", itemId: "WP-1020", itemName: "Feeder Grizzly Bar", qty: 2, eta: "2026-08-06", preparedBy: "E. Adonoo", feedbackLog: [], status: "Completed", date: "2026-08-03", assetId: "" }
-];
-const initialAssets = [
-  { id: "AS-1001", itemId: "EQ-5001", itemName: "Mobile Jaw Crusher MJ-42", customerId: "C-01", serialNumber: "MJ42-2024-0113", installDate: "2024-03-10", warrantyExpiry: "2026-03-10", status: "Active", notes: "Primary crushing unit, Tarkwa site." },
-  { id: "AS-1002", itemId: "EQ-5002", itemName: "Cone Crusher CH430", customerId: "C-02", serialNumber: "CH430-2025-0087", installDate: "2025-11-02", warrantyExpiry: "2027-11-02", status: "Active", notes: "Secondary-stage crusher." }
-];
 const initialPriceBooks = [
   { id: "PB-STD", name: "Standard", isStandard: true },
   { id: "PB-1001", name: "Gold Tier", isStandard: false }
@@ -1781,11 +1773,6 @@ function resolveUnitPrice(item, customer, priceBooks, priceBookEntries) {
   }
   return item.sell;
 }
-const initialServiceContracts = [
-  { id: "SC-1001", customerId: "C-01", assetId: "AS-1001", type: "Annual Maintenance", startDate: "2025-09-01", endDate: "2026-08-31", value: 36000, status: "Active", coverageNotes: "Two scheduled preventive visits + priority call-out response." },
-  { id: "SC-1002", customerId: "C-02", assetId: "AS-1002", type: "Extended Warranty", startDate: "2025-01-15", endDate: "2026-01-15", value: 18000, status: "Active", coverageNotes: "Parts-only extended cover on the cone crusher's wear components." },
-  { id: "SC-1003", customerId: "C-03", assetId: "", type: "Support Plan", startDate: "2026-02-01", endDate: "2027-06-30", value: 9000, status: "Active", coverageNotes: "Phone/email technical support, no on-site visits included." }
-];
 const initialApprovalSettings = { valueThreshold: 20000, directorThreshold: 500000, flaggedCustomers: ["Akwatia Gold Ltd"] };
 const initialEmailTemplates = {
   quotation: { subject: "Quotation {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your quotation {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" },
@@ -2109,6 +2096,70 @@ async function fetchVendors() {
 }
 async function fetchPurchaseOrders() {
   const { data, error } = await window.sb.from("purchase_orders").select("*, purchase_order_lines(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+function mapAssetFromDb(row) {
+  return {
+    id: row.display_code,
+    realId: row.id,
+    itemId: row.item_id || "",
+    itemName: row.item_name,
+    customerId: row.customer_id,
+    serialNumber: row.serial_number || "",
+    installDate: row.install_date || "",
+    warrantyExpiry: row.warranty_expiry || "",
+    status: row.status,
+    notes: row.notes || ""
+  };
+}
+function mapServiceJobFromDb(row) {
+  const notes = row.service_job_notes || [];
+  return {
+    id: row.display_code,
+    realId: row.id,
+    jobNumber: row.display_code,
+    customer: row.customers ? row.customers.name : "",
+    customerId: row.customer_id,
+    type: row.job_type,
+    country: row.country || "",
+    description: row.description || "",
+    technician: row.technician,
+    eta: row.eta || "",
+    preparedBy: row.prepared_by_name || "",
+    feedbackLog: notes.filter(n => n.note_type === "Feedback").map(n => ({ date: (n.created_at || "").slice(0, 10), note: n.note, by: n.author_name || "" })),
+    managerNotes: notes.filter(n => n.note_type === "Manager").map(n => ({ date: (n.created_at || "").slice(0, 10), note: n.note, by: n.author_name || "" })),
+    status: row.status,
+    date: (row.created_at || "").slice(0, 10),
+    assetId: row.asset_id || ""
+  };
+}
+function mapServiceContractFromDb(row) {
+  return {
+    id: row.display_code,
+    realId: row.id,
+    customerId: row.customer_id,
+    assetId: row.asset_id || "",
+    type: row.contract_type,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    value: Number(row.value),
+    status: row.status,
+    coverageNotes: row.coverage_notes || ""
+  };
+}
+async function fetchAssets() {
+  const { data, error } = await window.sb.from("assets").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchServiceJobs() {
+  const { data, error } = await window.sb.from("service_jobs").select("*, customers(name), service_job_notes(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchServiceContracts() {
+  const { data, error } = await window.sb.from("service_contracts").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -2925,10 +2976,29 @@ function DocumentsTable({ docs, customers, kind, onSend, onConvert, onPrint, onD
   />;
 }
 
-function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, setServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose, lang }) {
+function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, reloadServiceJobs, feedbackDraft, setFeedbackDraft, managerDraft, setManagerDraft, onComplete, onCreateQuote, onClose, lang }) {
   const canManage = ["director", "admin", "service"].includes(role);
   const draft = feedbackDraft[job.id] || "";
   const asset = job.assetId ? (assets || []).find(a => a.id === job.assetId) : null;
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteError, setNoteError] = useState("");
+  async function addNote(noteType, text) {
+    if (!text || !text.trim() || noteBusy) return;
+    setNoteBusy(true);
+    setNoteError("");
+    try {
+      const { error } = await window.sb.from("service_job_notes").insert({
+        service_job_id: job.realId, note_type: noteType, note: text.trim(), author_name: currentUser,
+      });
+      if (error) throw error;
+      logAction(currentUser, `Logged ${noteType.toLowerCase()} on ${job.id}`, "Service");
+      await reloadServiceJobs();
+    } catch (err) {
+      setNoteError(err.message);
+    } finally {
+      setNoteBusy(false);
+    }
+  }
   return <Drawer title={tf(lang, "sj.jobDetailsTitle", { id: job.jobNumber })} onClose={onClose}>
     {JOB_FLOW_STAGES.includes(job.status) && <div style={{ marginBottom: 16 }}><PathStepper stages={JOB_FLOW_STAGES} current={job.status} /></div>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
@@ -2945,10 +3015,11 @@ function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, 
     </div>
     <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onCreateQuote(job); onClose(); }}>{t(lang, "cq.createQuotationBtn")}</button>
-      {job.status !== "Completed" && canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => { onComplete(job.id); onClose(); }}><Check size={14} /> {t(lang, "sj.markCompleted")}</button>}
+      {job.status !== "Completed" && canManage && <button type="button" className="mis-btn-primary mis-focus" onClick={() => { onComplete(job); onClose(); }}><Check size={14} /> {t(lang, "sj.markCompleted")}</button>}
     </div>
     <div className="mis-divider" />
     <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>{t(lang, "sj.clientFeedback")}</div>
+    {noteError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{noteError}</p>}
     {(job.feedbackLog || []).length === 0 && <div className="mis-empty">{t(lang, "sj.noFeedbackYet")}</div>}
     {(job.feedbackLog || []).map((f, i) => <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-soft)" }}>
       <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{f.note}</div>
@@ -2956,24 +3027,29 @@ function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, 
     </div>)}
     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
       <TInput value={draft} onChange={e => setFeedbackDraft(d => ({ ...d, [job.id]: e.target.value }))} placeholder={t(lang, "sj.logFeedbackPlaceholder")} />
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendFeedback(setServiceJobs, job.id, draft, currentUser, logAction); setFeedbackDraft(d => ({ ...d, [job.id]: "" })); }}>{t(lang, "sj.logBtn")}</button>
+      <button type="button" disabled={noteBusy} className="mis-btn-ghost mis-focus" onClick={async () => { await addNote("Feedback", draft); setFeedbackDraft(d => ({ ...d, [job.id]: "" })); }}>{t(lang, "sj.logBtn")}</button>
     </div>
-    <ManagerCommentsPanel record={job} role={role} currentUser={currentUser} logAction={logAction} setter={setServiceJobs} draft={managerDraft} setDraft={setManagerDraft} lang={lang} />
+    <ManagerCommentsPanel record={job} role={role} currentUser={currentUser} logAction={logAction} draft={managerDraft} setDraft={setManagerDraft} onAddNote={text => addNote("Manager", text)} lang={lang} />
   </Drawer>;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, reloadCustomers, items, quotations, setQuotations, approvalSettings, priceBooks, priceBookEntries, users, assets, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
+function ServiceJobsTab({ serviceJobs, reloadServiceJobs, customers, setCustomers, reloadCustomers, items, quotations, setQuotations, approvalSettings, priceBooks, priceBookEntries, users, assets, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
   const canManage = ["director", "admin", "service"].includes(role);
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerFields, setNewCustomerFields] = useState({ name: "", country: "" });
   const [managerDraft, setManagerDraft] = useState({});
-  const [detailJob, setDetailJob] = useState(null);
+  // Stored by id, not the row object itself, so the drawer always shows
+  // the freshly reloaded job (e.g. right after logging feedback) instead
+  // of the stale snapshot that was current when it was opened.
+  const [detailJobId, setDetailJobId] = useState(null);
+  const detailJob = detailJobId ? serviceJobs.find(j => j.id === detailJobId) : null;
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [showCreate, setShowCreate] = useState(null);
   const [sendDoc, setSendDoc] = useState(null);
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [completeBusyId, setCompleteBusyId] = useState(null);
 
   async function submit(e) {
     e.preventDefault();
@@ -2983,22 +3059,36 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
     try {
       const customer = await resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId: form.customerId, customers, reloadCustomers, logAction, currentUser });
       if (!customer) return;
-      const jobNumber = uid("SJ", serviceJobs, 3);
-      const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO(), assetId: form.assetId || "" };
-      setServiceJobs(js => [job, ...js]);
-      logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
+      const { error: insertError } = await window.sb.from("service_jobs").insert({
+        customer_id: customer.id, job_type: form.jobType, country: form.country || customer.country,
+        description: form.description || null, eta: form.eta || null, prepared_by_name: form.preparedBy || currentUser,
+        asset_id: form.assetId || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Logged a service job (${form.jobType}) for ${customer.name}`, "Service");
       setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
       setIsNewCustomer(false);
       setNewCustomerFields({ name: "", country: "" });
+      await reloadServiceJobs();
     } catch (err) {
       setSubmitError(err.message);
     } finally {
       setSubmitBusy(false);
     }
   }
-  function complete(id) {
-    setServiceJobs(js => js.map(j => j.id === id ? { ...j, status: "Completed" } : j));
-    logAction(currentUser, `Completed service job ${id}`, "Service");
+  async function complete(job) {
+    if (completeBusyId) return;
+    setCompleteBusyId(job.realId);
+    try {
+      const { error } = await window.sb.from("service_jobs").update({ status: "Completed" }).eq("id", job.realId);
+      if (error) throw error;
+      logAction(currentUser, `Completed service job ${job.id}`, "Service");
+      await reloadServiceJobs();
+    } catch (err) {
+      setSubmitError(err.message);
+    } finally {
+      setCompleteBusyId(null);
+    }
   }
   function openQuoteFor(job) {
     setShowCreate({ defaultCustomerId: job.customerId, defaultLines: [{ itemId: "", desc: `${job.type} — ${job.description || "service job"}`, qty: 1, unitPrice: 0, newPart: true }] });
@@ -3034,13 +3124,13 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
         { header: t(lang, "common.status"), render: j => { const cs = statusColor(j.status); return <Badge color={cs[0]} soft={cs[1]}>{j.status}</Badge>; } },
         { header: t(lang, "cq.preparedBy"), render: j => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{j.preparedBy || "—"}</span> },
         { header: t(lang, "cq.eta"), render: j => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{j.eta || "—"}</span> },
-        { header: "", render: j => <button type="button" className="mis-link-btn" onClick={() => setDetailJob(j)}>{t(lang, "dt.details")}</button> }
+        { header: "", render: j => <button type="button" className="mis-link-btn" onClick={() => setDetailJobId(j.id)}>{t(lang, "dt.details")}</button> }
       ]}
       rows={serviceJobs}
       rowKey={j => j.id}
       empty={t(lang, "sj.noServiceJobsYet")}
     />
-    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} assets={assets} role={role} currentUser={currentUser} logAction={logAction} setServiceJobs={setServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJob(null)} lang={lang} />}
+    {detailJob && <JobDetailDrawer job={detailJob} customer={customers.find(c => c.id === detailJob.customerId)} assets={assets} role={role} currentUser={currentUser} logAction={logAction} reloadServiceJobs={reloadServiceJobs} feedbackDraft={feedbackDraft} setFeedbackDraft={setFeedbackDraft} managerDraft={managerDraft} setManagerDraft={setManagerDraft} onComplete={complete} onCreateQuote={openQuoteFor} onClose={() => setDetailJobId(null)} lang={lang} />}
     {showCreate && <CreateQuotationModal
       type="part"
       customers={customers} setCustomers={setCustomers}
@@ -3168,12 +3258,23 @@ function appendManagerNote(setter, id, note, currentUser, logAction) {
   setter(list => list.map(x => x.id === id ? { ...x, managerNotes: [...(x.managerNotes || []), { date: todayISO(), note: note.trim(), by: currentUser }] } : x));
   logAction(currentUser, `Added manager comment on ${id}`, "Sales");
 }
-function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, draft, setDraft, lang }) {
+// onAddNote is optional: pass an async(text) callback to persist the note
+// for real (used by JobDetailDrawer, where service jobs are backed by the
+// database); omit it to keep the original local-state-only behavior
+// (still used by QuotationDetailDrawer, whose feedback/manager notes
+// aren't migrated to real storage yet).
+function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, draft, setDraft, onAddNote, lang }) {
   const notes = record.managerNotes || [];
   const canView = ["director", "admin", "finance"].includes(role) || notes.length > 0;
   const canComment = ["director", "admin", "finance"].includes(role);
   if (!canView) return null;
   const text = draft[record.id] || "";
+  async function submit() {
+    if (!text.trim()) return;
+    if (onAddNote) await onAddNote(text);
+    else appendManagerNote(setter, record.id, text, currentUser, logAction);
+    setDraft(d => ({ ...d, [record.id]: "" }));
+  }
   return <React.Fragment>
     <div className="mis-divider" />
     <div style={{ fontSize: 11, color: "var(--text-tertiary)", margin: "12px 0 8px", textTransform: "uppercase" }}>{t(lang, "sj.managerComments")}</div>
@@ -3184,7 +3285,7 @@ function ManagerCommentsPanel({ record, role, currentUser, logAction, setter, dr
     </div>)}
     {canComment && <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
       <TInput value={text} onChange={e => setDraft(d => ({ ...d, [record.id]: e.target.value }))} placeholder={t(lang, "sj.commentPlaceholder")} />
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { appendManagerNote(setter, record.id, text, currentUser, logAction); setDraft(d => ({ ...d, [record.id]: "" })); }}>{t(lang, "sj.commentBtn")}</button>
+      <button type="button" className="mis-btn-ghost mis-focus" onClick={submit}>{t(lang, "sj.commentBtn")}</button>
     </div>}
   </React.Fragment>;
 }
@@ -3763,23 +3864,38 @@ function Customers({ role, currentUser, customers, setCustomers, countries, relo
 // ---------------------------------------------------------------------------
 // INSTALLED BASE (ASSETS)
 // ---------------------------------------------------------------------------
-function CreateAssetModal({ customers, items, assets, setAssets, currentUser, logAction, onClose, lang }) {
+function CreateAssetModal({ customers, items, reloadAssets, currentUser, logAction, onClose, lang }) {
   const equipmentItems = items.filter(i => i.type === "equipment");
   const [form, setForm] = useState({ itemId: "", customerId: "", serialNumber: "", installDate: todayISO(), warrantyExpiry: "", notes: "" });
-  function submit(e) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
     e.preventDefault();
     const item = equipmentItems.find(i => i.id === form.itemId);
     const customer = customers.find(c => c.id === form.customerId);
-    if (!item || !customer || !form.serialNumber.trim()) return;
-    const asset = { id: uid("AS", assets, 4), itemId: item.id, itemName: item.name, customerId: customer.id, serialNumber: form.serialNumber.trim(), installDate: form.installDate, warrantyExpiry: form.warrantyExpiry, status: "Active", notes: form.notes };
-    setAssets(as => [asset, ...as]);
-    logAction(currentUser, `Registered asset ${asset.id} (${item.name}, S/N ${asset.serialNumber}) for ${customer.name}`, "Installed Base");
-    onClose();
+    if (!item || !customer || !form.serialNumber.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("assets").insert({
+        item_id: item.id, item_name: item.name, customer_id: customer.id, serial_number: form.serialNumber.trim(),
+        install_date: form.installDate || null, warranty_expiry: form.warrantyExpiry || null, notes: form.notes || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Registered asset (${item.name}, S/N ${form.serialNumber.trim()}) for ${customer.name}`, "Installed Base");
+      await reloadAssets();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   return <Modal title={t(lang, "asset.registerAsset")} onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
-    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {t(lang, "asset.registerAsset")}</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {busy ? "Saving…" : t(lang, "asset.registerAsset")}</button>
   </React.Fragment>}>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div className="mis-grid-2">
         <Field label={t(lang, "asset.equipmentCol")}><TSelect required value={form.itemId} onChange={e => setForm(f => ({ ...f, itemId: e.target.value }))}>
@@ -3819,7 +3935,7 @@ function AssetDetailDrawer({ asset, customer, serviceJobs, onClose, lang }) {
     </div>; })}
   </Drawer>;
 }
-function AssetsTab({ role, currentUser, assets, setAssets, customers, items, serviceJobs, logAction, lang }) {
+function AssetsTab({ role, currentUser, assets, reloadAssets, customers, items, serviceJobs, logAction, lang }) {
   const canCreate = ["director", "admin", "sales", "service"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState(null);
@@ -3837,29 +3953,45 @@ function AssetsTab({ role, currentUser, assets, setAssets, customers, items, ser
       { header: t(lang, "asset.serviceHistory"), render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{serviceJobs.filter(j => j.assetId === a.id).length}</span> },
       { header: t(lang, "common.actions"), render: a => <button type="button" className="mis-link-btn" onClick={() => setDetail(a)}>{t(lang, "dt.details")}</button> }
     ]} rows={assets} rowKey={a => a.id} empty={t(lang, "asset.noAssetsYet")} />
-    {showCreate && <CreateAssetModal customers={customers} items={items} assets={assets} setAssets={setAssets} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {showCreate && <CreateAssetModal customers={customers} items={items} reloadAssets={reloadAssets} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
     {detail && <AssetDetailDrawer asset={detail} customer={customers.find(c => c.id === detail.customerId)} serviceJobs={serviceJobs} onClose={() => setDetail(null)} lang={lang} />}
   </div>;
 }
 // ---------------------------------------------------------------------------
 // SERVICE CONTRACTS
 // ---------------------------------------------------------------------------
-function CreateContractModal({ customers, assets, contracts, setContracts, currentUser, logAction, onClose, lang }) {
+function CreateContractModal({ customers, assets, reloadServiceContracts, currentUser, logAction, onClose, lang }) {
   const [form, setForm] = useState({ customerId: "", assetId: "", type: "", startDate: todayISO(), endDate: "", value: 0, coverageNotes: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const customerAssets = assets.filter(a => a.customerId === form.customerId);
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     const customer = customers.find(c => c.id === form.customerId);
-    if (!customer || !form.type.trim() || !form.endDate) return;
-    const contract = { id: uid("SC", contracts, 4), customerId: customer.id, assetId: form.assetId || "", type: form.type.trim(), startDate: form.startDate, endDate: form.endDate, value: Number(form.value) || 0, status: "Active", coverageNotes: form.coverageNotes };
-    setContracts(cs => [contract, ...cs]);
-    logAction(currentUser, `Created service contract ${contract.id} (${contract.type}) for ${customer.name}`, "Service Contracts");
-    onClose();
+    if (!customer || !form.type.trim() || !form.endDate || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("service_contracts").insert({
+        customer_id: customer.id, asset_id: form.assetId || null, contract_type: form.type.trim(),
+        start_date: form.startDate, end_date: form.endDate, value: Number(form.value) || 0,
+        coverage_notes: form.coverageNotes || null,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Created a service contract (${form.type.trim()}) for ${customer.name}`, "Service Contracts");
+      await reloadServiceContracts();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   return <Modal title={t(lang, "contract.createContract")} onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
-    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {t(lang, "contract.createContract")}</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}><Plus size={14} /> {busy ? "Saving…" : t(lang, "contract.createContract")}</button>
   </React.Fragment>}>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div className="mis-grid-2">
         <Field label={t(lang, "cust.customerCol")}><TSelect required value={form.customerId} onChange={e => setForm(f => ({ ...f, customerId: e.target.value, assetId: "" }))}>
@@ -3883,16 +4015,29 @@ function CreateContractModal({ customers, assets, contracts, setContracts, curre
     </form>
   </Modal>;
 }
-function ContractDetailDrawer({ contract, customer, asset, role, currentUser, logAction, setContracts, onClose, lang }) {
+function ContractDetailDrawer({ contract, customer, asset, role, currentUser, logAction, reloadServiceContracts, onClose, lang }) {
   const canCancel = ["director", "admin", "finance"].includes(role) && contract.status !== "Cancelled";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const display = contractDisplayStatus(contract);
   const cs = statusColor(display);
-  function cancelContract() {
-    setContracts(list => list.map(c => c.id === contract.id ? { ...c, status: "Cancelled" } : c));
-    logAction(currentUser, `Cancelled service contract ${contract.id}`, "Service Contracts");
-    onClose();
+  async function cancelContract() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: updateError } = await window.sb.from("service_contracts").update({ status: "Cancelled" }).eq("id", contract.realId);
+      if (updateError) throw updateError;
+      logAction(currentUser, `Cancelled service contract ${contract.id}`, "Service Contracts");
+      await reloadServiceContracts();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
   }
   return <Drawer title={contract.id} onClose={onClose}>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
       <div className="mis-kv"><span>{t(lang, "cust.customerCol")}</span><b>{customer ? customer.name : "—"}</b></div>
       <div className="mis-kv"><span>{t(lang, "contract.type")}</span><b>{contract.type}</b></div>
@@ -3904,10 +4049,10 @@ function ContractDetailDrawer({ contract, customer, asset, role, currentUser, lo
       <div className="mis-divider" />
       <div className="mis-kv" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}><span>{t(lang, "contract.coverageNotes")}</span><span style={{ color: "var(--text-primary)" }}>{contract.coverageNotes || "—"}</span></div>
     </div>
-    {canCancel && <button type="button" className="mis-btn-danger" onClick={cancelContract}>{t(lang, "contract.cancelContract")}</button>}
+    {canCancel && <button type="button" disabled={busy} className="mis-btn-danger" onClick={cancelContract}>{t(lang, "contract.cancelContract")}</button>}
   </Drawer>;
 }
-function ContractsTab({ role, currentUser, contracts, setContracts, customers, assets, logAction, lang }) {
+function ContractsTab({ role, currentUser, contracts, reloadServiceContracts, customers, assets, logAction, lang }) {
   const canCreate = ["director", "admin", "service", "finance"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [detail, setDetail] = useState(null);
@@ -3924,8 +4069,8 @@ function ContractsTab({ role, currentUser, contracts, setContracts, customers, a
       { header: t(lang, "contract.value"), render: c => <span className="mis-mono">{fmtGHS(c.value)}</span> },
       { header: t(lang, "common.actions"), render: c => <button type="button" className="mis-link-btn" onClick={() => setDetail(c)}>{t(lang, "dt.details")}</button> }
     ]} rows={contracts} rowKey={c => c.id} empty={t(lang, "contract.noContractsYet")} />
-    {showCreate && <CreateContractModal customers={customers} assets={assets} contracts={contracts} setContracts={setContracts} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
-    {detail && <ContractDetailDrawer contract={detail} customer={customers.find(c => c.id === detail.customerId)} asset={assets.find(a => a.id === detail.assetId)} role={role} currentUser={currentUser} logAction={logAction} setContracts={setContracts} onClose={() => setDetail(null)} lang={lang} />}
+    {showCreate && <CreateContractModal customers={customers} assets={assets} reloadServiceContracts={reloadServiceContracts} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {detail && <ContractDetailDrawer contract={detail} customer={customers.find(c => c.id === detail.customerId)} asset={assets.find(a => a.id === detail.assetId)} role={role} currentUser={currentUser} logAction={logAction} reloadServiceContracts={reloadServiceContracts} onClose={() => setDetail(null)} lang={lang} />}
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -6359,10 +6504,19 @@ function SetvacoBusinessSystem() {
   async function reloadPurchaseOrders() {
     setPurchaseOrders((await fetchPurchaseOrders()).map(mapPurchaseOrderFromDb));
   }
+  async function reloadAssets() {
+    setAssets((await fetchAssets()).map(mapAssetFromDb));
+  }
+  async function reloadServiceJobs() {
+    setServiceJobs((await fetchServiceJobs()).map(mapServiceJobFromDb));
+  }
+  async function reloadServiceContracts() {
+    setServiceContracts((await fetchServiceContracts()).map(mapServiceContractFromDb));
+  }
 
-  // Loads real Customers/Stock Room/Sales/Users/Purchasing data once we
-  // know who's signed in (RLS needs an authenticated session to return any
-  // rows at all).
+  // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
+  // data once we know who's signed in (RLS needs an authenticated session
+  // to return any rows at all).
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
@@ -6375,7 +6529,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6383,6 +6537,9 @@ function SetvacoBusinessSystem() {
           setUsers(profileRows);
           setVendors(vendorRows.map(mapVendorFromDb));
           setPurchaseOrders(poRows.map(mapPurchaseOrderFromDb));
+          setAssets(assetRows.map(mapAssetFromDb));
+          setServiceJobs(serviceJobRows.map(mapServiceJobFromDb));
+          setServiceContracts(contractRows.map(mapServiceContractFromDb));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -6424,9 +6581,12 @@ function SetvacoBusinessSystem() {
   const [quotations, setQuotations] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
-  const [serviceJobs, setServiceJobs] = useState(() => (persisted && persisted.serviceJobs) || initialServiceJobs);
-  const [assets, setAssets] = useState(() => (persisted && persisted.assets) || initialAssets);
-  const [serviceContracts, setServiceContracts] = useState(() => (persisted && persisted.serviceContracts) || initialServiceContracts);
+  // Service Jobs/Assets/Contracts load from the real database (see the
+  // data-fetching useEffect below) — no local demo fallback, same as
+  // customers/stock/vendors.
+  const [serviceJobs, setServiceJobs] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [serviceContracts, setServiceContracts] = useState([]);
   const [savedReports, setSavedReports] = useState(() => (persisted && persisted.savedReports) || []);
   const [priceBooks, setPriceBooks] = useState(() => (persisted && persisted.priceBooks) || initialPriceBooks);
   const [priceBookEntries, setPriceBookEntries] = useState(() => (persisted && persisted.priceBookEntries) || initialPriceBookEntries);
@@ -6627,10 +6787,10 @@ function SetvacoBusinessSystem() {
           {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} items={items} taxProfiles={taxProfiles} reloadSales={reloadSales} reloadCustomers={reloadCustomers} reloadStock={reloadStock} quotations={quotations} setQuotations={setQuotations} invoices={invoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
-          {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
-          {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} setContracts={setServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
+          {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} reloadAssets={reloadAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
+          {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} reloadServiceContracts={reloadServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
-          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} reloadServiceJobs={reloadServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} vendors={vendors} reloadVendors={reloadVendors} items={items} reloadStock={reloadStock} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "attendance" && <AttendancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}

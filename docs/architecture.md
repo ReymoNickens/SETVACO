@@ -258,8 +258,8 @@ admin can escalate it.
   server-side), Budgets (admin/finance set an amount per expense category
   and period, `budgets` — "actual" spend is computed by the frontend from
   Approved/Paid expenses in that category and period; deliberately scoped
-  to Expense categories only since Purchasing isn't migrated to this
-  schema yet), Payroll (admin/finance run a pay period through
+  to Expense categories only, not Purchasing — a budget spanning both would
+  need its own design pass), Payroll (admin/finance run a pay period through
   `run_payroll()` — a SECURITY DEFINER RPC that's the *only* way
   `payroll_runs`/`payslips` rows are created; direct INSERT/UPDATE/DELETE
   on both tables is revoked from `authenticated`, same posture as
@@ -285,10 +285,20 @@ admin can escalate it.
   an inbound industry-standard code to one of SETVACO's own customers) —
   never neither. See `20260813210923_purchasing.sql`.
 
+- Service Bay: Active Jobs (`service_jobs`, admin/service/warehouse read,
+  admin/service write — customer/asset cross-tenant validated server-side),
+  Installed Base (`assets`, admin/sales/service/finance read, admin/sales/
+  service write), Service Contracts (`service_contracts`, admin/service/
+  finance read/create, admin/finance can cancel). Client feedback and
+  internal manager commentary on a job are unified in `service_job_notes`
+  (`note_type` discriminates, same shape as `performance_records`) — no
+  update/delete, a correction is a new note. Display status
+  (Expiring Soon/Expired for contracts, warranty status for assets) is
+  computed by the frontend from date columns, not stored. See
+  `20260813240000_service_jobs_assets_contracts.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): service jobs, assets, service contracts, reports, price
-books, notifications, variance/audit. These need their own migrations
-(`service_jobs`, an assets/contracts schema) before they're real.
+this schema): reports, price books, notifications, variance/audit.
 `nav_permissions` (server-side mirror of the role→nav-item matrix) also
 doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
 (Finance) are natural next steps now that Purchasing/Vendors are real, but
