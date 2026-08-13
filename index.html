@@ -242,12 +242,12 @@ const Style = () => <style>{`
   .mis-table td { padding: 9px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
   .mis-table tbody tr:hover { background: var(--panel-alt); }
   .mis-table-wrap { overflow-x: auto; }
-  .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:flex-start; justify-content:center; padding: 5vh 16px; overflow-y:auto; z-index: 80; }
-  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 640px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  .mis-modal.wide { max-width: 940px; }
-  .mis-modal-head { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); }
-  .mis-modal-body { padding: 20px; display:flex; flex-direction:column; gap:14px; max-height: 72vh; overflow-y:auto; }
-  .mis-modal-foot { padding: 14px 20px; border-top: 1px solid var(--border-soft); display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:flex-start; justify-content:center; padding: 3vh 16px; overflow-y:auto; z-index: 80; }
+  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 720px; max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .mis-modal.wide { max-width: 980px; }
+  .mis-modal-head { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); flex-shrink: 0; }
+  .mis-modal-body { padding: 20px; display:flex; flex-direction:column; gap:14px; overflow-y:auto; flex: 1 1 auto; min-height: 0; }
+  .mis-modal-foot { padding: 14px 20px; border-top: 1px solid var(--border-soft); display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; flex-shrink: 0; }
   .mis-tabs { display:flex; gap: 4px; border-bottom: 1px solid var(--border-soft); flex-wrap:wrap; }
   .mis-tab { padding: 9px 14px; font-size: 13px; color: var(--text-secondary); cursor:pointer; border-bottom: 2px solid transparent; background:none; border-left:none; border-right:none; border-top:none; }
   .mis-tab:hover { color: var(--text-primary); }
