@@ -423,8 +423,8 @@ function RolePill({ role, lang }) {
   const bg = ROLE_COLORS[role] || "var(--sky)";
   return <span className="mis-badge" style={{ background: bg, color: "#FFFFFF" }}>{lang ? t(lang, "role." + role) : ((ROLES[role] || {}).label || role)}</span>;
 }
-function Toggle({ on, onChange }) {
-  return <button type="button" onClick={onChange} className="mis-focus" style={{ width: 40, height: 22, borderRadius: 999, position: "relative", flexShrink: 0, background: on ? "var(--ore)" : "var(--border)", transition: "background 0.15s ease", border: "none", cursor: "pointer" }}>
+function Toggle({ on, onChange, disabled }) {
+  return <button type="button" onClick={onChange} disabled={disabled} className="mis-focus" style={{ width: 40, height: 22, borderRadius: 999, position: "relative", flexShrink: 0, background: on ? "var(--ore)" : "var(--border)", transition: "background 0.15s ease", border: "none", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1 }}>
     <span style={{ position: "absolute", top: 2, left: on ? 20 : 2, width: 18, height: 18, borderRadius: "50%", background: "#FFFFFF", transition: "left 0.15s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.25)" }} />
   </button>;
 }
@@ -750,6 +750,7 @@ const TRANSLATIONS = {
     "salesov.forecastSent": "Sent",
     "salesov.forecastInvoiced": "Invoiced",
     "common.cancel": "Cancel",
+    "common.saving": "Saving...",
     "common.branch": "Branch",
     "inv.part": "Part",
     "inv.equipment": "Equipment",
@@ -916,7 +917,7 @@ const TRANSLATIONS = {
     "ua.fullName": "Full name",
     "ua.username": "Username",
     "ua.tempPassword": "Temporary password",
-    "ua.tempPasswordHint": "Demo only — no real authentication is implemented in this prototype",
+    "ua.tempPasswordHint": "A temporary password is generated automatically. The new user sets their own password via the sign-in screen's password reset link.",
     "ua.accessLevel": "Access level / role",
     "ua.accessLevelCol": "Access level",
     "ua.activeCol": "Active",
@@ -1283,6 +1284,7 @@ const TRANSLATIONS = {
     "salesov.forecastSent": "Envoyé",
     "salesov.forecastInvoiced": "Facturé",
     "common.cancel": "Annuler",
+    "common.saving": "Enregistrement...",
     "common.branch": "Succursale",
     "inv.part": "Pièce",
     "inv.equipment": "Équipement",
@@ -1449,7 +1451,7 @@ const TRANSLATIONS = {
     "ua.fullName": "Nom complet",
     "ua.username": "Nom d'utilisateur",
     "ua.tempPassword": "Mot de passe temporaire",
-    "ua.tempPasswordHint": "Démonstration uniquement — aucune authentification réelle n'est implémentée dans ce prototype",
+    "ua.tempPasswordHint": "Un mot de passe temporaire est généré automatiquement. Le nouvel utilisateur définit son propre mot de passe via le lien de réinitialisation de l'écran de connexion.",
     "ua.accessLevel": "Niveau d'accès / rôle",
     "ua.accessLevelCol": "Niveau d'accès",
     "ua.activeCol": "Actif",
@@ -1765,15 +1767,6 @@ const initialEmailTemplates = {
   quotation: { subject: "Quotation {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your quotation {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" },
   invoice: { subject: "Invoice {{orderId}} from SETVACO Holding Ltd", body: "Dear {{customer}},\n\nPlease find below your invoice {{orderId}}, total {{total}}.\n\n{{lines}}\n\nKind regards,\n{{sender}}\nSETVACO Holding Limited" }
 };
-const initialUsers = [
-  { id: "U-00", name: "Kwesi Setrana", email: "k.setrana@setvaco.com", username: "ksetrana", role: "director", status: "Active" },
-  { id: "U-01", name: "Efua Mensah", email: "e.mensah@setvaco.com", username: "emensah", role: "admin", status: "Active" },
-  { id: "U-02", name: "Kwabena Owusu", email: "k.owusu@setvaco.com", username: "kowusu", role: "sales", status: "Active" },
-  { id: "U-03", name: "Yaw Darko", email: "y.darko@setvaco.com", username: "ydarko", role: "warehouse", status: "Active" },
-  { id: "U-04", name: "Abena Sarpong", email: "a.sarpong@setvaco.com", username: "asarpong", role: "procurement", status: "Active" },
-  { id: "U-05", name: "Kojo Boateng", email: "k.boateng@setvaco.com", username: "kboateng", role: "service", status: "Active" },
-  { id: "U-06", name: "Adjoa Amponsah", email: "a.amponsah@setvaco.com", username: "aamponsah", role: "finance", status: "Active" }
-];
 const initialAuditLog = [
   { id: "AL-001", ts: "2026-08-05T09:12:00", user: "Kwabena Owusu", action: "Created quotation QT-9001 for Chorkor Mines Ltd", module: "Sales", comments: [] },
   { id: "AL-002", ts: "2026-08-05T10:40:00", user: "Abena Sarpong", action: "Raised PO-7705 to Sandvik Parts Distribution", module: "Purchasing", comments: [] },
@@ -1947,6 +1940,13 @@ async function fetchExpenseCategories() {
 }
 async function fetchExpenses() {
   const { data, error } = await window.sb.from("expenses").select("*, profiles!expenses_submitted_by_fkey(name)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+// Company roster for Users & Access / Staff Activity / the "send document"
+// cc-picker.
+async function fetchProfiles() {
+  const { data, error } = await window.sb.from("profiles").select("id, name, email, username, role, status").order("name");
   if (error) throw error;
   return data;
 }
@@ -3842,30 +3842,39 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
 // ---------------------------------------------------------------------------
 // USERS & ACCESS
 // ---------------------------------------------------------------------------
-function CreateUserModal({ users, setUsers, currentUser, logAction, onClose, lang }) {
-  const [form, setForm] = useState({ name: "", email: "", username: "", password: "", role: "sales" });
-  function submit(e) {
+function CreateUserModal({ onCreated, onClose, lang }) {
+  const [form, setForm] = useState({ name: "", email: "", username: "", role: "sales" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.username.trim()) return;
-    const user = { id: uid("U", users, 2), name: form.name, email: form.email, username: form.username, role: form.role, status: "Active" };
-    setUsers(us => [...us, user]);
-    logAction(currentUser, `Created user account for ${user.name} (${ROLES[user.role].label})`, "Users & Access");
+    setBusy(true);
+    setError("");
+    const { data, error: invokeError } = await window.sb.functions.invoke("admin-manage-user", {
+      body: { action: "create", name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role },
+    });
+    setBusy(false);
+    if (invokeError || (data && data.error)) {
+      setError((data && data.error) || invokeError.message);
+      return;
+    }
+    await onCreated();
     onClose();
   }
   return <Modal title={t(lang, "ua.createUserAccountTitle")} onClose={onClose} footer={<React.Fragment>
     <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
-    <button type="button" className="mis-btn-primary mis-focus" onClick={submit}><UserPlus size={14} /> {t(lang, "ua.createAccountBtn")}</button>
+    <button type="button" className="mis-btn-primary mis-focus" disabled={busy} onClick={submit}><UserPlus size={14} /> {busy ? t(lang, "common.saving") : t(lang, "ua.createAccountBtn")}</button>
   </React.Fragment>}>
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
       <Field label={t(lang, "ua.fullName")}><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
       <div className="mis-grid-2">
         <Field label={t(lang, "cust.companyEmail")}><TInput type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="name@setvaco.com" /></Field>
         <Field label={t(lang, "ua.username")}><TInput required value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} /></Field>
       </div>
-      <div className="mis-grid-2">
-        <Field label={t(lang, "ua.tempPassword")} hint={t(lang, "ua.tempPasswordHint")}><TInput type="password" required value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></Field>
-        <Field label={t(lang, "ua.accessLevel")}><TSelect value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>{Object.keys(ROLES).map(k => <option key={k} value={k}>{t(lang, "role." + k)}</option>)}</TSelect></Field>
-      </div>
+      <Field label={t(lang, "ua.accessLevel")}><TSelect value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>{Object.keys(ROLES).map(k => <option key={k} value={k}>{t(lang, "role." + k)}</option>)}</TSelect></Field>
+      <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "ua.tempPasswordHint")}</p>
     </form>
   </Modal>;
 }
@@ -3930,11 +3939,12 @@ function PriceBooksPanel({ priceBooks, setPriceBooks, priceBookEntries, setPrice
   </div>;
 }
 
-function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, logAction, lang }) {
+function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, logAction, lang }) {
   const isSuperUser = ["admin", "director"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [statusBusyId, setStatusBusyId] = useState(null);
   function updateTemplate(key, field, value) {
     setEmailTemplates(et => ({ ...et, [key]: { ...et[key], [field]: value } }));
   }
@@ -3942,16 +3952,16 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
     logAction(currentUser, "Updated email templates", "Users & Access");
     setEditingTemplate(null);
   }
-  function setUserRole(id, newRole) {
-    const u = users.find(x => x.id === id);
-    setUsers(us => us.map(x => x.id === id ? { ...x, role: newRole } : x));
-    logAction(currentUser, `Changed access level for ${u ? u.name : id} to ${ROLES[newRole].label}`, "Users & Access");
-  }
-  function toggleStatus(id) {
+  async function toggleStatus(id) {
     const u = users.find(x => x.id === id);
     const wasActive = u && u.status === "Active";
-    setUsers(us => us.map(x => x.id === id ? { ...x, status: x.status === "Active" ? "Suspended" : "Active" } : x));
-    logAction(currentUser, `${wasActive ? "Suspended" : "Reactivated"} account for ${u ? u.name : id}`, "Users & Access");
+    setStatusBusyId(id);
+    const { error } = await window.sb.functions.invoke("admin-manage-user", {
+      body: { action: wasActive ? "suspend" : "reactivate", userId: id },
+    });
+    setStatusBusyId(null);
+    if (error) { alert(error.message); return; }
+    await reloadUsers();
   }
   function updateThreshold(v) {
     setApprovalSettings(s => ({ ...s, valueThreshold: Number(v) || 0 }));
@@ -4000,8 +4010,8 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
         { header: t(lang, "common.name"), render: u => <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar name={u.name} role={u.role} size={28} /><span style={{ color: "var(--text-primary)" }}>{u.name}</span></div> },
         { header: t(lang, "cust.companyEmail"), render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.email}</span> },
         { header: t(lang, "ua.username"), render: u => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-secondary)" }}>{u.username}</span> },
-        { header: t(lang, "ua.accessLevelCol"), render: u => isSuperUser ? <TSelect value={u.role} onChange={e => setUserRole(u.id, e.target.value)} style={{ width: 190 }}>{Object.keys(ROLES).map(k => <option key={k} value={k}>{t(lang, "role." + k)}</option>)}</TSelect> : <RolePill role={u.role} lang={lang} /> },
-        { header: t(lang, "ua.activeCol"), render: u => isSuperUser ? <Toggle on={u.status === "Active"} onChange={() => toggleStatus(u.id)} /> : (() => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; })() }
+        { header: t(lang, "ua.accessLevelCol"), render: u => <RolePill role={u.role} lang={lang} /> },
+        { header: t(lang, "ua.activeCol"), render: u => isSuperUser ? <Toggle on={u.status === "Active"} disabled={statusBusyId === u.id} onChange={() => toggleStatus(u.id)} /> : (() => { const cs = statusColor(u.status); return <Badge color={cs[0]} soft={cs[1]}>{u.status}</Badge>; })() }
       ]} rows={users} rowKey={u => u.id} empty={t(lang, "ua.noUsersYet")} />
     </div>
     <div>
@@ -4016,7 +4026,7 @@ function UsersAccess({ role, currentUser, users, setUsers, approvalSettings, set
         </table>
       </div>
     </div>
-    {showCreate && <CreateUserModal users={users} setUsers={setUsers} currentUser={currentUser} logAction={logAction} onClose={() => setShowCreate(false)} lang={lang} />}
+    {showCreate && <CreateUserModal onCreated={reloadUsers} onClose={() => setShowCreate(false)} lang={lang} />}
   </div>;
 }
 
@@ -5112,9 +5122,12 @@ function SetvacoBusinessSystem() {
     setInvoices(mappedInvoices);
     return { quotations: mappedQuotations, invoices: mappedInvoices };
   }
+  async function reloadUsers() {
+    setUsers(await fetchProfiles());
+  }
 
-  // Loads real Customers/Stock Room/Sales data once we know who's signed in
-  // (RLS needs an authenticated session to return any rows at all).
+  // Loads real Customers/Stock Room/Sales/Users data once we know who's
+  // signed in (RLS needs an authenticated session to return any rows at all).
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
@@ -5127,11 +5140,12 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices()]).then(([customerRows, roomRows, quotationRows, invoiceRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
           setInvoices(invoiceRows.map(mapInvoiceFromDb));
+          setUsers(profileRows);
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -5176,7 +5190,7 @@ function SetvacoBusinessSystem() {
   const [savedReports, setSavedReports] = useState(() => (persisted && persisted.savedReports) || []);
   const [priceBooks, setPriceBooks] = useState(() => (persisted && persisted.priceBooks) || initialPriceBooks);
   const [priceBookEntries, setPriceBookEntries] = useState(() => (persisted && persisted.priceBookEntries) || initialPriceBookEntries);
-  const [users, setUsers] = useState(() => (persisted && persisted.users) || initialUsers);
+  const [users, setUsers] = useState([]);
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
   const [approvalSettings, setApprovalSettings] = useState(() => (persisted && persisted.approvalSettings) || initialApprovalSettings);
@@ -5384,7 +5398,7 @@ function SetvacoBusinessSystem() {
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
-          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} reloadUsers={reloadUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
           {nav === "meetingroom" && <MeetingRoomPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "meetingscheduled" && <ComingSoonPanel title="Scheduled Meetings" note="Meeting scheduling is planned for a later phase — Start a Meeting works today for instant calls." />}
