@@ -133,31 +133,39 @@ button{cursor:pointer;}
 // STYLE — design tokens + component classes
 // ---------------------------------------------------------------------------
 const Style = () => <style>{`
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  /* Design direction: technical drawing / blueprint. Every token below
+     traces back to an actual engineering-drawing convention (drafting-pen
+     ink blue, drawing-sheet white, a faint grid line color) rather than a
+     generic SaaS brand palette — see docs/design-system.md. Variable NAMES
+     are unchanged from the previous palette on purpose: hundreds of call
+     sites across the file reference these by name, so only the values
+     needed to change to retheme the whole app. */
   .mis-root {
-    --brand: #2A3B94; --brand-deep: #131B4A; --brand-line: rgba(255,255,255,0.09);
-    --paper: #F3F5FC; --panel: #FFFFFF; --panel-alt: #EEF1FB; --border: #DBE1F5; --border-soft: #E9ECFA;
-    --ink: #0F1330; --ink-soft: #565E85; --ink-faint: #8D93B8;
-    --ore: #2A3B94; --ore-soft: rgba(42,59,148,0.09);
-    --coral: #F0555C; --coral-soft: rgba(240,85,92,0.12);
-    --teal: #14B8A6; --teal-soft: rgba(20,184,166,0.12);
-    --sky: #3E7BFA; --sky-soft: rgba(62,123,250,0.11);
-    --amber: #E3A73B; --amber-soft: rgba(227,167,59,0.15);
-    --vital: #DC3E4C; --vital-soft: rgba(220,62,76,0.10);
+    --brand: #1E3A8A; --brand-deep: #14275C; --brand-line: rgba(255,255,255,0.09);
+    --paper: #FFFFFF; --panel: #FFFFFF; --panel-alt: #F6F9FE; --border: #C7D6EF; --border-soft: #DCE6F7;
+    --ink: #101828; --ink-soft: #48546B; --ink-faint: #8493AD;
+    --ore: #1E3A8A; --ore-soft: rgba(30,58,138,0.08);
+    --coral: #B4351E; --coral-soft: rgba(180,53,30,0.10);
+    --teal: #1E7A5C; --teal-soft: rgba(30,122,92,0.10);
+    --sky: #2E5AAC; --sky-soft: rgba(46,90,172,0.10);
+    --amber: #9C6B12; --amber-soft: rgba(156,107,18,0.12);
+    --vital: #B4351E; --vital-soft: rgba(180,53,30,0.10);
     --safe: var(--teal); --safe-soft: var(--teal-soft);
     --caution: var(--amber); --caution-soft: var(--amber-soft);
     --info: var(--sky); --info-soft: var(--sky-soft);
     --text-primary: var(--ink); --text-secondary: var(--ink-soft); --text-tertiary: var(--ink-faint);
-    --shadow-sm: 0 1px 2px rgba(19,27,74,0.07); --shadow-md: 0 14px 30px rgba(19,27,74,0.14), 0 2px 8px rgba(19,27,74,0.06);
-    --shadow-glow: 0 0 0 1px rgba(42,59,148,0.06), 0 18px 40px rgba(42,59,148,0.16);
+    --shadow-sm: 0 1px 0 rgba(16,24,40,0.05); --shadow-md: 0 2px 6px rgba(16,24,40,0.08);
+    --shadow-glow: 0 0 0 1px rgba(30,58,138,0.10);
+    --grid-line: #DCE6F7;
     font-family: 'IBM Plex Sans', sans-serif; background: var(--paper);
-    background-image: radial-gradient(circle at 12% 8%, rgba(42,59,148,0.07), transparent 42%),
-      radial-gradient(circle at 92% 4%, rgba(20,184,166,0.06), transparent 38%),
-      radial-gradient(rgba(19,27,74,0.035) 1px, transparent 1px);
-    background-size: auto, auto, 16px 16px;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
     color: var(--ink);
   }
-  .mis-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+  .mis-display { font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
   .mis-mono { font-family: 'IBM Plex Mono', monospace; }
   .mis-sidebar {
     background: linear-gradient(165deg, var(--brand) 0%, var(--brand-deep) 100%);
@@ -168,11 +176,20 @@ const Style = () => <style>{`
   }
   .mis-panel { background: var(--panel); border: 1px solid var(--border-soft); border-radius: 16px; box-shadow: var(--shadow-sm); }
   .mis-panel-alt { background: var(--panel-alt); border: 1px solid var(--border); }
-  .mis-nav-item { transition: color 0.16s ease; background:none; border:none; text-align:left; cursor:pointer; border-radius: 10px; margin: 0 10px; width: calc(100% - 20px) !important; color: rgba(255,255,255,0.62); position: relative; z-index: 1; }
-  .mis-nav-item:hover { color: #FFFFFF; }
-  .mis-nav-item.active { color: #FFFFFF !important; font-weight: 500; }
-  .mis-nav-pill { position: absolute; left: 10px; right: 10px; border-radius: 10px; background: rgba(255,255,255,0.14); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10); transition: top 0.28s cubic-bezier(.34,1.4,.4,1), height 0.28s cubic-bezier(.34,1.4,.4,1), opacity 0.2s ease; z-index: 0; }
-  .mis-nav-pill::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:2px; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+  /* Sheet-index sidebar — rooms and stations, not icon-and-label nav
+     items. See ROOMS/NAV and Part 3 of docs/design-system.md. */
+  .mis-room { border-bottom: 1px solid var(--brand-line); }
+  .mis-room-head { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; background: none; border: none; width: 100%; text-align: left; transition: background 0.12s ease; }
+  .mis-room-head:hover { background: rgba(255,255,255,0.06); }
+  .mis-room-head.active { background: rgba(255,255,255,0.10); }
+  .mis-room-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; color: #8FB4F0; width: 22px; flex-shrink: 0; }
+  .mis-room-name { font-size: 13px; color: rgba(255,255,255,0.92); flex: 1; }
+  .mis-room-caret { font-size: 9px; color: rgba(255,255,255,0.4); transition: transform 0.15s ease; }
+  .mis-stations { padding: 2px 0 6px; }
+  .mis-station { display: flex; align-items: baseline; gap: 8px; padding: 7px 16px 7px 40px; font-size: 12px; color: rgba(255,255,255,0.68); cursor: pointer; background: none; border: none; width: 100%; text-align: left; border-left: 2px solid transparent; transition: background 0.12s ease, color 0.12s ease; }
+  .mis-station:hover { color: #FFFFFF; background: rgba(255,255,255,0.05); }
+  .mis-station.active { color: #FFFFFF; background: rgba(255,255,255,0.09); border-left-color: #8FB4F0; }
+  .mis-station-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8FB4F0; flex-shrink: 0; }
   .mis-row:hover { background: var(--panel-alt); }
   .mis-btn-primary { background: linear-gradient(135deg, var(--brand) 0%, #3A4EC0 100%); color: #FFFFFF; font-weight: 600; transition: filter 0.14s ease, transform 0.08s ease, box-shadow 0.14s ease; border-radius:10px; padding:9px 16px; font-size:13px; display:inline-flex; align-items:center; gap:6px; border:none; white-space:nowrap; box-shadow: var(--shadow-sm); }
   .mis-btn-primary:hover { filter: brightness(1.1); box-shadow: 0 6px 16px rgba(42,59,148,0.32); transform: translateY(-1px); }
@@ -254,6 +271,15 @@ const Style = () => <style>{`
   .mis-sheet-body { padding: 24px; display:flex; flex-direction:column; gap: 22px; }
   @media (max-width: 720px) { .mis-sheet-overlay { padding: 0; } .mis-sheet { border-radius: 0; min-height: 100vh; } }
   .mis-empty { color: var(--text-tertiary); font-size: 13px; padding: 24px; text-align:center; }
+  /* Dimension-callout: a measured number with a bracket line under it,
+     like a drawing's dimension annotation, instead of a rounded stat card. */
+  .mis-dim-line { position: relative; }
+  .mis-dim-line::before, .mis-dim-line::after { content: ""; position: absolute; top: -3px; width: 1px; height: 7px; background: var(--ink-faint); }
+  .mis-dim-line::before { left: 0; }
+  .mis-dim-line::after { right: 0; }
+  /* Cross-hatch: the pattern a real drawing uses for a cut-away / restricted
+     section — used for empty and no-access states instead of generic grey. */
+  .mis-crosshatch { background-image: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 1px, transparent 1px, transparent 8px); border: 1px dashed var(--border); }
   .mis-link-btn { background:none; border:none; color: var(--info); font-size:12px; text-decoration:underline; padding:0; cursor:pointer; }
   .mis-grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .mis-grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -452,32 +478,63 @@ const ROLES = {
   finance: { label: "Finance / Audit" }
 };
 const ALL_ROLES = Object.keys(ROLES);
-// `feature` maps a nav item to a supabase.tenant_features.feature_key —
-// omit it for items that are core/cross-cutting (Dashboard, Customers) or
-// not yet backed by a real feature key, and it's never gated. See
+// Navigation as a physical office: top-level groups are "rooms" (matching
+// how SETVACO's own office is actually laid out), each containing
+// "stations" for the specific tasks done there — not a flat feature menu.
+// Sheet-index tags (00/ST/SL/...) are wayfinding numbers alongside the
+// plain-English label, never a replacement for it — a new staff member
+// still finds their way by the words, same as before.
+//
+// `feature` (set per room, since a room maps ~1:1 to a tenant_features
+// module) gates the whole room; omit it for rooms that are core/
+// cross-cutting or not yet backed by a real feature key. See
 // company_has_feature() / tenant_features in
 // 20260812000100_tenant_features_branding_platform_admin.sql.
-const NAV = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
-  { key: "partsInventory", label: "Stock Room", icon: Package, roles: ALL_ROLES, feature: "stock_room" },
-  { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["director", "admin", "sales", "warehouse", "procurement", "finance"], feature: "stock_room" },
-  { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"], feature: "sales" },
-  { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"], feature: "sales" },
-  { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"], feature: "sales" },
-  { key: "assets", label: "Installed Base", icon: Tag, roles: ["director", "admin", "sales", "service", "finance"], feature: "service_jobs" },
-  { key: "servicejobs", label: "Service", icon: Wrench, roles: ["director", "admin", "service", "warehouse"], feature: "service_jobs" },
-  { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"], feature: "service_jobs" },
-  { key: "purchasing", label: "Purchasing", icon: Truck, roles: ["director", "admin", "procurement", "finance"], feature: "purchasing" },
-  { key: "employees", label: "Employee Records", icon: Users, roles: ["admin", "hr", "finance"], feature: "hr" },
-  { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]), feature: "hr" },
-  { key: "expenses", label: "Expenses", icon: Receipt, roles: ALL_ROLES.concat(["hr"]), feature: "finance" },
-  { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
-  { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
-  { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
-  { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["director", "admin", "finance"] },
-  { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
-  { key: "financials", label: "Company Financials", icon: BarChart3, roles: ["director"] }
+const ROOMS = [
+  { tag: "00", name: "Dashboard", stations: [
+    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ALL_ROLES },
+  ] },
+  { tag: "ST", name: "Stock Room", feature: "stock_room", stations: [
+    { key: "partsInventory", label: "Inventory Levels", icon: Package, roles: ALL_ROLES },
+    { key: "equipmentInventory", label: "Equipment Inventory", icon: Boxes, roles: ["director", "admin", "sales", "warehouse", "procurement", "finance"] },
+  ] },
+  { tag: "SL", name: "Sales Floor", feature: "sales", stations: [
+    { key: "salesoverview", label: "Sales Overview", icon: LayoutDashboard, roles: ["director", "admin", "sales", "finance"] },
+    { key: "partsales", label: "Parts Sales", icon: ShoppingCart, roles: ["director", "admin", "sales", "warehouse", "finance"] },
+    { key: "equipmentsales", label: "Equipment Sales", icon: Truck, roles: ["director", "admin", "sales", "finance"] },
+    { key: "customers", label: "Customers", icon: Users, roles: ["director", "admin", "sales", "finance"] },
+  ] },
+  { tag: "SV", name: "Service Bay", feature: "service_jobs", stations: [
+    { key: "servicejobs", label: "Active Jobs", icon: Wrench, roles: ["director", "admin", "service", "warehouse"] },
+    { key: "assets", label: "Installed Base", icon: Tag, roles: ["director", "admin", "sales", "service", "finance"] },
+    { key: "contracts", label: "Service Contracts", icon: FileSignature, roles: ["director", "admin", "service", "finance"] },
+  ] },
+  { tag: "PU", name: "Purchasing Office", feature: "purchasing", stations: [
+    { key: "purchasing", label: "Purchase Orders", icon: Truck, roles: ["director", "admin", "procurement", "finance"] },
+  ] },
+  { tag: "HR", name: "HR Office", feature: "hr", stations: [
+    { key: "employees", label: "Employee Records", icon: Users, roles: ["admin", "hr", "finance"] },
+    { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]) },
+  ] },
+  { tag: "FN", name: "Finance Office", feature: "finance", stations: [
+    { key: "expenses", label: "Expenses", icon: Receipt, roles: ALL_ROLES.concat(["hr"]) },
+    { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
+    { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
+  ] },
+  { tag: "AD", name: "Admin Office", stations: [
+    { key: "staffActivity", label: "Staff Activity", icon: MessageSquare, roles: ["director", "admin", "finance"] },
+    { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
+    { key: "financials", label: "Company Financials", icon: BarChart3, roles: ["director"] },
+  ] },
+  { tag: "MR", name: "Meeting Room", stations: [
+    { key: "meetingroom", label: "Start a Meeting", icon: MessageSquare, roles: ALL_ROLES },
+  ] },
 ];
+// Flat, backward-compatible view of the same data — CommandPalette, the
+// role-permission matrix in Users & Access, and the nav-reset effect all
+// already work in terms of one flat list; only the sidebar itself needs to
+// know about rooms/stations.
+const NAV = ROOMS.flatMap(r => r.stations.map(s => ({ ...s, roomTag: r.tag, roomName: r.name, feature: s.feature || r.feature })));
 // Linear happy-path stage sequences for PathStepper. "Pending Approval" and
 // "Rejected" (quotations) are exception branches, not points on this path —
 // PathStepper is only shown when the record's status is actually on it.
@@ -506,15 +563,16 @@ const FORECAST_WEIGHTS = { "Pending Approval": 0.2, Quoted: 0.3, Sent: 0.6, Invo
 const TRANSLATIONS = {
   en: {
     "nav.dashboard": "Dashboard",
-    "nav.partsInventory": "Stock Room",
+    "nav.partsInventory": "Inventory Levels",
     "nav.equipmentInventory": "Equipment Inventory",
     "nav.salesoverview": "Sales Overview",
     "nav.partsales": "Parts Sales",
     "nav.equipmentsales": "Equipment Sales",
     "nav.assets": "Installed Base",
-    "nav.servicejobs": "Service",
+    "nav.servicejobs": "Active Jobs",
     "nav.contracts": "Service Contracts",
-    "nav.purchasing": "Purchasing",
+    "nav.purchasing": "Purchase Orders",
+    "nav.meetingroom": "Start a Meeting",
     "nav.customers": "Customers",
     "nav.reports": "Reports",
     "nav.variance": "Variance & Audit",
@@ -529,12 +587,20 @@ const TRANSLATIONS = {
     "role.service": "Service Technician Lead",
     "role.finance": "Finance / Audit",
     "app.businessSystem": "BUSINESS SYSTEM",
+    "app.drawingSetLive": "Drawing Set · Live",
+    "app.sheetIndex": "Sheet Index",
     "app.internal": "SETVACO · INTERNAL",
     "app.signedInAs": "Signed in as",
     "app.search": "Search or jump to…",
     "app.resetDemo": "Reset demo data",
     "app.footer": "SETVACO HOLDING LTD · PROTOTYPE · DEMO DATA",
     "app.language": "Language",
+    "app.sheet": "Sheet",
+    "app.date": "Date",
+    "app.preparedBy": "Prepared By",
+    "app.role": "Role",
+    "app.status": "Status",
+    "app.live": "Live",
     "doc.quotation": "Quotation",
     "doc.invoice": "Invoice",
     "doc.description": "Description",
@@ -1017,15 +1083,16 @@ const TRANSLATIONS = {
   },
   fr: {
     "nav.dashboard": "Tableau de bord",
-    "nav.partsInventory": "Magasin",
+    "nav.partsInventory": "Niveaux de stock",
     "nav.equipmentInventory": "Inventaire des équipements",
     "nav.salesoverview": "Aperçu des ventes",
     "nav.partsales": "Ventes de pièces",
     "nav.equipmentsales": "Ventes d'équipements",
     "nav.assets": "Parc installé",
-    "nav.servicejobs": "Service",
+    "nav.servicejobs": "Interventions actives",
     "nav.contracts": "Contrats de service",
-    "nav.purchasing": "Achats",
+    "nav.purchasing": "Bons de commande",
+    "nav.meetingroom": "Démarrer une réunion",
     "nav.customers": "Clients",
     "nav.reports": "Rapports",
     "nav.variance": "Écarts et audit",
@@ -1040,12 +1107,20 @@ const TRANSLATIONS = {
     "role.service": "Chef technicien de service",
     "role.finance": "Finance / Audit",
     "app.businessSystem": "SYSTÈME D'ENTREPRISE",
+    "app.drawingSetLive": "Jeu de plans · En direct",
+    "app.sheetIndex": "Index des feuillets",
     "app.internal": "SETVACO · INTERNE",
     "app.signedInAs": "Connecté(e) en tant que",
     "app.search": "Rechercher ou aller à…",
     "app.resetDemo": "Réinitialiser les données de démonstration",
     "app.footer": "SETVACO HOLDING LTD · PROTOTYPE · DONNÉES DE DÉMONSTRATION",
     "app.language": "Langue",
+    "app.sheet": "Feuillet",
+    "app.date": "Date",
+    "app.preparedBy": "Préparé Par",
+    "app.role": "Rôle",
+    "app.status": "Statut",
+    "app.live": "En direct",
     "doc.quotation": "Devis",
     "doc.invoice": "Facture",
     "doc.description": "Description",
@@ -1948,17 +2023,18 @@ function PathStepper({ stages, current }) {
     </React.Fragment>; })}
   </div>;
 }
-function StatCard({ label, value, sub, icon: Ic, tint, soft }) {
+function StatCard({ label, value, sub, icon: Ic, tint, soft, urgent }) {
   const shown = useCountUp(value, 900);
-  return <div className="mis-panel mis-card-hover" style={{ borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12, borderLeft: `3px solid ${tint || "var(--border)"}` }}>
+  return <div className="mis-panel" style={{ borderRadius: 2, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, border: "1px solid var(--border)", borderLeft: `3px solid ${tint || "var(--border)"}`, background: urgent ? "var(--vital-soft)" : "var(--panel)", boxShadow: "none" }}>
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--text-tertiary)" }}>{label}</span>
-      <div style={{ width: 32, height: 32, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: soft || "var(--ore-soft)" }}>
-        <Ic size={16} style={{ color: tint }} />
-      </div>
+      <span className="mis-mono" style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--text-tertiary)" }}>{label}</span>
+      {Ic && <Ic size={13} style={{ color: tint, opacity: 0.7, flexShrink: 0 }} />}
     </div>
-    <div className="mis-display" style={{ fontSize: 26, color: "var(--text-primary)" }}>{shown}</div>
-    {sub && <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sub}</div>}
+    <div className="mis-display" style={{ fontSize: 26, color: urgent ? "var(--vital)" : "var(--text-primary)", lineHeight: 1 }}>{shown}</div>
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span className="mis-dim-line" style={{ flex: 1, height: 1, background: "var(--ink-faint)" }} />
+      {sub && <span className="mis-mono" style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", whiteSpace: "nowrap" }}>{sub}</span>}
+    </div>
   </div>;
 }
 function Field({ label, children, hint }) {
@@ -4239,13 +4315,13 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
       <StatCard label={t(lang, "dash.stockValue")} value={fmtGHS(stockValue)} sub={dashboardBranchFilter === "All" ? t(lang, "dash.partsEquipAllBranches") : dashboardBranchFilter} icon={Package} tint="var(--ore)" soft="var(--ore-soft)" />
-      <StatCard label={t(lang, "dash.belowReorderPoint")} value={lowStock.length} sub={t(lang, "dash.itemsNeedingReplenishment")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" />
+      <StatCard label={t(lang, "dash.belowReorderPoint")} value={lowStock.length} sub={t(lang, "dash.itemsNeedingReplenishment")} icon={AlertTriangle} tint="var(--vital)" soft="var(--vital-soft)" urgent={lowStock.length > 0} />
       <StatCard label={t(lang, "dash.openQuotations")} value={openQuotes} sub={t(lang, "dash.partsEquipService")} icon={ShoppingCart} tint="var(--caution)" soft="var(--caution-soft)" />
       <StatCard label={t(lang, "dash.posInProgress")} value={inTransitPOs} sub={t(lang, "dash.orderedOrInTransit")} icon={Truck} tint="var(--info)" soft="var(--info-soft)" />
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
       <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.itemsNearestDepletion")}</h3>
+        <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.itemsNearestDepletion")}</h3>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {lowStock.slice(0, 8).map(it => <div key={it.id} className="mis-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 8px", borderBottom: "1px solid var(--border-soft)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -4258,17 +4334,17 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
         </div>
       </div>
       <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-        <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.customerCreditRisk")}</h3>
+        <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.customerCreditRisk")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {customers.map(c => { const pct = Math.round(creditUtilization(c) * 100); const risky = isCreditRisk(c); return <div key={c.id}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4, color: risky ? "var(--vital)" : "var(--text-secondary)" }}><span>{c.name}</span><span className="mis-mono">{pct}%</span></div>
-            <div style={{ width: "100%", borderRadius: 999, height: 6, background: "var(--panel-alt)" }}><div style={{ height: 6, borderRadius: 999, width: `${Math.min(pct, 100)}%`, background: risky ? "var(--vital)" : "var(--ore)" }} /></div>
+            <div style={{ width: "100%", height: 4, background: "var(--panel-alt)", border: "1px solid var(--border)" }}><div style={{ height: "100%", width: `${Math.min(pct, 100)}%`, background: risky ? "var(--vital)" : "var(--teal)" }} /></div>
           </div>; })}
         </div>
       </div>
     </div>
     {canSeeContracts && expiringContracts.length > 0 && <div className="mis-panel" style={{ borderRadius: 16, padding: 16, borderLeft: "3px solid var(--caution)" }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 4 }}>{t(lang, "dash.contractsExpiring")}</h3>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 4 }}>{t(lang, "dash.contractsExpiring")}</h3>
       <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 12 }}>{t(lang, "dash.within60Days")}</p>
       {expiringContracts.map(c => { const cust = customers.find(x => x.id === c.customerId); return <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12 }}>
         <span style={{ color: "var(--text-primary)" }}>{c.id} · {cust ? cust.name : "—"} <span style={{ color: "var(--text-tertiary)" }}>({c.type})</span></span>
@@ -4276,7 +4352,7 @@ function Dashboard({ items, quotations, invoices, purchaseOrders, customers, ser
       </div>; })}
     </div>}
     {["director", "admin", "finance"].includes(role) && <div className="mis-panel" style={{ borderRadius: 16, padding: 16 }}>
-      <h3 style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>{t(lang, "dash.recentActivity")}</h3>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "dash.recentActivity")}</h3>
       {recentActivity.length === 0 && <div className="mis-empty">{t(lang, "dash.noActivityYet")}</div>}
       {recentActivity.map(a => <div key={a.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-soft)", fontSize: 12, gap: 12 }}>
         <span style={{ color: "var(--text-secondary)" }}>{a.action}</span>
@@ -4923,8 +4999,7 @@ function SetvacoBusinessSystem() {
   const [toast, setToast] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const navRefs = useRef({});
-  const [pill, setPill] = useState({ top: 0, height: 0, opacity: 0 });
+  const [expandedRooms, setExpandedRooms] = useState(() => new Set());
 
   useEffect(() => {
     if (!profile) { setCompanyFeatures(null); return; }
@@ -4940,15 +5015,22 @@ function SetvacoBusinessSystem() {
   const allowedNav = NAV.filter(n =>
     n.roles.includes(role) && (!n.feature || !companyFeatures || companyFeatures.includes(n.feature))
   );
+  const allowedNavKeys = new Set(allowedNav.map(n => n.key));
+  const allowedRooms = ROOMS
+    .map(r => ({ ...r, stations: r.stations.filter(s => allowedNavKeys.has(s.key)) }))
+    .filter(r => r.stations.length > 0);
 
   useEffect(() => { if (profile && !allowedNav.find(n => n.key === nav)) setNav(allowedNav[0] ? allowedNav[0].key : "dashboard"); /* eslint-disable-next-line */ }, [role, companyFeatures]);
   useEffect(() => {
     savePersisted({ stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang });
   }, [stockRooms, items, vendors, customers, quotations, invoices, purchaseOrders, serviceJobs, assets, serviceContracts, savedReports, priceBooks, priceBookEntries, users, auditLog, notifications, approvalSettings, emailTemplates, lang]);
+  // Auto-expand whichever room contains the current station, so landing on
+  // (or switching to) a station via CommandPalette/deep link always shows
+  // it in context rather than leaving its room collapsed.
   useEffect(() => {
-    const el = navRefs.current[nav];
-    if (el) setPill({ top: el.offsetTop, height: el.offsetHeight, opacity: 1 });
-  }, [nav, collapsed, allowedNav.length]);
+    const room = ROOMS.find(r => r.stations.some(s => s.key === nav));
+    if (room) setExpandedRooms(prev => new Set(prev).add(room.tag));
+  }, [nav]);
   useEffect(() => {
     function onKey(e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setPaletteOpen(o => !o); }
@@ -5015,22 +5097,41 @@ function SetvacoBusinessSystem() {
     <Style />
     <aside className="mis-sidebar" style={{ width: sidebarWidth, flexShrink: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "20px 0" : "20px 16px", justifyContent: collapsed ? "center" : "flex-start", borderBottom: "1px solid var(--brand-line)" }}>
-        <div className="mis-seal" style={{ width: 44, height: 44, flexShrink: 0 }}>
-          <GearMark size={28} spin />
+        <div className="mis-seal" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 4 }}>
+          <GearMark size={26} spin />
         </div>
         {!collapsed && <div>
-          <div className="mis-display" style={{ fontSize: 17, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
-          <div className="mis-mono" style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{t(lang, "app.businessSystem")}</div>
+          <div className="mis-display" style={{ fontSize: 16, color: "#FFFFFF", lineHeight: 1.1 }}>SETVACO</div>
+          <div className="mis-mono" style={{ fontSize: 9.5, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t(lang, "app.drawingSetLive")}</div>
         </div>}
       </div>
-      <nav style={{ flex: 1, padding: "10px 0", position: "relative" }}>
-        <div className="mis-nav-pill" style={{ top: pill.top, height: pill.height, opacity: pill.opacity }} />
-        {allowedNav.map(n => { const Ic = n.icon; const active = nav === n.key; const label = t(lang, "nav." + n.key); return <button key={n.key} ref={el => { navRefs.current[n.key] = el; }} type="button" title={collapsed ? label : undefined} className={"mis-nav-item mis-focus" + (active ? " active" : "")} onClick={() => setNav(n.key)} style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "10px 0" : "10px 16px", fontSize: 13, marginBottom: 2 }}>
-          <Ic size={16} />{!collapsed && label}
-        </button>; })}
+      {!collapsed && <div className="mis-mono" style={{ padding: "12px 16px 4px", fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>{t(lang, "app.sheetIndex")}</div>}
+      <nav className="mis-scroll" style={{ flex: 1, padding: "6px 0", overflowY: "auto" }}>
+        {allowedRooms.map(room => {
+          const single = room.stations.length === 1;
+          const expanded = expandedRooms.has(room.tag);
+          const roomActive = room.stations.some(s => s.key === nav);
+          return <div key={room.tag} className="mis-room">
+            <button type="button" title={collapsed ? room.name : undefined} className={"mis-room-head mis-focus" + (roomActive && single ? " active" : "")}
+              onClick={() => single ? setNav(room.stations[0].key) : setExpandedRooms(prev => { const next = new Set(prev); next.has(room.tag) ? next.delete(room.tag) : next.add(room.tag); return next; })}>
+              <span className="mis-room-tag">{room.tag}</span>
+              {!collapsed && <React.Fragment>
+                <span className="mis-room-name">{room.name}</span>
+                {!single && <span className="mis-room-caret">{expanded ? "▾" : "▸"}</span>}
+              </React.Fragment>}
+            </button>
+            {!collapsed && !single && expanded && <div className="mis-stations">
+              {room.stations.map(s => { const active = nav === s.key; const label = t(lang, "nav." + s.key); return (
+                <button key={s.key} type="button" className={"mis-station mis-focus" + (active ? " active" : "")} onClick={() => setNav(s.key)}>
+                  <span className="mis-station-tag">{room.tag}-{String(room.stations.indexOf(s) + 1).padStart(2, "0")}</span> {label}
+                </button>
+              ); })}
+            </div>}
+          </div>;
+        })}
       </nav>
       <div style={{ padding: collapsed ? "10px 0" : "10px 16px", display: "flex", justifyContent: collapsed ? "center" : "flex-end" }}>
-        <button type="button" className="mis-focus" onClick={() => setCollapsed(c => !c)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.65)", width: 26, height: 26, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <button type="button" className="mis-focus" onClick={() => setCollapsed(c => !c)} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.65)", width: 26, height: 26, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ChevronDown size={14} style={{ transform: collapsed ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 0.2s ease" }} />
         </button>
       </div>
@@ -5040,19 +5141,39 @@ function SetvacoBusinessSystem() {
       </div>}
     </aside>
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "var(--paper)" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--paper)", flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div className="mis-eyebrow" style={{ marginBottom: 2 }}>{t(lang, "app.internal")}</div>
-          <h1 className="mis-display" style={{ fontSize: 24, color: "var(--ink)", lineHeight: 1 }}>{t(lang, "nav." + ((allowedNav.find(n => n.key === nav) || {}).key || "dashboard")).toUpperCase()}</h1>
-          <StrataRule className="mt-1.5" />
-          <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>{t(lang, "app.signedInAs")} {currentUser} · {t(lang, "role." + role)}</p>
+      {/* Title block — modeled on the stamp box in the corner of a real
+          engineering drawing (sheet name / date / prepared-by / revision),
+          showing real data instead of decoration. See docs/design-system.md. */}
+      <header style={{ display: "flex", alignItems: "stretch", justifyContent: "space-between", borderBottom: "2px solid var(--brand)", background: "var(--paper)", flexWrap: "wrap" }}>
+        <div style={{ padding: "16px 24px", minWidth: 200 }}>
+          {(() => { const room = ROOMS.find(r => r.stations.some(s => s.key === nav)); const station = room && room.stations.find(s => s.key === nav);
+            return <div className="mis-eyebrow" style={{ marginBottom: 4 }}>{room ? `${t(lang, "app.sheet")} ${room.tag}${room.stations.length > 1 ? "-" + String(room.stations.indexOf(station) + 1).padStart(2, "0") : ""} — ${room.name}` : t(lang, "app.internal")}</div>; })()}
+          <h1 className="mis-display" style={{ fontSize: 24, color: "var(--brand)", lineHeight: 1 }}>{t(lang, "nav." + ((allowedNav.find(n => n.key === nav) || {}).key || "dashboard")).toUpperCase()}</h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", borderLeft: "1px solid var(--border)" }}>
+          <div style={{ padding: "10px 16px", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
+            <span className="mis-mono" style={{ fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "app.date")}</span>
+            <span className="mis-mono" style={{ fontSize: 12, fontWeight: 500 }}>{todayISO()}</span>
+          </div>
+          <div style={{ padding: "10px 16px", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
+            <span className="mis-mono" style={{ fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "app.preparedBy")}</span>
+            <span className="mis-mono" style={{ fontSize: 12, fontWeight: 500 }}>{(currentUser || "").toUpperCase()}</span>
+          </div>
+          <div style={{ padding: "10px 16px", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
+            <span className="mis-mono" style={{ fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "app.role")}</span>
+            <span className="mis-mono" style={{ fontSize: 12, fontWeight: 500 }}>{t(lang, "role." + role).toUpperCase()}</span>
+          </div>
+          <div style={{ padding: "10px 16px", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
+            <span className="mis-mono" style={{ fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>{t(lang, "app.status")}</span>
+            <span className="mis-mono" style={{ fontSize: 12, fontWeight: 500, color: "var(--teal)" }}>● {t(lang, "app.live")}</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 20px", borderLeft: "1px solid var(--border)" }}>
           <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPaletteOpen(true)} style={{ color: "var(--text-tertiary)" }}>
             <Search size={14} /> {t(lang, "app.search")} <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
           </button>
           <NotificationBell notifications={notifications} setNotifications={setNotifications} currentUser={currentUser} lang={lang} />
-          <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }} title={t(lang, "app.language")}>
+          <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 4, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }} title={t(lang, "app.language")}>
             <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
             <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>
           </div>
