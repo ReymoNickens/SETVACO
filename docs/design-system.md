@@ -100,6 +100,23 @@ this exist on an actual engineering drawing." If not, reconsider it. This
 ruled out, for example, soft drop shadows and large rounded corners in the
 new components — a real drawing sheet is flat and hard-edged.
 
+**Sibling artifact — the login screen is not a drawing.** Staff don't sign
+a drawing to get into the building; they sign a paper register at the
+door. The login screen (`LoginScreen` in `index.html`) is styled as that
+physical sign-in sheet instead: ruled ledger paper, a red margin line, a
+dated "Staff Sign-In Register" header, ghost rows suggesting people who've
+already signed in today (real timestamps only — see
+`recent_signin_times()` — never names or emails, since RLS blocks
+everything pre-login and there's no tenant context resolved yet at that
+point), and the login fields relabeled Staff Email / Signature. The
+"signature" field is a completely normal `type="password"` input — no
+handwritten signature is captured — framed with a cursive "sign here"
+placeholder that gives way to real masked dots once typed, and an explicit
+"(your password)" hint so the metaphor never becomes a security
+ambiguity. Same ink-blue/white/mono language as the blueprint interior,
+applied to a different real object: you sign the register, then walk into
+the drawing office.
+
 **Not yet built** (interaction-level, layered on top of this same
 foundation once useful, not built speculatively ahead of demand):
 loading states as a draw-on line animation, CAD-style layer-visibility
