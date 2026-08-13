@@ -1741,12 +1741,6 @@ const initialEquipment = [
   { id: "EQ-5004", type: "equipment", name: "Radial Stacking Conveyor 24m", brand: "AUROX", category: "Conveying", branch: "Accra HQ", stockRoom: "SR-02", qty: 3, reorder: 1, cost: 210000, sell: 275000 },
   { id: "EQ-5005", type: "equipment", name: "Impact Crusher NP1213", brand: "Sandvik", category: "Crushing Plant", branch: "Tema Warehouse", stockRoom: "SR-05", qty: 0, reorder: 1, cost: 1650000, sell: 2050000 }
 ];
-const initialVendors = [
-  { id: "V-01", name: "Sandvik Parts Distribution", code: "SND-GH-014", contact: "Lars Eriksson", email: "parts@sandvik-gh.com", phone: "+233 30 222 1145", altContact: "Mikael Roos, Accounts", categories: "Crusher wear parts, bearings", taxExempt: false, certificateFile: "sandvik-business-cert.pdf" },
-  { id: "V-02", name: "Terex Aftermarket", code: "TRX-WA-221", contact: "Mensah Owusu", email: "aftermarket@terex.com", phone: "+233 24 556 7788", altContact: "", categories: "Wear parts, filters, electrical", taxExempt: false, certificateFile: null },
-  { id: "V-03", name: "AUROX Composites and Compounds Oy", code: "AUX-FI-009", contact: "Mika Laine", email: "sales@auroxcc.fi", phone: "+358 40 123 4567", altContact: "", categories: "Conveyor belting", taxExempt: true, certificateFile: null },
-  { id: "V-04", name: "Voltline Electrical Supplies", code: "VLT-GH-077", contact: "Nana Yeboah", email: "info@voltline.com.gh", phone: "+233 20 334 8899", altContact: "", categories: "Electrical, VFD drives", taxExempt: false, certificateFile: null }
-];
 const initialCustomers = [
   { id: "C-01", name: "Chorkor Mines Ltd", tier: "Gold", country: "Ghana", address: "Plot 12, Tarkwa Industrial Area, Tarkwa", email: "procurement@chorkormines.com", phone: "+233 24 111 2233", contactPerson: "Samuel Aidoo", contactAddress: "Plot 12, Tarkwa Industrial Area, Tarkwa", companyDetails: "Registered mining operator · TIN GH-0091827", poCode: "CHK-001", creditLimit: 150000, outstanding: 42000, taxExempt: false, priceBookId: "PB-1001", contacts: [{ name: "Samuel Aidoo", role: "Procurement Manager", email: "s.aidoo@chorkormines.com", phone: "+233 24 111 2233" }, { name: "Linda Owusu", role: "Finance Officer", email: "l.owusu@chorkormines.com", phone: "+233 24 111 9090" }] },
   { id: "C-02", name: "Akwatia Gold Ltd", tier: "Gold", country: "Ghana", address: "Km 4 Akwatia-Kade Rd, Akwatia", email: "buying@akwatiagold.com", phone: "+233 24 220 6611", contactPerson: "Grace Antwi", contactAddress: "Km 4 Akwatia-Kade Rd, Akwatia", companyDetails: "Registered mining operator · TIN GH-0075512", poCode: "AWG-002", creditLimit: 100000, outstanding: 88000, taxExempt: false, contacts: [{ name: "Grace Antwi", role: "Purchasing Lead", email: "g.antwi@akwatiagold.com", phone: "+233 24 220 6611" }] },
@@ -1761,11 +1755,6 @@ const initialQuotations = [
 ];
 const initialInvoices = [
   { id: "INV-6001", quotationId: "QT-9003", type: "part", customerId: "C-03", lines: [{ itemId: "CN-3311", desc: "Hydraulic Filter", qty: 10, unitPrice: 85, newPart: false }], subtotal: 850, applyTax: false, taxRate: 15, taxAmount: 0, total: 850, status: "Paid", date: "2026-08-01", createdBy: "Kwabena Owusu" }
-];
-const initialPurchaseOrders = [
-  { id: "PO-7710", vendorId: "V-03", lines: [{ itemId: "CV-2004", itemName: "Conveyor Belt (per m)", qty: 50 }], status: "In Transit", date: "2026-08-02", expected: "2026-08-14", source: "manual" },
-  { id: "PO-7705", vendorId: "V-01", lines: [{ itemId: "WP-1012", itemName: "Cone Crusher Mantle", qty: 3 }], status: "Ordered", date: "2026-08-05", expected: "2026-08-20", source: "manual" },
-  { id: "PO-7698", vendorId: "V-02", lines: [{ itemId: "CN-3311", itemName: "Hydraulic Filter", qty: 30 }], status: "Received", date: "2026-07-25", expected: "2026-08-01", source: "manual" }
 ];
 const initialServiceJobs = [
   { id: "SJ-210", jobNumber: "SJ-210", customer: "Chorkor Mines Ltd", customerId: "C-01", type: "Crusher Reline", country: "Ghana", description: "Full jaw crusher liner replacement and toggle inspection.", technician: "K. Boateng", itemId: "WP-1001", itemName: "Jaw Crusher Wear Plate", qty: 2, eta: "2026-08-12", preparedBy: "K. Boateng", feedbackLog: [], status: "In Progress", date: "2026-08-05", assetId: "AS-1001" },
@@ -2082,6 +2071,47 @@ function mapInvoiceFromDb(row) {
     date: (row.created_at || "").slice(0, 10), createdBy: row.prepared_by_name || ""
   };
 }
+function mapVendorFromDb(row) {
+  return {
+    id: row.id,
+    displayCode: row.display_code,
+    name: row.name,
+    code: row.vendor_code || "",
+    contact: row.contact_name || "",
+    email: row.email || "",
+    phone: row.phone || "",
+    altContact: row.alt_contact || "",
+    categories: row.categories || "",
+    taxExempt: row.tax_exempt,
+    certificateFile: row.certificate_file || null
+  };
+}
+function mapPurchaseOrderFromDb(row) {
+  return {
+    id: row.display_code,
+    realId: row.id,
+    vendorId: row.vendor_id,
+    customerId: row.customer_id,
+    externalPoNumber: row.external_po_number || "",
+    lines: (row.purchase_order_lines || []).slice().sort((a, b) => a.line_no - b.line_no).map(l => ({
+      itemId: l.item_id || "", itemName: l.description, qty: Number(l.qty_ordered)
+    })),
+    status: row.status,
+    date: (row.created_at || "").slice(0, 10),
+    expected: row.expected_date || "",
+    source: row.customer_id ? "matched" : "manual"
+  };
+}
+async function fetchVendors() {
+  const { data, error } = await window.sb.from("vendors").select("*").order("name");
+  if (error) throw error;
+  return data;
+}
+async function fetchPurchaseOrders() {
+  const { data, error } = await window.sb.from("purchase_orders").select("*, purchase_order_lines(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 async function fetchQuotations() {
   const { data, error } = await window.sb.from("quotations").select("*, quotation_lines(*)").order("created_at", { ascending: false });
   if (error) throw error;
@@ -2362,7 +2392,7 @@ function StockLedgerHistory({ itemId, lang }) {
   </div>;
 }
 
-function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, realBranches, reloadStock, dataLoading, dataError, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, setPurchaseOrders, auditLog, lang }) {
+function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, realBranches, reloadStock, dataLoading, dataError, role, currentUser, logAction, pushNotification, vendors, purchaseOrders, reloadPurchaseOrders, auditLog, lang }) {
   const label = type === "equipment" ? "Equipment" : "Part";
   const typeLabel = type === "equipment" ? t(lang, "inv.equipment") : t(lang, "inv.part");
   const canManage = ["director", "admin", "warehouse", "procurement"].includes(role);
@@ -2389,6 +2419,8 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
   const [uploadError, setUploadError] = useState("");
   const [roomBusy, setRoomBusy] = useState(false);
   const [roomError, setRoomError] = useState("");
+  const [poUploadBusy, setPoUploadBusy] = useState(false);
+  const [poUploadError, setPoUploadError] = useState("");
 
   const typedItems = items.filter(i => i.type === type);
   const rooms = stockRooms.filter(r => branchFilter === "All" || r.branch === branchFilter);
@@ -2495,17 +2527,33 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
   function handleUploadPO(file) {
     parseExcelFile(file).then(rows => setPoPreview({ groups: groupPORows(rows), fileName: file.name })).catch(err => window.alert("Could not read file: " + err.message));
   }
-  function confirmUploadPO() {
-    if (!poPreview) return;
-    const newPOs = poPreview.groups.map(g => {
-      const vendor = vendors.find(v => v.name.toLowerCase() === g.vendor.toLowerCase());
-      return { id: /^PO-/.test(g.poNumber) ? g.poNumber : uid("PO", purchaseOrders, 4), vendorId: vendor ? vendor.id : null, vendorNameRaw: vendor ? undefined : (g.vendor || "Unspecified vendor"), lines: g.lines, status: "Ordered", date: todayISO(), expected: g.expected || "", source: "uploaded" };
-    });
-    setPurchaseOrders(ps => [...newPOs, ...ps]);
-    newPOs.forEach(po => pushNotification("po", `Purchase order ${po.id} uploaded — ${po.lines.length} line item(s) awaiting delivery`));
-    logAction(currentUser, `Uploaded purchase order file "${poPreview.fileName}" (${newPOs.length} PO's)`, "Purchasing");
-    setPoPreview(null);
-    setShowUploadPO(false);
+  async function confirmUploadPO() {
+    if (!poPreview || poUploadBusy) return;
+    setPoUploadBusy(true);
+    setPoUploadError("");
+    try {
+      for (const g of poPreview.groups) {
+        const vendor = vendors.find(v => v.name.toLowerCase() === g.vendor.toLowerCase());
+        if (!vendor) throw new Error(`No vendor named "${g.vendor}" — add it in Vendors before importing.`);
+        const lines = g.lines.map(l => {
+          const matchedItem = items.find(it => it.displayCode === l.itemId || it.id === l.itemId);
+          return { item_id: matchedItem ? matchedItem.id : null, description: l.itemName || l.itemId, qty: l.qty };
+        });
+        const { error: rpcError } = await window.sb.rpc("create_purchase_order", {
+          p_vendor_id: vendor.id, p_external_po_number: g.poNumber, p_expected_date: g.expected || null, p_lines: lines,
+        });
+        if (rpcError) throw rpcError;
+        pushNotification("po", `Purchase order ${g.poNumber} uploaded — ${lines.length} line item(s) awaiting delivery`);
+      }
+      logAction(currentUser, `Uploaded purchase order file "${poPreview.fileName}" (${poPreview.groups.length} PO's)`, "Purchasing");
+      setPoPreview(null);
+      setShowUploadPO(false);
+      await reloadPurchaseOrders();
+    } catch (err) {
+      setPoUploadError(err.message);
+    } finally {
+      setPoUploadBusy(false);
+    }
   }
   function exportReport() {
     const rows = filtered.map(i => ({ Code: i.displayCode || i.id, Name: i.name, Brand: i.brand, Category: i.category, Branch: i.branch, "Stock Room": roomLabel(i.stockRoom), "On Hand": i.qty, "Reorder At": i.reorder, Cost: i.cost, "Sell Price": i.sell }));
@@ -2588,8 +2636,9 @@ function InventoryPanel({ type, items, setItems, stockRooms, setStockRooms, real
 
     {showUploadPO && <Modal title={t(lang, "inv.uploadPOFileTitle")} wide onClose={() => { setShowUploadPO(false); setPoPreview(null); }} footer={poPreview ? <React.Fragment>
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPoPreview(null)}>{t(lang, "inv.chooseDifferentFile")}</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUploadPO}><Check size={14} /> {tf(lang, "inv.importPOs", { n: poPreview.groups.length })}</button>
+      <button type="button" disabled={poUploadBusy} className="mis-btn-primary mis-focus" onClick={confirmUploadPO}><Check size={14} /> {poUploadBusy ? "Importing…" : tf(lang, "inv.importPOs", { n: poPreview.groups.length })}</button>
     </React.Fragment> : null}>
+      {poUploadError && <p style={{ fontSize: 12, color: "var(--vital)", marginBottom: 10 }}>{poUploadError}</p>}
       {!poPreview && <React.Fragment>
         <FileDrop label={t(lang, "inv.dropPOFile")} accept=".xlsx,.xls,.csv" onFile={handleUploadPO} hint={t(lang, "inv.expectedColumnsPO")} />
         <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "inv.uploadPOHint")}</p>
@@ -3306,39 +3355,62 @@ function POLineItemsEditor({ lines, setLines, items, lang }) {
   </div>;
 }
 
-function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers, items, setItems, role, currentUser, logAction, pushNotification, lang }) {
+function InternalPOsTab({ purchaseOrders, reloadPurchaseOrders, reloadStock, vendors, customers, items, role, currentUser, logAction, pushNotification, lang }) {
   const canManage = ["director", "admin", "procurement"].includes(role);
   const [form, setForm] = useState({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [busyPoId, setBusyPoId] = useState(null);
   function setFormLines(updater) { setForm(f => ({ ...f, lines: typeof updater === "function" ? updater(f.lines) : updater })); }
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     const vendor = vendors.find(v => v.id === form.vendorId);
-    const validLines = form.lines.filter(l => l.itemId && Number(l.qty) > 0).map(l => ({ itemId: l.itemId, itemName: l.itemName, qty: Number(l.qty) }));
-    if (!vendor || !validLines.length) return;
-    const po = { id: uid("PO", purchaseOrders, 4), vendorId: vendor.id, lines: validLines, status: "Ordered", date: todayISO(), expected: form.expected, source: "manual" };
-    setPurchaseOrders(ps => [po, ...ps]);
-    logAction(currentUser, `Raised ${po.id} to ${vendor.name} for ${validLines.map(l => l.itemName).join(", ")}`, "Purchasing");
-    pushNotification("po", `${po.id} raised to ${vendor.name}`);
-    setForm({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
+    const validLines = form.lines.filter(l => l.itemId && Number(l.qty) > 0).map(l => ({ item_id: l.itemId, description: l.itemName, qty: Number(l.qty) }));
+    if (!vendor || !validLines.length || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: rpcError } = await window.sb.rpc("create_purchase_order", {
+        p_vendor_id: vendor.id, p_expected_date: form.expected || null, p_lines: validLines,
+      });
+      if (rpcError) throw rpcError;
+      logAction(currentUser, `Raised a purchase order to ${vendor.name} for ${validLines.map(l => l.description).join(", ")}`, "Purchasing");
+      pushNotification("po", `Purchase order raised to ${vendor.name}`);
+      setForm({ vendorId: "", expected: "", lines: [{ itemId: "", itemName: "", qty: 1 }] });
+      await reloadPurchaseOrders();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
-  function advance(po) {
-    const next = po.status === "Ordered" ? "In Transit" : po.status === "In Transit" ? "Received" : po.status;
-    if (next === po.status) return;
-    setPurchaseOrders(ps => ps.map(p => p.id === po.id ? { ...p, status: next } : p));
-    if (next === "Received") {
-      setItems(its => its.map(it => { const line = po.lines.find(l => l.itemId === it.id); return line ? { ...it, qty: it.qty + line.qty } : it; }));
-      logAction(currentUser, `Received ${po.id} — stock updated for ${po.lines.map(l => l.itemName).join(", ") || "matched order"}`, "Purchasing");
-    } else {
-      logAction(currentUser, `Marked ${po.id} as ${next}`, "Purchasing");
+  async function advance(po) {
+    if (busyPoId) return;
+    setBusyPoId(po.realId);
+    setError("");
+    try {
+      const { data: nextStatus, error: rpcError } = await window.sb.rpc("advance_purchase_order", { p_po_id: po.realId });
+      if (rpcError) throw rpcError;
+      if (nextStatus === "Received") {
+        logAction(currentUser, `Received ${po.id} — stock updated for ${po.lines.map(l => l.itemName).join(", ") || "matched order"}`, "Purchasing");
+        await reloadStock();
+      } else {
+        logAction(currentUser, `Marked ${po.id} as ${nextStatus}`, "Purchasing");
+      }
+      await reloadPurchaseOrders();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyPoId(null);
     }
   }
   function poParty(p) {
-    if (p.vendorNameRaw) return p.vendorNameRaw;
     if (p.vendorId) { const v = vendors.find(x => x.id === p.vendorId); if (v) return v.name; }
     if (p.customerId) { const c = customers.find(x => x.id === p.customerId); if (c) return c.name + t(lang, "po.customerOrderSuffix"); }
     return t(lang, "inv.unspecifiedVendor");
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     {canManage && <form onSubmit={submit} className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div className="mis-grid-2">
         <Field label={t(lang, "po.vendor")}><TSelect required value={form.vendorId} onChange={e => setForm(f => ({ ...f, vendorId: e.target.value }))}>
@@ -3347,7 +3419,7 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
         <Field label={t(lang, "po.expectedDeliveryDate")}><TInput type="date" value={form.expected} onChange={e => setForm(f => ({ ...f, expected: e.target.value }))} /></Field>
       </div>
       <POLineItemsEditor lines={form.lines} setLines={setFormLines} items={items} lang={lang} />
-      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {t(lang, "po.raisePO")}</button>
+      <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {busy ? "Raising…" : t(lang, "po.raisePO")}</button>
     </form>}
     <DataTable columns={[
       { header: t(lang, "po.poCol"), render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.id}</span> },
@@ -3355,24 +3427,39 @@ function InternalPOsTab({ purchaseOrders, setPurchaseOrders, vendors, customers,
       { header: t(lang, "po.lines"), render: p => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.lines.length ? p.lines.map(l => `${l.itemName || l.itemId} x${l.qty}`).join(", ") : (p.externalPoNumber ? tf(lang, "po.externalPoPending", { code: p.externalPoNumber }) : "—")}</span> },
       { header: t(lang, "po.expected"), render: p => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.expected || "—"}</span> },
       { header: t(lang, "common.status"), render: p => { const cs = statusColor(p.status); return <Badge color={cs[0]} soft={cs[1]}>{p.status}</Badge>; } },
-      { header: t(lang, "common.actions"), render: p => canManage && p.status !== "Received" ? <button type="button" className="mis-link-btn" onClick={() => advance(p)}>{p.status === "Ordered" ? t(lang, "po.markInTransit") : t(lang, "po.markReceived")}</button> : null }
+      { header: t(lang, "common.actions"), render: p => canManage && p.status !== "Received" ? <button type="button" disabled={!!busyPoId} className="mis-link-btn" onClick={() => advance(p)}>{p.status === "Ordered" ? t(lang, "po.markInTransit") : t(lang, "po.markReceived")}</button> : null }
     ]} rows={purchaseOrders} rowKey={p => p.id} empty={t(lang, "po.noPOsYet")} />
   </div>;
 }
 
-function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang }) {
+function VendorsTab({ vendors, reloadVendors, role, currentUser, logAction, lang }) {
   const canManage = ["director", "admin", "procurement"].includes(role);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
   const [preview, setPreview] = useState(null);
-  function submit(e) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
     e.preventDefault();
-    if (!form.name.trim()) return;
-    const vendor = { id: uid("V", vendors, 2), ...form };
-    setVendors(vs => [...vs, vendor]);
-    logAction(currentUser, `Added vendor ${vendor.name} (code ${vendor.code || "—"})`, "Purchasing");
-    setForm({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
-    setShowAdd(false);
+    if (!form.name.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("vendors").insert({
+        name: form.name.trim(), vendor_code: form.code || null, contact_name: form.contact || null,
+        email: form.email || null, phone: form.phone || null, alt_contact: form.altContact || null,
+        categories: form.categories || null, tax_exempt: form.taxExempt, certificate_file: form.certificateFile,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Added vendor ${form.name} (code ${form.code || "—"})`, "Purchasing");
+      setForm({ name: "", code: "", contact: "", email: "", phone: "", altContact: "", categories: "", taxExempt: false, certificateFile: null });
+      setShowAdd(false);
+      await reloadVendors();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   function handleUpload(file) {
     parseExcelFile(file).then(rows => {
@@ -3380,29 +3467,43 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang })
       setPreview({ rows: parsed, fileName: file.name });
     }).catch(err => window.alert("Could not read file: " + err.message));
   }
-  function confirmUpload() {
-    if (!preview) return;
-    let list = vendors.slice();
-    preview.rows.forEach(v => {
-      const existingIdx = list.findIndex(x => v.code && x.code === v.code);
-      if (existingIdx >= 0) list[existingIdx] = { ...list[existingIdx], ...v };
-      else list = [...list, { id: uid("V", list, 2), ...v }];
-    });
-    setVendors(list);
-    logAction(currentUser, `Uploaded vendor list "${preview.fileName}" (${preview.rows.length} records)`, "Purchasing");
-    setPreview(null);
+  async function confirmUpload() {
+    if (!preview || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      for (const v of preview.rows) {
+        const existing = v.code ? vendors.find(x => x.code === v.code) : null;
+        const fields = { name: v.name, vendor_code: v.code || null, contact_name: v.contact || null, email: v.email || null, phone: v.phone || null, categories: v.categories || null };
+        if (existing) {
+          const { error: updateError } = await window.sb.from("vendors").update(fields).eq("id", existing.id);
+          if (updateError) throw updateError;
+        } else {
+          const { error: insertError } = await window.sb.from("vendors").insert(fields);
+          if (insertError) throw insertError;
+        }
+      }
+      logAction(currentUser, `Uploaded vendor list "${preview.fileName}" (${preview.rows.length} records)`, "Purchasing");
+      setPreview(null);
+      await reloadVendors();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     {canManage && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
       <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowAdd(true)}><Plus size={14} /> {t(lang, "ven.addVendor")}</button>
     </div>}
     {!canManage && <p style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{t(lang, "ven.restricted")}</p>}
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     {canManage && <FileDrop label={t(lang, "ven.dropFile")} accept=".xlsx,.xls,.csv" onFile={handleUpload} hint={t(lang, "ven.expectedColumns")} />}
     {preview && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
       <p style={{ fontSize: 13 }}>{tf(lang, "ven.previewReady", { file: preview.fileName, n: preview.rows.length })}</p>
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPreview(null)}>{t(lang, "common.cancel")}</button>
-        <button type="button" className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {t(lang, "common.import")}</button>
+        <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={confirmUpload}><Check size={14} /> {busy ? "Importing…" : t(lang, "common.import")}</button>
       </div>
     </div>}
     <DataTable columns={[
@@ -3415,7 +3516,7 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang })
     ]} rows={vendors} rowKey={v => v.id} empty={t(lang, "ven.noVendorsYet")} />
     {showAdd && <Modal title={t(lang, "ven.addVendor")} onClose={() => setShowAdd(false)} footer={<React.Fragment>
       <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setShowAdd(false)}>{t(lang, "common.cancel")}</button>
-      <button type="button" className="mis-btn-primary mis-focus" onClick={submit}>{t(lang, "ven.addVendor")}</button>
+      <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Saving…" : t(lang, "ven.addVendor")}</button>
     </React.Fragment>}>
       <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <Field label={t(lang, "ven.vendorName")}><TInput required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></Field>
@@ -3438,11 +3539,13 @@ function VendorsTab({ vendors, setVendors, role, currentUser, logAction, lang })
   </div>;
 }
 
-function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders, role, currentUser, logAction, pushNotification, lang }) {
+function MatchPOCodeTab({ customers, vendors, reloadPurchaseOrders, role, currentUser, logAction, pushNotification, lang }) {
   const canManage = ["director", "admin", "procurement"].includes(role);
   const [code, setCode] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [match, setMatch] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   function search(e) {
     e.preventDefault();
     const needle = code.trim().toUpperCase();
@@ -3453,16 +3556,28 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
     if (vendor) { setMatch({ kind: "vendor", record: vendor }); return; }
     setMatch({ kind: "none" });
   }
-  function submitOrder() {
-    if (!match || match.kind !== "customer") return;
-    const po = { id: uid("PO", purchaseOrders, 4), vendorId: null, customerId: match.record.id, externalPoNumber: poNumber || code, lines: [], status: "Ordered", date: todayISO(), expected: "", source: "matched" };
-    setPurchaseOrders(ps => [po, ...ps]);
-    logAction(currentUser, `Matched industry code ${code} to ${match.record.name} and submitted order ${po.id} (external PO ${poNumber || "n/a"})`, "Purchasing");
-    pushNotification("po", `Order ${po.id} submitted for ${match.record.name} from matched PO code ${code}`);
-    setCode(""); setPoNumber(""); setMatch(null);
+  async function submitOrder() {
+    if (!match || match.kind !== "customer" || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: rpcError } = await window.sb.rpc("create_purchase_order", {
+        p_customer_id: match.record.id, p_external_po_number: poNumber || code,
+      });
+      if (rpcError) throw rpcError;
+      logAction(currentUser, `Matched industry code ${code} to ${match.record.name} and submitted an order (external PO ${poNumber || "n/a"})`, "Purchasing");
+      pushNotification("po", `Order submitted for ${match.record.name} from matched PO code ${code}`);
+      setCode(""); setPoNumber(""); setMatch(null);
+      await reloadPurchaseOrders();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <p style={{ fontSize: 12, color: "var(--text-tertiary)", maxWidth: 640 }}>{t(lang, "match.intro")}</p>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     <form onSubmit={search} className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
       <Field label={t(lang, "ven.industryStdCode")}><TInput required value={code} onChange={e => setCode(e.target.value)} placeholder={t(lang, "match.codePlaceholder")} style={{ width: 200 }} /></Field>
       <Field label={t(lang, "match.externalPoNumber")}><TInput value={poNumber} onChange={e => setPoNumber(e.target.value)} placeholder={t(lang, "match.externalPoPlaceholder")} style={{ width: 200 }} /></Field>
@@ -3472,7 +3587,7 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.matchedCustomer", { name: match.record.name })}</b></div>
       <div className="mis-kv"><span>{t(lang, "match.country")}</span><b>{match.record.country}</b></div>
       <div className="mis-kv"><span>{t(lang, "match.contact")}</span><b>{match.record.contactPerson} · {match.record.email}</b></div>
-      {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> {t(lang, "match.submitOrder")}</button>}
+      {canManage && <button type="button" disabled={busy} className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }} onClick={submitOrder}><Plus size={14} /> {busy ? "Submitting…" : t(lang, "match.submitOrder")}</button>}
     </div>}
     {match && match.kind === "vendor" && <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Check size={16} style={{ color: "var(--safe)" }} /><b>{tf(lang, "match.belongsToVendor", { name: match.record.name })}</b></div>
@@ -3482,7 +3597,7 @@ function MatchPOCodeTab({ customers, vendors, purchaseOrders, setPurchaseOrders,
   </div>;
 }
 
-function Purchasing({ role, currentUser, purchaseOrders, setPurchaseOrders, vendors, setVendors, items, setItems, customers, logAction, pushNotification, lang }) {
+function Purchasing({ role, currentUser, purchaseOrders, reloadPurchaseOrders, vendors, reloadVendors, items, reloadStock, customers, logAction, pushNotification, lang }) {
   const subTabsAll = [
     { key: "pos", label: t(lang, "po.tabInternal") },
     { key: "vendors", label: t(lang, "po.tabVendors") },
@@ -3491,9 +3606,9 @@ function Purchasing({ role, currentUser, purchaseOrders, setPurchaseOrders, vend
   const [sub, setSub] = useState("pos");
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={subTabsAll} active={sub} onChange={setSub} />
-    {sub === "pos" && <InternalPOsTab purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} customers={customers} items={items} setItems={setItems} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
-    {sub === "vendors" && <VendorsTab vendors={vendors} setVendors={setVendors} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
-    {sub === "match" && <MatchPOCodeTab customers={customers} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+    {sub === "pos" && <InternalPOsTab purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} reloadStock={reloadStock} vendors={vendors} customers={customers} items={items} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+    {sub === "vendors" && <VendorsTab vendors={vendors} reloadVendors={reloadVendors} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
+    {sub === "match" && <MatchPOCodeTab customers={customers} vendors={vendors} reloadPurchaseOrders={reloadPurchaseOrders} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -6238,9 +6353,16 @@ function SetvacoBusinessSystem() {
   async function reloadUsers() {
     setUsers(await fetchProfiles());
   }
+  async function reloadVendors() {
+    setVendors((await fetchVendors()).map(mapVendorFromDb));
+  }
+  async function reloadPurchaseOrders() {
+    setPurchaseOrders((await fetchPurchaseOrders()).map(mapPurchaseOrderFromDb));
+  }
 
-  // Loads real Customers/Stock Room/Sales/Users data once we know who's
-  // signed in (RLS needs an authenticated session to return any rows at all).
+  // Loads real Customers/Stock Room/Sales/Users/Purchasing data once we
+  // know who's signed in (RLS needs an authenticated session to return any
+  // rows at all).
   useEffect(() => {
     if (!profile) return;
     let cancelled = false;
@@ -6253,12 +6375,14 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
           setInvoices(invoiceRows.map(mapInvoiceFromDb));
           setUsers(profileRows);
+          setVendors(vendorRows.map(mapVendorFromDb));
+          setPurchaseOrders(poRows.map(mapPurchaseOrderFromDb));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -6291,12 +6415,15 @@ function SetvacoBusinessSystem() {
   // with a `feature` tag are treated as allowed rather than hidden, so this
   // stays backward-compatible with a database that predates the migration.
   const [companyFeatures, setCompanyFeatures] = useState(null);
-  const [vendors, setVendors] = useState(() => (persisted && persisted.vendors) || initialVendors);
+  // Vendors/Purchase Orders load from the real database (see the
+  // data-fetching useEffect below) — no local demo fallback, same as
+  // customers/stock.
+  const [vendors, setVendors] = useState([]);
   // Quotations/invoices load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
   const [quotations, setQuotations] = useState([]);
   const [invoices, setInvoices] = useState([]);
-  const [purchaseOrders, setPurchaseOrders] = useState(() => (persisted && persisted.purchaseOrders) || initialPurchaseOrders);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [serviceJobs, setServiceJobs] = useState(() => (persisted && persisted.serviceJobs) || initialServiceJobs);
   const [assets, setAssets] = useState(() => (persisted && persisted.assets) || initialAssets);
   const [serviceContracts, setServiceContracts] = useState(() => (persisted && persisted.serviceContracts) || initialServiceContracts);
@@ -6496,15 +6623,15 @@ function SetvacoBusinessSystem() {
       <main className="mis-scroll" style={{ flex: 1, overflow: "auto", padding: 24 }}>
         <div key={nav} className="mis-view-enter">
           {nav === "dashboard" && <Dashboard items={items} quotations={quotations} invoices={invoices} purchaseOrders={purchaseOrders} customers={customers} serviceContracts={serviceContracts} auditLog={auditLog} realBranches={realBranches} role={role} lang={lang} />}
-          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
-          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "partsInventory" && <InventoryPanel type="part" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} auditLog={auditLog} lang={lang} />}
+          {nav === "equipmentInventory" && <InventoryPanel type="equipment" items={items} setItems={setItems} stockRooms={stockRooms} setStockRooms={setStockRooms} realBranches={realBranches} reloadStock={reloadStock} dataLoading={dataLoading} dataError={dataError} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} vendors={vendors} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} auditLog={auditLog} lang={lang} />}
           {nav === "salesoverview" && <SalesOverview quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} customers={customers} items={items} purchaseOrders={purchaseOrders} role={role} lang={lang} />}
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} items={items} taxProfiles={taxProfiles} reloadSales={reloadSales} reloadCustomers={reloadCustomers} reloadStock={reloadStock} quotations={quotations} setQuotations={setQuotations} invoices={invoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
           {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} setContracts={setServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
-          {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} vendors={vendors} reloadVendors={reloadVendors} items={items} reloadStock={reloadStock} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "attendance" && <AttendancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}

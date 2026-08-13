@@ -274,13 +274,25 @@ admin can escalate it.
   existing user's role isn't wired to a backend action yet — the "Access
   Level" column is read-only.
 
+- Purchasing: Vendors (`vendors`, root table, admin/procurement write,
+  admin/procurement/finance read), Purchase Orders (`purchase_orders` +
+  `purchase_order_lines`, created only via `create_purchase_order()` and
+  advanced only via `advance_purchase_order()` — both SECURITY DEFINER,
+  direct table writes revoked from `authenticated`, same posture as
+  quotations/invoices). Receiving a PO moves real stock through
+  `adjust_stock()` (reason `purchase_receipt`). A PO belongs to either a
+  vendor (normal order) or a customer (the "Match PO Code" flow, matching
+  an inbound industry-standard code to one of SETVACO's own customers) —
+  never neither. See `20260813210923_purchasing.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): purchase orders, service jobs, vendors, assets, service
-contracts, reports, price books, notifications, variance/audit. These need
-their own migrations (`purchase_orders` + line tables, `service_jobs`,
-`vendors`, an `adjust_stock` call with reason `purchase_receipt` when a PO
-is received) before they're real. `nav_permissions` (server-side mirror of
-the role→nav-item matrix) also doesn't exist yet in this schema.
+this schema): service jobs, assets, service contracts, reports, price
+books, notifications, variance/audit. These need their own migrations
+(`service_jobs`, an assets/contracts schema) before they're real.
+`nav_permissions` (server-side mirror of the role→nav-item matrix) also
+doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
+(Finance) are natural next steps now that Purchasing/Vendors are real, but
+aren't built yet.
 
 ## Migrations
 
