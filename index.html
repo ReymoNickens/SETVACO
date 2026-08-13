@@ -560,8 +560,10 @@ const ROOMS = [
     { key: "access", label: "Users & Access", icon: KeyRound, roles: ["director", "admin"] },
     { key: "financials", label: "Company Financials", icon: BarChart3, roles: ["director"] },
   ] },
-  { tag: "MR", name: "Meeting Room", stations: [
+  { tag: "MR", name: "Meeting Room", feature: "meetings", stations: [
     { key: "meetingroom", label: "Start a Meeting", icon: MessageSquare, roles: ALL_ROLES },
+    { key: "meetingscheduled", label: "Scheduled Meetings", icon: CalendarDays, roles: ALL_ROLES },
+    { key: "meetingrecordings", label: "Recordings & Transcripts", icon: FileText, roles: ALL_ROLES },
   ] },
 ];
 // Flat, backward-compatible view of the same data — CommandPalette, the
@@ -607,6 +609,8 @@ const TRANSLATIONS = {
     "nav.contracts": "Service Contracts",
     "nav.purchasing": "Purchase Orders",
     "nav.meetingroom": "Start a Meeting",
+    "nav.meetingscheduled": "Scheduled Meetings",
+    "nav.meetingrecordings": "Recordings & Transcripts",
     "nav.customers": "Customers",
     "nav.reports": "Reports",
     "nav.variance": "Variance & Audit",
@@ -1138,6 +1142,8 @@ const TRANSLATIONS = {
     "nav.contracts": "Contrats de service",
     "nav.purchasing": "Bons de commande",
     "nav.meetingroom": "Démarrer une réunion",
+    "nav.meetingscheduled": "Réunions programmées",
+    "nav.meetingrecordings": "Enregistrements et transcriptions",
     "nav.customers": "Clients",
     "nav.reports": "Rapports",
     "nav.variance": "Écarts et audit",
@@ -4980,6 +4986,71 @@ function SubmitExpenseModal({ profile, categories, currentUser, logAction, pushN
 }
 
 // ---------------------------------------------------------------------------
+// Meeting Room, Phase 1 — voice/video calling via Daily.co (see
+// create-meeting-room Edge Function). "Start a Meeting" is real; the other
+// two stations are Phase 2/3 (recording+consent, transcription — see
+// docs/architecture.md) and shown as clearly-labeled not-yet-available
+// placeholders rather than built ahead of that design work.
+// ---------------------------------------------------------------------------
+function ComingSoonPanel({ title, note }) {
+  return <div className="mis-crosshatch" style={{ padding: 40, textAlign: "center" }}>
+    <div className="mis-mono" style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-faint)", marginBottom: 6 }}>{title}</div>
+    <div style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{note}</div>
+  </div>;
+}
+function MeetingRoomPanel({ currentUser, logAction, lang }) {
+  const [title, setTitle] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [activeMeeting, setActiveMeeting] = useState(null);
+
+  async function startMeeting(e) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { data, error: invokeError } = await window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } });
+      // supabase-js only rejects on network failure — a 503/502/500 from
+      // the function still resolves here with `data` holding the error
+      // body, so both paths need checking.
+      if (invokeError) throw invokeError;
+      if (!data || data.error) throw new Error((data && data.message) || (data && data.error) || "Could not start the meeting.");
+      setActiveMeeting(data.meeting);
+      logAction(currentUser, `Started a meeting${title.trim() ? `: ${title.trim()}` : ""}`, "Meeting Room");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (activeMeeting) {
+    return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 className="mis-eyebrow">{activeMeeting.title}</h3>
+        <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { setActiveMeeting(null); setTitle(""); }}>Leave</button>
+      </div>
+      <iframe
+        src={activeMeeting.daily_room_url}
+        allow="camera; microphone; fullscreen; display-capture; autoplay"
+        style={{ width: "100%", height: "70vh", border: "1px solid var(--border)" }}
+      />
+    </div>;
+  }
+
+  return <div className="mis-panel" style={{ padding: 24, maxWidth: 480 }}>
+    <h3 className="mis-eyebrow" style={{ marginBottom: 4 }}>Meeting Room</h3>
+    <div className="mis-display" style={{ fontSize: 20, color: "var(--brand)", marginBottom: 18 }}>Start a Meeting</div>
+    <form onSubmit={startMeeting} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <Field label="Meeting Title (optional)"><TInput value={title} onChange={e => setTitle(e.target.value)} placeholder="Weekly stock review" /></Field>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{busy ? "Starting…" : "Start Meeting"}</button>
+    </form>
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
 // MAIN APP
 // ---------------------------------------------------------------------------
 function SetvacoBusinessSystem() {
@@ -5315,6 +5386,9 @@ function SetvacoBusinessSystem() {
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} setUsers={setUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
+          {nav === "meetingroom" && <MeetingRoomPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "meetingscheduled" && <ComingSoonPanel title="Scheduled Meetings" note="Meeting scheduling is planned for a later phase — Start a Meeting works today for instant calls." />}
+          {nav === "meetingrecordings" && <ComingSoonPanel title="Recordings & Transcripts" note="Recording (opt-in, clearly disclosed) and transcription are planned for later phases, once retention policy is defined." />}
         </div>
       </main>
     </div>
