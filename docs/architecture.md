@@ -232,18 +232,28 @@ admin can escalate it.
   platform-admin path (`is_platform_admin()`) — see "Per-tenant feature
   gating and branding" and "Platform admin" above. No profile has the
   platform-admin flag set yet (provisioning is a manual step, not done).
+- HR Office: Employee Records (`employee_details`, 1:1 extension of
+  `profiles`), Leave Requests (self-service file + admin/hr approve),
+  Attendance (self-service clock in/out, `attendance_records`, one row per
+  employee per day — see `20260813170205_attendance.sql`).
+- Finance Office: Expenses (self-service submit + admin/finance
+  approve/reject/mark-paid; submitter can't approve their own, enforced
+  server-side).
+- Users & Access: real `profiles` roster, real account creation/
+  suspend/reactivate through `admin-manage-user` (see above). Changing an
+  existing user's role isn't wired to a backend action yet — the "Access
+  Level" column is read-only.
 
 **Still local demo state in `index.html`** (untouched, not yet migrated to
 this schema): purchase orders, service jobs, vendors, assets, service
-contracts, reports, price books, users & access management, notifications,
-variance/audit. These need their own migrations (`purchase_orders` + line
-tables, `service_jobs`, `vendors`, an `adjust_stock` call with reason
-`purchase_receipt` when a PO is received) before they're real.
-`nav_permissions` (server-side mirror of the role→nav-item matrix) also
-doesn't exist yet in this schema. HR and Finance are gated in
-`tenant_features` (keys exist) but have no tables of their own yet — the
-multi-tenant foundation (this migration) was deliberately built first so
-those modules don't have to retrofit tenant scoping later.
+contracts, reports, price books, notifications, variance/audit. These need
+their own migrations (`purchase_orders` + line tables, `service_jobs`,
+`vendors`, an `adjust_stock` call with reason `purchase_receipt` when a PO
+is received) before they're real. `nav_permissions` (server-side mirror of
+the role→nav-item matrix) also doesn't exist yet in this schema. Payroll
+(salary setup in HR, pay-run disbursement in Finance) is scoped but not
+yet built — deliberately deferred as its own pass given the added weight
+of Ghana SSNIT/PAYE deduction compliance.
 
 ## Migrations
 
@@ -289,17 +299,18 @@ check, an admin from one company could suspend a login belonging to a
 `audit_log` insert wrote a nonexistent `actor_name` column and omitted the
 required `company_id`, which would have errored on any actual invocation.
 
-Not yet deployed to the live project (Edge Functions aren't part of a SQL
-migration and are deployed separately), and not yet called by the
-frontend — "Users & Access" in `index.html` is still local demo state (see
-"What's built vs. not yet built"). The only account that exists today is
-still the bootstrap admin, provisioned by hand directly against the
-database during setup and left to set its own password via a genuine
-Supabase password-recovery email (nobody, including the person who built
-this, ever knew or stored that password in plaintext). Because `create`
-always provisions under the *caller's own* company, this function can only
-ever add staff to a company that already has an active admin — it can't
-bootstrap the very first admin of a brand new company (SETVACO's own
-bootstrap admin or the first `evolveit` platform-admin login). That first
-account per company still has to be created by hand, directly against the
-database/Auth Admin API, same as SETVACO's was.
+Deployed to the live project and wired into the frontend — "Users &
+Access" in `index.html` creates real accounts through this function (no
+password field in the create-user form; the temp password is
+server-generated and never seen by the calling admin) and calls it again
+for suspend/reactivate. The bootstrap admin remains the one account
+created by hand directly against the database during setup, left to set
+its own password via a genuine Supabase password-recovery email (nobody,
+including the person who built this, ever knew or stored that password in
+plaintext). Because `create` always provisions under the *caller's own*
+company, this function can only ever add staff to a company that already
+has an active admin — it can't bootstrap the very first admin of a brand
+new company (SETVACO's own bootstrap admin or the first `evolveit`
+platform-admin login). That first account per company still has to be
+created by hand, directly against the database/Auth Admin API, same as
+SETVACO's was.

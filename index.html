@@ -392,6 +392,8 @@ const Sliders = p => <Icon {...p} paths={<><line x1="4" y1="6" x2="20" y2="6"/><
 const Tags = p => <Icon {...p} paths={<><path d="M14 3h5v5L9 18l-6-6L14 3z"/><circle cx="16" cy="6" r="1" fill="currentColor" stroke="none"/></>} />;
 const Receipt = p => <Icon {...p} paths={<><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></>} />;
 const CalendarDays = p => <Icon {...p} paths={<><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7" y1="13" x2="7" y2="13.01"/><line x1="12" y1="13" x2="12" y2="13.01"/><line x1="17" y1="13" x2="17" y2="13.01"/></>} />;
+const Clock = p => <Icon {...p} paths={<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></>} />;
+const Banknote = p => <Icon {...p} paths={<><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="10" x2="6" y2="10.01"/><line x1="18" y1="14" x2="18" y2="14.01"/></>} />;
 
 // Core-sample mark: drill-core cylinder with layered strata, recolored per item.
 function CoreSample({ layers, size = 40 }) {
@@ -548,6 +550,7 @@ const ROOMS = [
   ] },
   { tag: "HR", name: "HR Office", feature: "hr", stations: [
     { key: "employees", label: "Employee Records", icon: Users, roles: ["admin", "hr", "finance"] },
+    { key: "attendance", label: "Attendance", icon: Clock, feature: "attendance", roles: ALL_ROLES.concat(["hr"]) },
     { key: "leaverequests", label: "Leave Requests", icon: CalendarDays, roles: ALL_ROLES.concat(["hr"]) },
   ] },
   { tag: "FN", name: "Finance Office", feature: "finance", stations: [
@@ -617,6 +620,10 @@ const TRANSLATIONS = {
     "nav.staffActivity": "Staff Activity",
     "nav.financials": "Company Financials",
     "nav.access": "Users & Access",
+    "nav.employees": "Employee Records",
+    "nav.attendance": "Attendance",
+    "nav.leaverequests": "Leave Requests",
+    "nav.expenses": "Expenses",
     "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -1151,6 +1158,10 @@ const TRANSLATIONS = {
     "nav.staffActivity": "Activité du personnel",
     "nav.financials": "Finances de l'entreprise",
     "nav.access": "Utilisateurs et accès",
+    "nav.employees": "Dossiers du personnel",
+    "nav.attendance": "Présence",
+    "nav.leaverequests": "Demandes de congé",
+    "nav.expenses": "Dépenses",
     "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -1930,6 +1941,11 @@ async function fetchLeaveTypes() {
 }
 async function fetchLeaveRequests() {
   const { data, error } = await window.sb.from("leave_requests").select("*, profiles!leave_requests_employee_id_fkey(name)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchAttendanceRecords() {
+  const { data, error } = await window.sb.from("attendance_records").select("*, profiles!attendance_records_employee_id_fkey(name)").order("work_date", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -4864,6 +4880,110 @@ function FileLeaveRequestModal({ profile, leaveTypes, currentUser, logAction, pu
 }
 
 // ---------------------------------------------------------------------------
+// HR — Attendance. Self-service clock in/out for everyone, matching
+// attendance_records' RLS exactly (attendance_records_select/_insert/
+// _update in 20260813170205_attendance.sql): an employee can always see
+// and punch their own row; admin/hr additionally see and correct the
+// whole company's roster.
+// ---------------------------------------------------------------------------
+function AttendancePanel({ profile, role, currentUser, logAction, lang }) {
+  const canManage = ["admin", "hr"].includes(role);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setRows(await fetchAttendanceRecords());
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  const today = todayISO();
+  const todayRow = rows.find(r => r.employee_id === profile.id && r.work_date === today);
+
+  async function clockIn() {
+    if (busy) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      const { error } = await window.sb.from("attendance_records").insert({ employee_id: profile.id, clock_in: new Date().toISOString() });
+      if (error) throw error;
+      await reload();
+      logAction(currentUser, "Clocked in", "HR");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function clockOut() {
+    if (busy || !todayRow) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      const { error } = await window.sb.from("attendance_records").update({ clock_out: new Date().toISOString() }).eq("id", todayRow.id);
+      if (error) throw error;
+      await reload();
+      logAction(currentUser, "Clocked out", "HR");
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const fmtTime = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+  const fmtHours = r => {
+    if (!r.clock_in || !r.clock_out) return "—";
+    const hrs = (new Date(r.clock_out) - new Date(r.clock_in)) / 3600000;
+    return hrs.toFixed(1) + "h";
+  };
+  const visibleRows = canManage ? rows : rows.filter(r => r.employee_id === profile.id);
+
+  if (loading) return <div className="mis-empty">Loading attendance…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    {actionError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{actionError}</p>}
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <div>
+        <h3 className="mis-eyebrow" style={{ marginBottom: 4 }}>Today</h3>
+        <p className="mis-mono" style={{ fontSize: 13 }}>
+          {todayRow ? <React.Fragment>In: {fmtTime(todayRow.clock_in)} {todayRow.clock_out ? <React.Fragment>· Out: {fmtTime(todayRow.clock_out)}</React.Fragment> : null}</React.Fragment> : "Not clocked in yet"}
+        </p>
+      </div>
+      {!todayRow && <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={clockIn}><Clock size={14} /> Clock In</button>}
+      {todayRow && !todayRow.clock_out && <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={clockOut}><Clock size={14} /> Clock Out</button>}
+      {todayRow && todayRow.clock_out && <Badge color="var(--safe)" soft="var(--safe-soft)">Day complete</Badge>}
+    </div>
+    <div>
+      <h3 className="mis-eyebrow" style={{ marginBottom: 12 }}>{canManage ? "Company Roster" : "Your Recent Days"}</h3>
+      <DataTable
+        columns={[
+          ...(canManage ? [{ header: "Employee", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> }] : []),
+          { header: "Date", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{r.work_date}</span> },
+          { header: "Clock In", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtTime(r.clock_in)}</span> },
+          { header: "Clock Out", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtTime(r.clock_out)}</span> },
+          { header: "Hours", render: r => <span className="mis-mono" style={{ fontSize: 12 }}>{fmtHours(r)}</span> },
+        ]}
+        rows={visibleRows}
+        rowKey={r => r.id}
+        empty="No attendance records yet."
+      />
+    </div>
+  </div>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance — Expenses. Same self-service + admin/finance-manage shape as
 // Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
 // in 20260812000200_hr_finance.sql — note the submitter can't approve
@@ -5393,6 +5513,7 @@ function SetvacoBusinessSystem() {
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
+          {nav === "attendance" && <AttendancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
