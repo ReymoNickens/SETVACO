@@ -2441,13 +2441,27 @@ function CustomerPickerField({ customerId, setCustomerId, isNew, setIsNew, newFi
     </div>}
   </div>;
 }
-function resolveOrCreateCustomer({ isNew, newFields, customerId, customers, setCustomers, logAction, currentUser }) {
+// customers is a live mirror of the real `customers` table everywhere else
+// in the app (see reloadCustomers) — this used to append a client-only,
+// never-persisted row here instead, which then vanished the moment
+// anything reloaded customers, and could hand a fake id into
+// create_quotation's real p_customer_id (a FK violation server-side).
+// Inserts for real now, same as CreateCustomerModal.
+async function resolveOrCreateCustomer({ isNew, newFields, customerId, customers, reloadCustomers, logAction, currentUser }) {
   if (!isNew) return customers.find(c => c.id === customerId) || null;
   if (!newFields.name.trim()) return null;
-  const customer = { id: uid("C", customers, 2), name: newFields.name.trim(), country: newFields.country.trim() || "—", tier: "Standard", creditLimit: 0, outstanding: 0, taxExempt: false, address: "", email: "", phone: "", contactPerson: "", contactAddress: "", companyDetails: "", poCode: "", contacts: [], walkIn: true };
-  setCustomers(cs => [...cs, customer]);
-  logAction(currentUser, `Created walk-in customer record for ${customer.name}`, "Customers");
-  return customer;
+  const { data, error } = await window.sb.from("customers")
+    .insert({ name: newFields.name.trim(), tier: "Standard", is_walk_in: true })
+    .select()
+    .single();
+  if (error) throw error;
+  await reloadCustomers();
+  logAction(currentUser, `Created walk-in customer record for ${data.name}`, "Customers");
+  // country is free-text here (no country picker in this quick-add flow,
+  // unlike CreateCustomerModal) so it isn't a real country_code — the
+  // customer row is inserted without one; create_quotation already
+  // defaults currency/tax sensibly when country_code is null.
+  return { id: data.id, name: data.name, country: newFields.country.trim() || "—", countryCode: null, tier: "Standard", creditLimit: 0, outstanding: 0, taxExempt: false, contacts: [] };
 }
 
 function CreateQuotationModal({ type, customers, inventoryItems, taxProfiles, reloadSales, currentUser, logAction, pushNotification, onClose, onCreated, defaultCustomerId, defaultLines, lang }) {
@@ -2671,7 +2685,7 @@ function JobDetailDrawer({ job, customer, assets, role, currentUser, logAction, 
   </Drawer>;
 }
 
-function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, items, quotations, setQuotations, approvalSettings, priceBooks, priceBookEntries, users, assets, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
+function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, reloadCustomers, items, quotations, setQuotations, approvalSettings, priceBooks, priceBookEntries, users, assets, role, currentUser, logAction, pushNotification, emailTemplates, lang }) {
   const canManage = ["director", "admin", "service"].includes(role);
   const [form, setForm] = useState({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
   const [isNewCustomer, setIsNewCustomer] = useState(false);
@@ -2681,19 +2695,29 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [showCreate, setShowCreate] = useState(null);
   const [sendDoc, setSendDoc] = useState(null);
+  const [submitBusy, setSubmitBusy] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (!form.jobType) return;
-    const customer = resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId: form.customerId, customers, setCustomers, logAction, currentUser });
-    if (!customer) return;
-    const jobNumber = uid("SJ", serviceJobs, 3);
-    const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO(), assetId: form.assetId || "" };
-    setServiceJobs(js => [job, ...js]);
-    logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
-    setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
-    setIsNewCustomer(false);
-    setNewCustomerFields({ name: "", country: "" });
+    if (!form.jobType || submitBusy) return;
+    setSubmitBusy(true);
+    setSubmitError("");
+    try {
+      const customer = await resolveOrCreateCustomer({ isNew: isNewCustomer, newFields: newCustomerFields, customerId: form.customerId, customers, reloadCustomers, logAction, currentUser });
+      if (!customer) return;
+      const jobNumber = uid("SJ", serviceJobs, 3);
+      const job = { id: jobNumber, jobNumber, customer: customer.name, customerId: customer.id, type: form.jobType, country: form.country || customer.country, description: form.description, technician: "Unassigned", itemId: "", itemName: "", qty: 0, eta: form.eta, preparedBy: form.preparedBy || currentUser, feedbackLog: [], status: "Open", date: todayISO(), assetId: form.assetId || "" };
+      setServiceJobs(js => [job, ...js]);
+      logAction(currentUser, `Logged service job ${job.id} (${job.type}) for ${customer.name}`, "Service");
+      setForm({ customerId: "", jobType: "", country: "", description: "", eta: "", preparedBy: currentUser, assetId: "" });
+      setIsNewCustomer(false);
+      setNewCustomerFields({ name: "", country: "" });
+    } catch (err) {
+      setSubmitError(err.message);
+    } finally {
+      setSubmitBusy(false);
+    }
   }
   function complete(id) {
     setServiceJobs(js => js.map(j => j.id === id ? { ...j, status: "Completed" } : j));
@@ -2721,7 +2745,8 @@ function ServiceJobsTab({ serviceJobs, setServiceJobs, customers, setCustomers, 
           {assets.filter(a => a.customerId === form.customerId).map(a => <option key={a.id} value={a.id}>{a.itemName} — {a.serialNumber}</option>)}
         </TSelect>
       </Field>}
-      <button type="submit" className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {t(lang, "sj.logServiceJobBtn")}</button>
+      {submitError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{submitError}</p>}
+      <button type="submit" disabled={submitBusy} className="mis-btn-primary mis-focus" style={{ alignSelf: "flex-start" }}><Plus size={14} /> {submitBusy ? t(lang, "login.loading") : t(lang, "sj.logServiceJobBtn")}</button>
     </form>}
     <DataTable
       columns={[
@@ -5045,7 +5070,7 @@ function SetvacoBusinessSystem() {
           {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} setAssets={setAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
           {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} setContracts={setServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
           {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
-          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
+          {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} setServiceJobs={setServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} setPurchaseOrders={setPurchaseOrders} vendors={vendors} setVendors={setVendors} items={items} setItems={setItems} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
