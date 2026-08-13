@@ -245,7 +245,14 @@ admin can escalate it.
   — expiry status is computed by the frontend from `expiry_date`, not
   stored), Recruitment (admin/hr only end to end — no self-service side,
   since a candidate isn't a system user — `job_openings` + `candidates`;
-  stops at "hired," no onboarding-checklist workflow in this pass).
+  stops at "hired," no onboarding-checklist workflow in this pass),
+  Employee Documents (self-service view, admin/hr-only upload —
+  `employee_documents` metadata + a private `employee-documents` Storage
+  bucket, the first use of Supabase Storage anywhere in this schema.
+  Objects are keyed `{company_id}/{employee_id}/{uuid}-{filename}` and
+  `storage.objects` has its own RLS policies mirroring the table's, so a
+  doc is only ever reachable via a short-lived signed URL, never a public
+  link — see `20260813203106_employee_documents.sql`).
 - Finance Office: Expenses (self-service submit + admin/finance
   approve/reject/mark-paid; submitter can't approve their own, enforced
   server-side), Budgets (admin/finance set an amount per expense category

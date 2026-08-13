@@ -555,6 +555,7 @@ const ROOMS = [
     { key: "performance", label: "Performance & Discipline", icon: FileSignature, feature: "performance", roles: ALL_ROLES.concat(["hr"]) },
     { key: "certifications", label: "Training & Certifications", icon: Tags, feature: "certifications", roles: ALL_ROLES.concat(["hr"]) },
     { key: "recruitment", label: "Recruitment", icon: UserPlus, feature: "recruitment", roles: ["admin", "hr"] },
+    { key: "employeeDocuments", label: "Employee Documents", icon: FileText, feature: "employee_documents", roles: ALL_ROLES.concat(["hr"]) },
     { key: "payrollSetup", label: "Payroll Setup", icon: Banknote, feature: "payroll", roles: ["admin", "hr"] },
   ] },
   { tag: "FN", name: "Finance Office", feature: "finance", stations: [
@@ -638,6 +639,7 @@ const TRANSLATIONS = {
     "nav.certifications": "Training & Certifications",
     "nav.budgets": "Budgets",
     "nav.recruitment": "Recruitment",
+    "nav.employeeDocuments": "Employee Documents",
     "role.director": "Director",
     "role.admin": "Administrator",
     "role.sales": "Sales Officer",
@@ -1183,6 +1185,7 @@ const TRANSLATIONS = {
     "nav.certifications": "Formation et certifications",
     "nav.budgets": "Budgets",
     "nav.recruitment": "Recrutement",
+    "nav.employeeDocuments": "Documents du personnel",
     "role.director": "Directeur",
     "role.admin": "Administrateur",
     "role.sales": "Chargé(e) des ventes",
@@ -2012,6 +2015,11 @@ async function fetchJobOpenings() {
 }
 async function fetchCandidates(openingId) {
   const { data, error } = await window.sb.from("candidates").select("*").eq("opening_id", openingId).order("applied_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+async function fetchEmployeeDocuments() {
+  const { data, error } = await window.sb.from("employee_documents").select("*, profiles!employee_documents_employee_id_fkey(name)").order("created_at", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -5853,6 +5861,122 @@ function AddCandidateModal({ opening, currentUser, logAction, onClose, onAdded }
 }
 
 // ---------------------------------------------------------------------------
+// HR — Employee Documents. Self-service view, admin/hr-only upload,
+// matching employee_documents' table RLS *and* the storage.objects
+// policies on the `employee-documents` bucket (both in
+// 20260813203106_employee_documents.sql) — a doc is only ever fetched via
+// a short-lived signed URL, never a public link, since the bucket is
+// private.
+// ---------------------------------------------------------------------------
+function EmployeeDocumentsPanel({ profile, role, currentUser, logAction, lang }) {
+  const canManage = ["admin", "hr"].includes(role);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [showUpload, setShowUpload] = useState(false);
+
+  async function reload() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      setRows(await fetchEmployeeDocuments());
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function openDoc(doc) {
+    setActionError("");
+    const { data, error } = await window.sb.storage.from("employee-documents").createSignedUrl(doc.storage_path, 60);
+    if (error) { setActionError(error.message); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  const visibleRows = canManage ? rows : rows.filter(r => r.employee_id === profile.id);
+
+  if (loading) return <div className="mis-empty">Loading documents…</div>;
+  if (loadError) return <p style={{ fontSize: 12, color: "var(--vital)" }}>{loadError}</p>;
+
+  return <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {actionError && <p style={{ fontSize: 12, color: "var(--vital)" }}>{actionError}</p>}
+    {canManage && <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <button type="button" className="mis-btn-primary mis-focus" onClick={() => setShowUpload(true)}><Upload size={14} /> Upload Document</button>
+    </div>}
+    <DataTable
+      columns={[
+        { header: "Code", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.display_code}</span> },
+        ...(canManage ? [{ header: "Employee", render: r => <span style={{ color: "var(--text-primary)" }}>{r.profiles ? r.profiles.name : "—"}</span> }] : []),
+        { header: "Type", render: r => <Badge color="var(--info)" soft="var(--info-soft)">{r.doc_type}</Badge> },
+        { header: "File", render: r => <button type="button" className="mis-link-btn" onClick={() => openDoc(r)}>{r.file_name}</button> },
+        { header: "Uploaded", render: r => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtDateTime(r.created_at)}</span> },
+      ]}
+      rows={visibleRows}
+      rowKey={r => r.id}
+      empty="No documents on file."
+    />
+    {showUpload && <UploadDocumentModal profile={profile} currentUser={currentUser} logAction={logAction} onClose={() => setShowUpload(false)} onUploaded={async () => { setShowUpload(false); await reload(); }} />}
+  </div>;
+}
+function UploadDocumentModal({ profile, currentUser, logAction, onClose, onUploaded }) {
+  const [profiles, setProfiles] = useState([]);
+  const [employeeId, setEmployeeId] = useState("");
+  const [docType, setDocType] = useState("Contract");
+  const [file, setFile] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { fetchProfiles().then(p => setProfiles(p.filter(x => x.status === "Active"))).catch(err => setError(err.message)); }, []);
+  async function submit(e) {
+    e.preventDefault();
+    if (!employeeId || !file || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const path = `${profile.company_id}/${employeeId}/${crypto.randomUUID()}-${file.name}`;
+      const { error: uploadError } = await window.sb.storage.from("employee-documents").upload(path, file);
+      if (uploadError) throw uploadError;
+      const { error: insertError } = await window.sb.from("employee_documents").insert({
+        employee_id: employeeId,
+        doc_type: docType,
+        file_name: file.name,
+        storage_path: path,
+        file_size: file.size,
+      });
+      if (insertError) throw insertError;
+      logAction(currentUser, `Uploaded ${docType.toLowerCase()} document "${file.name}"`, "HR");
+      onUploaded();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title="Upload Employee Document" onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>Cancel</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? "Uploading…" : "Upload"}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label="Employee">
+        <TSelect required value={employeeId} onChange={e => setEmployeeId(e.target.value)}>
+          <option value="">Select employee…</option>
+          {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </TSelect>
+      </Field>
+      <Field label="Document Type">
+        <TSelect value={docType} onChange={e => setDocType(e.target.value)}>
+          {["Contract", "ID", "Certificate", "Payslip", "Other"].map(t => <option key={t} value={t}>{t}</option>)}
+        </TSelect>
+      </Field>
+      <FileDrop label={file ? file.name : "Click or drag a file here"} onFile={setFile} hint="PDF, image, or document file" />
+    </form>
+  </Modal>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance — Expenses. Same self-service + admin/finance-manage shape as
 // Leave Requests, matching expenses' RLS (expenses_select/_insert/_update
 // in 20260812000200_hr_finance.sql — note the submitter can't approve
@@ -6391,6 +6515,7 @@ function SetvacoBusinessSystem() {
           {nav === "certifications" && <CertificationsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "budgets" && <BudgetsPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "recruitment" && <RecruitmentPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "employeeDocuments" && <EmployeeDocumentsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
