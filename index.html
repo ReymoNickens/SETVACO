@@ -6417,37 +6417,42 @@ function ComingSoonPanel({ title, note }) {
 function MeetingRoomPanel({ currentUser, logAction, lang }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
+  const [waitingLong, setWaitingLong] = useState(false);
   const [error, setError] = useState("");
   const [activeMeeting, setActiveMeeting] = useState(null);
+  // Identifies which startMeeting() call is still "current" so a slow
+  // response from an abandoned attempt can never resolve after the fact and
+  // silently swap in a different room. An earlier version let a timed-out
+  // request keep running in the background and apply its result whenever it
+  // eventually arrived — combined with the button re-enabling on timeout,
+  // that let a second (or third) click fire off ANOTHER room-creation call
+  // while the first was still in flight, and each of those, once it landed,
+  // replaced the iframe's `src` with a freshly created Daily.co room. Each
+  // fresh room is a brand-new page load that runs its own camera/mic
+  // permission check, which is what was showing up as the permission prompt
+  // repeatedly reappearing even after being denied. One request per
+  // explicit click, and only the click that's still current is allowed to
+  // touch state, closes that off.
+  const requestIdRef = useRef(0);
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   async function startMeeting(e) {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
+    setWaitingLong(false);
     setError("");
-    // Without a timeout, a hung request to the Edge Function (e.g. Daily.co's
-    // own API stalling) left the button stuck on "Starting…" forever — no
-    // error, no way to tell the user anything was wrong. But the room
-    // creation (Daily API call + DB insert) sometimes genuinely takes longer
-    // than the timeout under normal conditions — confirmed by real meeting
-    // rows appearing in the database seconds after the client had already
-    // given up and shown a timeout error. Abandoning the wait doesn't cancel
-    // the underlying request, so it's still tracked here: if it succeeds
-    // late, the UI recovers into the meeting instead of leaving the user
-    // stuck looking at a failure for a meeting that actually started fine.
-    let timedOut = false;
-    const invokePromise = window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } });
-    invokePromise.then(({ data, error: invokeError }) => {
-      if (!timedOut) return;
-      if (!invokeError && data && !data.error && data.meeting) {
-        setActiveMeeting(data.meeting);
-        setError("");
-        logAction(currentUser, `Started a meeting${title.trim() ? `: ${title.trim()}` : ""}`, "Meeting Room");
-      }
-    }).catch(() => {});
+    const requestId = ++requestIdRef.current;
+    // Purely cosmetic — keeps the button honest if Daily's API + the DB
+    // round trip runs long, without abandoning the request or letting the
+    // user fire off a second one (the button stays disabled the whole time).
+    const longWaitTimer = setTimeout(() => {
+      if (mountedRef.current && requestIdRef.current === requestId) setWaitingLong(true);
+    }, 8000);
     try {
-      const timeout = new Promise((_, reject) => setTimeout(() => { timedOut = true; reject(new Error("This is taking longer than usual. Hang on — the meeting may still connect in a moment.")); }, 15000));
-      const { data, error: invokeError } = await Promise.race([invokePromise, timeout]);
+      const { data, error: invokeError } = await window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } });
+      if (!mountedRef.current || requestIdRef.current !== requestId) return; // superseded or unmounted — drop it
       // supabase-js only rejects on network failure — a 503/502/500 from
       // the function still resolves here with `data` holding the error
       // body, so both paths need checking.
@@ -6469,9 +6474,10 @@ function MeetingRoomPanel({ currentUser, logAction, lang }) {
       setActiveMeeting(data.meeting);
       logAction(currentUser, `Started a meeting${title.trim() ? `: ${title.trim()}` : ""}`, "Meeting Room");
     } catch (err) {
-      setError(err.message);
+      if (mountedRef.current && requestIdRef.current === requestId) setError(err.message);
     } finally {
-      setBusy(false);
+      clearTimeout(longWaitTimer);
+      if (mountedRef.current && requestIdRef.current === requestId) { setBusy(false); setWaitingLong(false); }
     }
   }
 
@@ -6495,7 +6501,7 @@ function MeetingRoomPanel({ currentUser, logAction, lang }) {
     <form onSubmit={startMeeting} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Field label="Meeting Title (optional)"><TInput value={title} onChange={e => setTitle(e.target.value)} placeholder="Weekly stock review" /></Field>
       {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
-      <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{busy ? "Starting…" : "Start Meeting"}</button>
+      <button type="submit" disabled={busy} className="mis-btn-primary mis-focus" style={{ justifyContent: "center" }}>{busy ? (waitingLong ? "Still connecting…" : "Starting…") : "Start Meeting"}</button>
     </form>
   </div>;
 }
