@@ -2117,6 +2117,14 @@ async function fetchPriceBookEntries() {
   if (error) throw error;
   return data;
 }
+function mapNotificationFromDb(row) {
+  return { id: row.id, ts: row.created_at, type: row.type, message: row.message, read: row.read };
+}
+async function fetchNotifications() {
+  const { data, error } = await window.sb.from("notifications").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 function mapAssetFromDb(row) {
   return {
     id: row.display_code,
@@ -4727,12 +4735,21 @@ function CompanyFinancials({ items, quotations, customers, lang }) {
 // ---------------------------------------------------------------------------
 // NOTIFICATIONS
 // ---------------------------------------------------------------------------
-function NotificationBell({ notifications, setNotifications, currentUser, lang }) {
+function NotificationBell({ notifications, reloadNotifications, lang }) {
   const [open, setOpen] = useState(false);
-  const visible = notifications.filter(n => !n.forUser || n.forUser === currentUser);
-  const unread = visible.filter(n => !n.read).length;
-  function toggle() {
-    setOpen(o => { const next = !o; if (next) setNotifications(ns => ns.map(n => (!n.forUser || n.forUser === currentUser) ? { ...n, read: true } : n)); return next; });
+  // Server-side RLS already scopes `notifications` to company-wide rows
+  // plus whatever was targeted at the signed-in user — no client-side
+  // filtering needed here anymore.
+  const unread = notifications.filter(n => !n.read).length;
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && unread > 0) {
+      // Best-effort — if this fails the bell just stays lit until the next
+      // successful open, not worth surfacing an error for.
+      await window.sb.from("notifications").update({ read: true }).eq("read", false);
+      await reloadNotifications();
+    }
   }
   return <div style={{ position: "relative" }}>
     <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: 8, position: "relative" }} onClick={toggle}>
@@ -4741,8 +4758,8 @@ function NotificationBell({ notifications, setNotifications, currentUser, lang }
     </button>
     {open && <div className="mis-panel" style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, borderRadius: 2, zIndex: 60, maxHeight: 360, overflowY: "auto" }}>
       <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)", fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase" }}>{t(lang, "nb.notifications")}</div>
-      {visible.length === 0 && <div className="mis-empty">{t(lang, "nb.nothingYet")}</div>}
-      {visible.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
+      {notifications.length === 0 && <div className="mis-empty">{t(lang, "nb.nothingYet")}</div>}
+      {notifications.map(n => <div key={n.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-soft)" }}>
         <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{n.message}</div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{fmtDateTime(n.ts)}</div>
       </div>)}
@@ -6641,6 +6658,10 @@ function SetvacoBusinessSystem() {
     setPriceBooks(bookRows.map(mapPriceBookFromDb));
     setPriceBookEntries(entryRows.map(mapPriceBookEntryFromDb));
   }
+  async function reloadNotifications() {
+    const rows = await fetchNotifications();
+    setNotifications(rows.map(mapNotificationFromDb));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -6657,7 +6678,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6670,6 +6691,7 @@ function SetvacoBusinessSystem() {
           setServiceContracts(contractRows.map(mapServiceContractFromDb));
           setPriceBooks(priceBookRows.map(mapPriceBookFromDb));
           setPriceBookEntries(priceBookEntryRows.map(mapPriceBookEntryFromDb));
+          setNotifications(notificationRows.map(mapNotificationFromDb));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -6724,7 +6746,9 @@ function SetvacoBusinessSystem() {
   const [priceBookEntries, setPriceBookEntries] = useState([]);
   const [users, setUsers] = useState([]);
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
-  const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
+  // Notifications load from the real database (see the data-fetching
+  // useEffect below) — no local demo fallback, same as customers/stock.
+  const [notifications, setNotifications] = useState([]);
   const [approvalSettings, setApprovalSettings] = useState(() => (persisted && persisted.approvalSettings) || initialApprovalSettings);
   const [emailTemplates, setEmailTemplates] = useState(() => (persisted && persisted.emailTemplates) || initialEmailTemplates);
   const [toast, setToast] = useState(null);
@@ -6776,8 +6800,16 @@ function SetvacoBusinessSystem() {
     setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod, comments: [] }, ...al]);
     showToast(action);
   }
+  // forUser is a display name (matching every existing call site, and how
+  // currentUser/logAction identify people throughout this file) — resolved
+  // to a real profile id here since notifications.for_profile_id is a
+  // proper FK. Fire-and-forget: a failed notification insert shouldn't
+  // block whatever action triggered it, so this only logs to the console
+  // rather than surfacing an error to the user.
   function pushNotification(type, message, forUser) {
-    setNotifications(ns => [{ id: uid("N", ns, 3), ts: nowISO(), type, message, read: false, forUser: forUser || null }, ...ns]);
+    const target = forUser ? users.find(u => u.name === forUser) : null;
+    window.sb.from("notifications").insert({ type, message, for_profile_id: target ? target.id : null })
+      .then(({ error }) => { if (error) { console.error("pushNotification failed:", error); return; } reloadNotifications(); });
   }
   function commentOnActivity(entryId, note) {
     if (!note || !note.trim()) return;
@@ -6903,7 +6935,7 @@ function SetvacoBusinessSystem() {
           <button type="button" className="mis-btn-ghost mis-focus" onClick={() => setPaletteOpen(true)} style={{ color: "var(--text-tertiary)" }}>
             <Search size={14} /> {t(lang, "app.search")} <span className="mis-kbd" style={{ marginLeft: 6 }}>⌘K</span>
           </button>
-          <NotificationBell notifications={notifications} setNotifications={setNotifications} currentUser={currentUser} lang={lang} />
+          <NotificationBell notifications={notifications} reloadNotifications={reloadNotifications} lang={lang} />
           <div className="mis-panel-alt mis-focus" style={{ display: "flex", borderRadius: 4, border: "1px solid var(--border)", overflow: "hidden", fontSize: 12 }} title={t(lang, "app.language")}>
             <button type="button" onClick={() => setLang("en")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "en" ? "var(--ore)" : "transparent", color: lang === "en" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "en" ? 600 : 400 }}>EN</button>
             <button type="button" onClick={() => setLang("fr")} style={{ border: "none", cursor: "pointer", padding: "7px 10px", background: lang === "fr" ? "var(--ore)" : "transparent", color: lang === "fr" ? "#FFFFFF" : "var(--text-secondary)", fontWeight: lang === "fr" ? 600 : 400 }}>FR</button>

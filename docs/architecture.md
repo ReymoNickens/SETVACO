@@ -310,8 +310,18 @@ admin can escalate it.
   against local-state ids instead of real ones. See
   `20260814123925_price_books.sql`.
 
+- Notifications: the bell-icon inbox (`pushNotification()`), now backed by
+  `notifications` (company-wide when `for_profile_id` is null, otherwise
+  targeted — resolved from the display name every call site already
+  passes). Unlike `audit_log`, a notification carries no integrity
+  requirement, so it's a direct client insert under RLS rather than
+  RPC-only. `read` is a single shared flag rather than tracked per
+  recipient — a deliberate carry-over of the same simplification the
+  local-state version already had, not a new gap. See
+  `20260814132759_notifications.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): reports, notifications, variance/audit. `nav_permissions`
+this schema): reports, variance/audit. `nav_permissions`
 (server-side mirror of the role→nav-item matrix) also doesn't exist yet in
 this schema. Accounts Payable and Bank Reconciliation (Finance) are natural
 next steps now that Purchasing/Vendors are real, but aren't built yet.
