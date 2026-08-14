@@ -1060,6 +1060,23 @@ const TRANSLATIONS = {
     "va.severityCol": "Severity",
     "va.noteCol": "Note",
     "va.noVarianceFlags": "No variance flags.",
+    "va.recordCount": "Record a stock count",
+    "va.newCountTitle": "Record a Stock Count",
+    "va.itemLabel": "Item",
+    "va.countedQtyLabel": "Counted qty",
+    "va.noteLabel": "Note (optional)",
+    "va.addLine": "Add line",
+    "va.submitCount": "Submit count",
+    "va.recentCounts": "Recent Counts",
+    "va.noCounts": "No stock counts recorded yet.",
+    "va.post": "Post adjustments",
+    "va.posting": "Posting…",
+    "va.statusOpen": "Open",
+    "va.statusPosted": "Posted",
+    "va.countedByCol": "Counted by",
+    "va.selectItem": "Select an item…",
+    "va.systemQty": "System qty",
+    "va.postConfirm": "Post this count? Any variance will be reconciled into system stock immediately — this can't be undone.",
     "va.whenCol": "When",
     "va.userCol": "User",
     "va.moduleCol": "Module",
@@ -1609,6 +1626,23 @@ const TRANSLATIONS = {
     "va.severityCol": "Sévérité",
     "va.noteCol": "Note",
     "va.noVarianceFlags": "Aucun écart signalé.",
+    "va.recordCount": "Enregistrer un comptage",
+    "va.newCountTitle": "Enregistrer un comptage de stock",
+    "va.itemLabel": "Article",
+    "va.countedQtyLabel": "Qté comptée",
+    "va.noteLabel": "Note (facultatif)",
+    "va.addLine": "Ajouter une ligne",
+    "va.submitCount": "Soumettre le comptage",
+    "va.recentCounts": "Comptages récents",
+    "va.noCounts": "Aucun comptage de stock enregistré pour le moment.",
+    "va.post": "Valider les ajustements",
+    "va.posting": "Validation…",
+    "va.statusOpen": "Ouvert",
+    "va.statusPosted": "Validé",
+    "va.countedByCol": "Compté par",
+    "va.selectItem": "Sélectionner un article…",
+    "va.systemQty": "Qté système",
+    "va.postConfirm": "Valider ce comptage ? Tout écart sera immédiatement réconcilié dans le stock système — action irréversible.",
     "va.whenCol": "Date",
     "va.userCol": "Utilisateur",
     "va.moduleCol": "Module",
@@ -2153,6 +2187,26 @@ async function fetchSavedReports() {
   if (error) throw error;
   return data;
 }
+function mapStockCountFromDb(row, roomsById, usersById) {
+  const room = roomsById[row.stock_room_id];
+  const counter = usersById[row.counted_by];
+  const poster = row.posted_by ? usersById[row.posted_by] : null;
+  return {
+    id: row.id, displayCode: row.display_code, stockRoomId: row.stock_room_id,
+    branch: room ? room.branch : "", roomName: room ? room.name : "",
+    status: row.status, countedBy: counter ? counter.name : "—", postedBy: poster ? poster.name : "",
+    createdAt: row.created_at, postedAt: row.posted_at,
+    lines: (row.stock_count_lines || []).map(l => ({
+      id: l.id, itemId: l.item_id, itemName: l.items ? l.items.name : "", itemCode: l.items ? l.items.display_code : "",
+      expected: Number(l.expected_qty), counted: Number(l.counted_qty), note: l.note || ""
+    }))
+  };
+}
+async function fetchStockCounts() {
+  const { data, error } = await window.sb.from("stock_counts").select("*, stock_count_lines(*, items(name, display_code))").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 function mapAssetFromDb(row) {
   return {
     id: row.display_code,
@@ -2284,7 +2338,8 @@ function statusColor(status) {
     "Expiring Soon": ["var(--caution)", "var(--caution-soft)"],
     Expired: ["var(--vital)", "var(--vital-soft)"],
     Pending: ["var(--caution)", "var(--caution-soft)"],
-    Approved: ["var(--safe)", "var(--safe-soft)"]
+    Approved: ["var(--safe)", "var(--safe-soft)"],
+    Posted: ["var(--safe)", "var(--safe-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
@@ -4523,31 +4578,149 @@ function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, 
 // ---------------------------------------------------------------------------
 // VARIANCE & AUDIT
 // ---------------------------------------------------------------------------
-function VarianceAudit({ auditLog, reloadAuditLog, lang }) {
+// A stock count is two-phase, matching the two RPCs it's built on:
+// create_stock_count() just records what was physically counted against a
+// server-snapshotted expected quantity (no stock movement yet); a separate,
+// explicit post_stock_count() reconciles the difference into real stock
+// through adjust_stock(). Posting is the only action gated by role here —
+// creating a count and posting one both use the create_stock_count/
+// post_stock_count RPCs' own admin/warehouse/procurement check, so `canCount`
+// only controls whether the buttons are shown, not whether the action is
+// actually allowed (the RPC enforces that either way).
+function NewStockCountModal({ stockRooms, items, onClose, onCreated, lang }) {
+  const [stockRoomId, setStockRoomId] = useState(stockRooms[0] ? stockRooms[0].id : "");
+  const [lines, setLines] = useState([{ itemId: "", countedQty: "", note: "" }]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const roomItems = items.filter(i => i.stockRoom === stockRoomId);
+
+  function updateLine(idx, patch) { setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l)); }
+  function addLine() { setLines(ls => [...ls, { itemId: "", countedQty: "", note: "" }]); }
+  function removeLine(idx) { setLines(ls => ls.length > 1 ? ls.filter((_, i) => i !== idx) : ls); }
+
+  async function submit(e) {
+    e.preventDefault();
+    const valid = lines.filter(l => l.itemId && l.countedQty !== "");
+    if (busy || !stockRoomId || valid.length === 0) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: rpcError } = await window.sb.rpc("create_stock_count", {
+        p_stock_room_id: stockRoomId,
+        p_lines: valid.map(l => ({ item_id: l.itemId, counted_qty: Number(l.countedQty), note: l.note.trim() || null })),
+      });
+      if (rpcError) throw rpcError;
+      await onCreated();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <Modal title={t(lang, "va.newCountTitle")} onClose={onClose} wide footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
+    <button type="button" className="mis-btn-primary mis-focus" disabled={busy} onClick={submit}>{busy ? t(lang, "common.saving") : t(lang, "va.submitCount")}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <Field label={t(lang, "inv.stockRoomLabel")}>
+        <TSelect value={stockRoomId} onChange={e => { setStockRoomId(e.target.value); setLines([{ itemId: "", countedQty: "", note: "" }]); }}>
+          {stockRooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </TSelect>
+      </Field>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {lines.map((line, idx) => {
+          const item = roomItems.find(i => i.id === line.itemId);
+          return <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+            <Field label={t(lang, "va.itemLabel")}>
+              <TSelect value={line.itemId} onChange={e => updateLine(idx, { itemId: e.target.value })}>
+                <option value="">{t(lang, "va.selectItem")}</option>
+                {roomItems.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+              </TSelect>
+            </Field>
+            <Field label={t(lang, "va.countedQtyLabel")}><TInput type="number" min="0" step="any" value={line.countedQty} onChange={e => updateLine(idx, { countedQty: e.target.value })} style={{ width: 100 }} /></Field>
+            <Field label={t(lang, "va.noteLabel")}><TInput value={line.note} onChange={e => updateLine(idx, { note: e.target.value })} /></Field>
+            {item && <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)", paddingBottom: 10, whiteSpace: "nowrap" }}>{t(lang, "va.systemQty")}: {item.qty}</span>}
+            <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={() => removeLine(idx)}><X size={13} /></button>
+          </div>;
+        })}
+      </div>
+      <button type="button" className="mis-btn-ghost mis-focus" style={{ alignSelf: "flex-start" }} onClick={addLine}><Plus size={14} /> {t(lang, "va.addLine")}</button>
+    </form>
+  </Modal>;
+}
+function VarianceAudit({ auditLog, reloadAuditLog, stockCounts, reloadStockCounts, items, stockRooms, role, lang }) {
   const [sub, setSub] = useState("variance");
   const [refreshing, setRefreshing] = useState(false);
+  const [showNewCount, setShowNewCount] = useState(false);
+  const [postingId, setPostingId] = useState(null);
+  const canCount = ["admin", "warehouse", "procurement"].includes(role);
   async function refresh() {
     if (refreshing) return;
     setRefreshing(true);
     try { await reloadAuditLog(); } finally { setRefreshing(false); }
   }
+  async function postCount(id) {
+    if (postingId) return;
+    if (!window.confirm(t(lang, "va.postConfirm"))) return;
+    setPostingId(id);
+    try {
+      const { error } = await window.sb.rpc("post_stock_count", { p_stock_count_id: id });
+      if (error) throw error;
+      await reloadStockCounts();
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setPostingId(null);
+    }
+  }
+  const flaggedLines = useMemo(() => {
+    const rows = [];
+    stockCounts.forEach(sc => sc.lines.forEach(l => {
+      const delta = l.counted - l.expected;
+      if (delta === 0) return;
+      rows.push({
+        id: sc.id + "-" + l.id, item: l.itemName, branch: sc.branch, expected: l.expected, counted: l.counted, delta,
+        severity: Math.abs(delta) >= 5 ? "High" : Math.abs(delta) >= 2 ? "Medium" : "Low",
+        note: l.note, status: sc.status,
+      });
+    }));
+    return rows;
+  }, [stockCounts]);
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={[{ key: "variance", label: t(lang, "va.stockVariance") }, { key: "audit", label: t(lang, "va.auditLog") }]} active={sub} onChange={setSub} />
     {sub === "variance" && <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
-        <TrendingDown size={18} style={{ color: "var(--vital)" }} />
-        <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "va.varianceDesc")}</p>
+      <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <TrendingDown size={18} style={{ color: "var(--vital)" }} />
+          <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "va.varianceDesc")}</p>
+        </div>
+        {canCount && <button type="button" className="mis-btn-primary mis-focus" style={{ flexShrink: 0 }} onClick={() => setShowNewCount(true)}><Plus size={14} /> {t(lang, "va.recordCount")}</button>}
       </div>
       <DataTable columns={[
-        { header: t(lang, "va.idCol"), render: v => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.id}</span> },
         { header: t(lang, "inv.part"), render: v => <span style={{ color: "var(--text-primary)" }}>{v.item}</span> },
         { header: t(lang, "common.branch"), render: v => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{v.branch}</span> },
         { header: t(lang, "po.expected"), render: v => <span className="mis-mono">{v.expected}</span> },
         { header: t(lang, "va.countedCol"), render: v => <span className="mis-mono">{v.counted}</span> },
         { header: t(lang, "va.deltaCol"), render: v => <span className="mis-mono" style={{ color: "var(--vital)", display: "flex", alignItems: "center", gap: 4 }}><ArrowDownRight size={12} />{v.delta}</span> },
         { header: t(lang, "va.severityCol"), render: v => <Badge color={v.severity === "High" ? "var(--vital)" : v.severity === "Medium" ? "var(--caution)" : "var(--info)"} soft={v.severity === "High" ? "var(--vital-soft)" : v.severity === "Medium" ? "var(--caution-soft)" : "var(--info-soft)"}>{v.severity}</Badge> },
+        { header: t(lang, "common.status"), render: v => { const cs = statusColor(v.status); return <Badge color={cs[0]} soft={cs[1]}>{t(lang, v.status === "Posted" ? "va.statusPosted" : "va.statusOpen")}</Badge>; } },
         { header: t(lang, "va.noteCol"), render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.note}</span> }
-      ]} rows={varianceLog} rowKey={v => v.id} empty={t(lang, "va.noVarianceFlags")} />
+      ]} rows={flaggedLines} rowKey={v => v.id} empty={t(lang, "va.noVarianceFlags")} />
+      <div>
+        <h3 className="mis-eyebrow" style={{ marginBottom: 14 }}>{t(lang, "va.recentCounts")}</h3>
+        <DataTable columns={[
+          { header: t(lang, "va.idCol"), render: sc => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{sc.displayCode}</span> },
+          { header: t(lang, "inv.stockRoom"), render: sc => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sc.roomName}</span> },
+          { header: t(lang, "common.branch"), render: sc => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sc.branch}</span> },
+          { header: t(lang, "va.countedByCol"), render: sc => <span style={{ color: "var(--text-primary)" }}>{sc.countedBy}</span> },
+          { header: t(lang, "va.whenCol"), render: sc => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtDateTime(sc.createdAt)}</span> },
+          { header: t(lang, "common.status"), render: sc => { const cs = statusColor(sc.status); return <Badge color={cs[0]} soft={cs[1]}>{t(lang, sc.status === "Posted" ? "va.statusPosted" : "va.statusOpen")}</Badge>; } },
+          { header: t(lang, "common.actions"), render: sc => canCount && sc.status === "Open" ? <button type="button" disabled={postingId === sc.id} className="mis-link-btn" onClick={() => postCount(sc.id)}>{postingId === sc.id ? t(lang, "va.posting") : t(lang, "va.post")}</button> : null }
+        ]} rows={stockCounts} rowKey={sc => sc.id} empty={t(lang, "va.noCounts")} />
+      </div>
+      {showNewCount && <NewStockCountModal stockRooms={stockRooms} items={items} onClose={() => setShowNewCount(false)} onCreated={async () => { setShowNewCount(false); await reloadStockCounts(); }} lang={lang} />}
     </div>}
     {sub === "audit" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
@@ -6714,6 +6887,14 @@ function SetvacoBusinessSystem() {
   async function reloadSavedReports() {
     setSavedReports((await fetchSavedReports()).map(mapSavedReportFromDb));
   }
+  async function reloadStockCounts() {
+    const rows = await fetchStockCounts();
+    const roomsById = {};
+    stockRooms.forEach(r => { roomsById[r.id] = r; });
+    const usersById = {};
+    users.forEach(u => { usersById[u.id] = u; });
+    setStockCounts(rows.map(r => mapStockCountFromDb(r, roomsById, usersById)));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -6730,7 +6911,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog(), fetchSavedReports()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows, savedReportRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog(), fetchSavedReports(), fetchStockCounts()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows, savedReportRows, stockCountRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6752,6 +6933,7 @@ function SetvacoBusinessSystem() {
           setStockRooms(mappedRooms);
           const roomsById = {};
           mappedRooms.forEach(r => { roomsById[r.id] = r; });
+          setStockCounts(stockCountRows.map(r => mapStockCountFromDb(r, roomsById, usersById)));
           return fetchItems().then(itemRows => {
             if (cancelled) return;
             setItems(itemRows.map(r => mapItemFromDb(r, roomsById)));
@@ -6800,6 +6982,8 @@ function SetvacoBusinessSystem() {
   // customers/stock. The report data itself (quotations, invoices, ...)
   // was already real; only these saved presets were still local.
   const [savedReports, setSavedReports] = useState([]);
+  // Stock counts load from the real database — no local demo fallback.
+  const [stockCounts, setStockCounts] = useState([]);
   // Price Books/entries load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
   const [priceBooks, setPriceBooks] = useState([]);
@@ -7029,7 +7213,7 @@ function SetvacoBusinessSystem() {
           {nav === "employeeDocuments" && <EmployeeDocumentsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
-          {nav === "variance" && <VarianceAudit auditLog={auditLog} reloadAuditLog={reloadAuditLog} lang={lang} />}
+          {nav === "variance" && <VarianceAudit auditLog={auditLog} reloadAuditLog={reloadAuditLog} stockCounts={stockCounts} reloadStockCounts={reloadStockCounts} items={items} stockRooms={stockRooms} role={role} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onSendMessage={sendStaffMessage} lang={lang} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} reloadUsers={reloadUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} priceBookEntries={priceBookEntries} reloadPriceBooks={reloadPriceBooks} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}

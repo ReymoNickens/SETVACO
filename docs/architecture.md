@@ -345,13 +345,29 @@ admin can escalate it.
   book, delete restricted to the creator or an admin. See
   `20260814153300_saved_reports.sql`.
 
+- Stock Variance: a new feature, not a migration — `varianceLog` was a
+  hardcoded const with no schema behind it at all. Two-phase, both through
+  SECURITY DEFINER RPCs (no direct client insert on either table, same
+  posture as purchase orders/quotations): `create_stock_count()` records
+  what was physically counted per item against a server-snapshotted
+  expected quantity (summed fresh from `inventory_ledger`, never trusted
+  from the client — the same source of truth `adjust_stock()` itself
+  uses), with no stock movement yet. `post_stock_count()` is the separate,
+  explicit step that reconciles any variance into real stock, posting one
+  `adjust_stock()` `'correction'` row per line — so a reconciliation is
+  just as ledger-traceable as a purchase receipt or a sale, and shows up
+  in the real Audit Log above. Gated to admin/warehouse/procurement,
+  matching `adjust_stock()`'s own role check exactly (select access also
+  extends to finance for oversight). The Stock Variance sub-tab now shows
+  every nonzero-delta line across all counts, plus a Recent Counts list
+  with a Post action for anything still Open. See
+  `20260814160422_stock_counts.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): the Stock Variance sub-tab specifically (`varianceLog` — a
-hardcoded const, not even React state; there is no stock-count/cycle-count
-feature built yet for it to read from).
-`nav_permissions` (server-side mirror of the role→nav-item matrix) also
-doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
-(Finance) are natural next steps now that Purchasing/Vendors are real, but
+this schema): `nav_permissions` (server-side mirror of the role→nav-item
+matrix) doesn't exist yet in this schema. Accounts Payable and Bank
+Reconciliation (Finance) are natural next steps now that Purchasing/Vendors
+are real, but
 aren't built yet. Full audit parity (adding `audit_log` writes to every
 remaining RPC/Edge Function so all logged actions become real) was
 considered and deliberately deferred — see this migration's commit for
