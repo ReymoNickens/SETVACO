@@ -6451,7 +6451,20 @@ function MeetingRoomPanel({ currentUser, logAction, lang }) {
       // supabase-js only rejects on network failure — a 503/502/500 from
       // the function still resolves here with `data` holding the error
       // body, so both paths need checking.
-      if (invokeError) throw invokeError;
+      if (invokeError) {
+        // supabase-js's own error.message for a non-2xx response is just
+        // "Edge Function returned a non-2xx status code" — it doesn't
+        // surface the actual JSON body the function sent back explaining
+        // why. That body is still readable off the raw Response it kept.
+        let detail = invokeError.message;
+        if (invokeError.context && typeof invokeError.context.json === "function") {
+          try {
+            const body = await invokeError.context.json();
+            detail = body.message || body.error || detail;
+          } catch (_) { /* body wasn't JSON — fall back to the generic message */ }
+        }
+        throw new Error(detail);
+      }
       if (!data || data.error) throw new Error((data && data.message) || (data && data.error) || "Could not start the meeting.");
       setActiveMeeting(data.meeting);
       logAction(currentUser, `Started a meeting${title.trim() ? `: ${title.trim()}` : ""}`, "Meeting Room");
