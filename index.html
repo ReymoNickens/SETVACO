@@ -6425,17 +6425,29 @@ function MeetingRoomPanel({ currentUser, logAction, lang }) {
     if (busy) return;
     setBusy(true);
     setError("");
+    // Without a timeout, a hung request to the Edge Function (e.g. Daily.co's
+    // own API stalling) left the button stuck on "Starting…" forever — no
+    // error, no way to tell the user anything was wrong. But the room
+    // creation (Daily API call + DB insert) sometimes genuinely takes longer
+    // than the timeout under normal conditions — confirmed by real meeting
+    // rows appearing in the database seconds after the client had already
+    // given up and shown a timeout error. Abandoning the wait doesn't cancel
+    // the underlying request, so it's still tracked here: if it succeeds
+    // late, the UI recovers into the meeting instead of leaving the user
+    // stuck looking at a failure for a meeting that actually started fine.
+    let timedOut = false;
+    const invokePromise = window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } });
+    invokePromise.then(({ data, error: invokeError }) => {
+      if (!timedOut) return;
+      if (!invokeError && data && !data.error && data.meeting) {
+        setActiveMeeting(data.meeting);
+        setError("");
+        logAction(currentUser, `Started a meeting${title.trim() ? `: ${title.trim()}` : ""}`, "Meeting Room");
+      }
+    }).catch(() => {});
     try {
-      // Without this, a hung request to the Edge Function (e.g. Daily.co's
-      // own API stalling) left the button stuck on "Starting…" forever —
-      // no error, no way to tell the user anything was wrong. Racing
-      // against a timeout guarantees this always resolves to a clear
-      // error instead of hanging silently.
-      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("The meeting service didn't respond in time. Please try again.")), 15000));
-      const { data, error: invokeError } = await Promise.race([
-        window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } }),
-        timeout,
-      ]);
+      const timeout = new Promise((_, reject) => setTimeout(() => { timedOut = true; reject(new Error("This is taking longer than usual. Hang on — the meeting may still connect in a moment.")); }, 15000));
+      const { data, error: invokeError } = await Promise.race([invokePromise, timeout]);
       // supabase-js only rejects on network failure — a 503/502/500 from
       // the function still resolves here with `data` holding the error
       // body, so both paths need checking.
