@@ -242,9 +242,9 @@ const Style = () => <style>{`
   .mis-table td { padding: 9px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
   .mis-table tbody tr:hover { background: var(--panel-alt); }
   .mis-table-wrap { overflow-x: auto; }
-  .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:flex-start; justify-content:center; padding: 3vh 16px; overflow-y:auto; z-index: 80; }
-  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 720px; max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  .mis-modal.wide { max-width: 980px; }
+  .mis-modal-overlay { position: fixed; inset: 0; background: rgba(10,11,12,0.68); display:flex; align-items:center; justify-content:center; padding: 3vh 16px; overflow-y:auto; z-index: 80; }
+  .mis-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 3px; width: 100%; max-width: 820px; max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .mis-modal.wide { max-width: 1040px; }
   .mis-modal-head { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-soft); flex-shrink: 0; }
   .mis-modal-body { padding: 20px; display:flex; flex-direction:column; gap:14px; overflow-y:auto; flex: 1 1 auto; min-height: 0; }
   .mis-modal-foot { padding: 14px 20px; border-top: 1px solid var(--border-soft); display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; flex-shrink: 0; }
@@ -2277,29 +2277,44 @@ function TInput(props) { const { className, ...rest } = props; return <input {..
 function TSelect({ children, className, ...rest }) { return <select {...rest} className={"mis-select mis-focus " + (className || "")}>{children}</select>; }
 function TArea(props) { const { className, ...rest } = props; return <textarea {...rest} className={"mis-textarea mis-focus " + (className || "")} />; }
 
+// Modal/Drawer/Sheet all render via a portal straight into <body>, not
+// wherever they're invoked in the component tree. Reason: every page view
+// is wrapped in .mis-view-enter for its enter animation, and a CSS
+// `transform` on an ancestor (even one that resolves to the identity
+// matrix) creates a new containing block for any descendant
+// `position: fixed` element — so without the portal, these overlays were
+// sized/positioned relative to that page wrapper's box instead of the
+// real viewport, making them look "squeezed into the page" instead of
+// properly covering the screen.
 function Modal({ title, onClose, children, footer, wide }) {
-  return <div className="mis-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div className={"mis-modal" + (wide ? " wide" : "")}>
-      <div className="mis-modal-head">
-        <h3 className="mis-display" style={{ fontSize: 16 }}>{title}</h3>
-        <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+  return ReactDOM.createPortal(
+    <div className="mis-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={"mis-modal" + (wide ? " wide" : "")}>
+        <div className="mis-modal-head">
+          <h3 className="mis-display" style={{ fontSize: 16 }}>{title}</h3>
+          <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+        </div>
+        <div className="mis-modal-body">{children}</div>
+        {footer && <div className="mis-modal-foot">{footer}</div>}
       </div>
-      <div className="mis-modal-body">{children}</div>
-      {footer && <div className="mis-modal-foot">{footer}</div>}
-    </div>
-  </div>;
+    </div>,
+    document.body
+  );
 }
 function Drawer({ title, onClose, children }) {
-  return <React.Fragment>
-    <div className="mis-drawer-overlay" onClick={onClose} />
-    <div className="mis-drawer">
-      <div className="mis-modal-head">
-        <h3 className="mis-display" style={{ fontSize: 15 }}>{title}</h3>
-        <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+  return ReactDOM.createPortal(
+    <React.Fragment>
+      <div className="mis-drawer-overlay" onClick={onClose} />
+      <div className="mis-drawer">
+        <div className="mis-modal-head">
+          <h3 className="mis-display" style={{ fontSize: 15 }}>{title}</h3>
+          <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+        </div>
+        <div style={{ padding: 18 }}>{children}</div>
       </div>
-      <div style={{ padding: 18 }}>{children}</div>
-    </div>
-  </React.Fragment>;
+    </React.Fragment>,
+    document.body
+  );
 }
 // A near-fullscreen overlay for a single record's whole picture — bigger
 // than Modal (sized for a form) and wider than Drawer (a narrow side
@@ -2310,18 +2325,21 @@ function Sheet({ title, subtitle, onClose, headerExtra, children }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return <div className="mis-sheet-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div className="mis-sheet mis-view-enter">
-      <div className="mis-sheet-head">
-        <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>{title}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-          {headerExtra}
-          <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+  return ReactDOM.createPortal(
+    <div className="mis-sheet-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="mis-sheet mis-view-enter">
+        <div className="mis-sheet-head">
+          <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>{title}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {headerExtra}
+            <button className="mis-btn-ghost mis-focus" style={{ padding: 6 }} onClick={onClose} type="button"><X size={14} /></button>
+          </div>
         </div>
+        <div className="mis-sheet-body">{children}</div>
       </div>
-      <div className="mis-sheet-body">{children}</div>
-    </div>
-  </div>;
+    </div>,
+    document.body
+  );
 }
 function Tabs({ tabs, active, onChange }) {
   return <div className="mis-tabs">
