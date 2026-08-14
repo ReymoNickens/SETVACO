@@ -297,12 +297,24 @@ admin can escalate it.
   computed by the frontend from date columns, not stored. See
   `20260813240000_service_jobs_assets_contracts.sql`.
 
+- Price Books: `price_books` (root, admin-only write, admin/sales/finance
+  read — sales needs it to price a quote, finance for visibility) always
+  has exactly one Standard book per company (enforced by a partial unique
+  index; a trigger blocks renaming or deleting it), plus as many custom
+  books as the company creates. `price_book_entries` holds the per-item
+  overrides, cross-tenant-validated against both its parent book and the
+  item the same way service_jobs validates its foreign ids.
+  `customers.price_book_id` (null = Standard) is validated against the
+  same company on insert/update. `resolveUnitPrice()` in index.html is
+  unchanged — it was already written against this exact shape, just
+  against local-state ids instead of real ones. See
+  `20260814123925_price_books.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): reports, price books, notifications, variance/audit.
-`nav_permissions` (server-side mirror of the role→nav-item matrix) also
-doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
-(Finance) are natural next steps now that Purchasing/Vendors are real, but
-aren't built yet.
+this schema): reports, notifications, variance/audit. `nav_permissions`
+(server-side mirror of the role→nav-item matrix) also doesn't exist yet in
+this schema. Accounts Payable and Bank Reconciliation (Finance) are natural
+next steps now that Purchasing/Vendors are real, but aren't built yet.
 
 ## Migrations
 

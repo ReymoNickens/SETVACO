@@ -1849,6 +1849,7 @@ function mapCustomerFromDb(row, countryNameByCode) {
     outstanding: Number(row.outstanding) || 0,
     taxExempt: row.tax_exempt,
     isWalkIn: row.is_walk_in,
+    priceBookId: row.price_book_id || "",
     contacts: (row.customer_contacts || []).map(c => ({ name: c.name, role: c.role || "", email: c.email || "", phone: c.phone || "" }))
   };
 }
@@ -1857,7 +1858,8 @@ function customerToDbFields(c) {
     name: c.name, tier: c.tier, country_code: c.countryCode || null, address: c.address || null,
     email: c.email || null, phone: c.phone || null, contact_person: c.contactPerson || null,
     contact_address: c.contactAddress || null, company_details: c.companyDetails || null,
-    po_code: c.poCode || null, credit_limit: c.creditLimit || 0, tax_exempt: !!c.taxExempt
+    po_code: c.poCode || null, credit_limit: c.creditLimit || 0, tax_exempt: !!c.taxExempt,
+    price_book_id: c.priceBookId || null
   };
 }
 function mapStockRoomFromDb(row) {
@@ -2096,6 +2098,22 @@ async function fetchVendors() {
 }
 async function fetchPurchaseOrders() {
   const { data, error } = await window.sb.from("purchase_orders").select("*, purchase_order_lines(*)").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+function mapPriceBookFromDb(row) {
+  return { id: row.id, displayCode: row.display_code, name: row.name, isStandard: row.is_standard };
+}
+function mapPriceBookEntryFromDb(row) {
+  return { id: row.id, displayCode: row.display_code, priceBookId: row.price_book_id, itemId: row.item_id, price: Number(row.price) };
+}
+async function fetchPriceBooks() {
+  const { data, error } = await window.sb.from("price_books").select("*").order("is_standard", { ascending: false }).order("name");
+  if (error) throw error;
+  return data;
+}
+async function fetchPriceBookEntries() {
+  const { data, error } = await window.sb.from("price_book_entries").select("*");
   if (error) throw error;
   return data;
 }
@@ -4265,41 +4283,73 @@ function CreateUserModal({ onCreated, onClose, lang }) {
 // price (no entries to manage). Custom books hold per-item price overrides;
 // a customer assigned to a custom book gets that book's price when present,
 // falling back to Standard (i.e. item.sell) for any item without an entry.
-function PriceBooksPanel({ priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, currentUser, logAction, lang }) {
+function PriceBooksPanel({ priceBooks, priceBookEntries, reloadPriceBooks, items, currentUser, logAction, lang }) {
   const [selectedBookId, setSelectedBookId] = useState((priceBooks.find(b => !b.isStandard) || priceBooks[0] || {}).id || "");
   const [newBookName, setNewBookName] = useState("");
   const [entryForm, setEntryForm] = useState({ itemId: "", price: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const selectedBook = priceBooks.find(b => b.id === selectedBookId);
   const entries = priceBookEntries.filter(e => e.priceBookId === selectedBookId);
-  function createBook() {
-    if (!newBookName.trim()) return;
-    const book = { id: uid("PB", priceBooks, 4), name: newBookName.trim(), isStandard: false };
-    setPriceBooks(bs => [...bs, book]);
-    logAction(currentUser, `Created price book "${book.name}"`, "Price Books");
-    setNewBookName("");
-    setSelectedBookId(book.id);
+  async function createBook() {
+    if (!newBookName.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { data, error: insertError } = await window.sb.from("price_books").insert({ name: newBookName.trim() }).select().single();
+      if (insertError) throw insertError;
+      logAction(currentUser, `Created price book "${newBookName.trim()}"`, "Price Books");
+      setNewBookName("");
+      await reloadPriceBooks();
+      setSelectedBookId(data.id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
-  function setEntry() {
+  async function setEntry() {
     const item = items.find(i => i.id === entryForm.itemId);
-    if (!item || !entryForm.price) return;
-    setPriceBookEntries(es => {
-      const existing = es.find(e => e.priceBookId === selectedBookId && e.itemId === item.id);
-      if (existing) return es.map(e => e === existing ? { ...e, price: Number(entryForm.price) } : e);
-      return [{ id: uid("PBE", es, 4), priceBookId: selectedBookId, itemId: item.id, price: Number(entryForm.price) }, ...es];
-    });
-    logAction(currentUser, `Set ${item.name} to ${fmtGHS(entryForm.price)} in price book "${selectedBook.name}"`, "Price Books");
-    setEntryForm({ itemId: "", price: "" });
+    if (!item || !entryForm.price || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: upsertError } = await window.sb.from("price_book_entries")
+        .upsert({ price_book_id: selectedBookId, item_id: item.id, price: Number(entryForm.price) }, { onConflict: "price_book_id,item_id" });
+      if (upsertError) throw upsertError;
+      logAction(currentUser, `Set ${item.name} to ${fmtGHS(entryForm.price)} in price book "${selectedBook.name}"`, "Price Books");
+      setEntryForm({ itemId: "", price: "" });
+      await reloadPriceBooks();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
-  function removeEntry(id) { setPriceBookEntries(es => es.filter(e => e.id !== id)); }
+  async function removeEntry(id) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: deleteError } = await window.sb.from("price_book_entries").delete().eq("id", id);
+      if (deleteError) throw deleteError;
+      await reloadPriceBooks();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   return <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
     <h3 className="mis-eyebrow">{t(lang, "pb.priceBooks")}</h3>
     <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "pb.priceBooksDesc")}</p>
+    {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {priceBooks.map(b => <button key={b.id} type="button" className={b.id === selectedBookId ? "mis-btn-primary mis-focus" : "mis-btn-ghost mis-focus"} onClick={() => setSelectedBookId(b.id)}>{b.name}{b.isStandard ? ` (${t(lang, "pb.standard")})` : ""}</button>)}
     </div>
     <div style={{ display: "flex", gap: 8 }}>
       <TInput value={newBookName} onChange={e => setNewBookName(e.target.value)} placeholder={t(lang, "pb.newBookPlaceholder")} />
-      <button type="button" className="mis-btn-ghost mis-focus" onClick={createBook}><Plus size={14} /> {t(lang, "pb.createBook")}</button>
+      <button type="button" disabled={busy} className="mis-btn-ghost mis-focus" onClick={createBook}><Plus size={14} /> {t(lang, "pb.createBook")}</button>
     </div>
     {selectedBook && (selectedBook.isStandard ? <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "pb.standardHint")}</p> : <React.Fragment>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -4310,19 +4360,19 @@ function PriceBooksPanel({ priceBooks, setPriceBooks, priceBookEntries, setPrice
           </TSelect>
         </Field>
         <Field label={t(lang, "pb.overridePrice")}><TInput type="number" min="0" step="0.01" value={entryForm.price} onChange={e => setEntryForm(f => ({ ...f, price: e.target.value }))} style={{ width: 140 }} /></Field>
-        <button type="button" className="mis-btn-primary mis-focus" onClick={setEntry}><Plus size={14} /> {t(lang, "pb.setPrice")}</button>
+        <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={setEntry}><Plus size={14} /> {t(lang, "pb.setPrice")}</button>
       </div>
       <DataTable columns={[
         { header: t(lang, "pb.item"), render: e => { const it = items.find(i => i.id === e.itemId); return <span style={{ color: "var(--text-primary)" }}>{it ? it.name : e.itemId}</span>; } },
         { header: t(lang, "pb.standardPrice"), render: e => { const it = items.find(i => i.id === e.itemId); return <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtGHS(it ? it.sell : 0)}</span>; } },
         { header: t(lang, "pb.overridePrice"), render: e => <span className="mis-mono" style={{ color: "var(--safe)" }}>{fmtGHS(e.price)}</span> },
-        { header: t(lang, "common.actions"), render: e => <button type="button" className="mis-link-btn" onClick={() => removeEntry(e.id)}>{t(lang, "pb.remove")}</button> }
+        { header: t(lang, "common.actions"), render: e => <button type="button" disabled={busy} className="mis-link-btn" onClick={() => removeEntry(e.id)}>{t(lang, "pb.remove")}</button> }
       ]} rows={entries} rowKey={e => e.id} empty={t(lang, "pb.noOverridesYet")} />
     </React.Fragment>)}
   </div>;
 }
 
-function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, priceBooks, setPriceBooks, priceBookEntries, setPriceBookEntries, items, logAction, lang }) {
+function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, setApprovalSettings, emailTemplates, setEmailTemplates, priceBooks, priceBookEntries, reloadPriceBooks, items, logAction, lang }) {
   const isSuperUser = ["admin", "director"].includes(role);
   const [showCreate, setShowCreate] = useState(false);
   const [flaggedText, setFlaggedText] = useState(approvalSettings.flaggedCustomers.join(", "));
@@ -4383,7 +4433,7 @@ function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, 
         </div> : <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{tpl.subject}</div>}
       </div>)}
     </div>}
-    {isSuperUser && <PriceBooksPanel priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} currentUser={currentUser} logAction={logAction} lang={lang} />}
+    {isSuperUser && <PriceBooksPanel priceBooks={priceBooks} priceBookEntries={priceBookEntries} reloadPriceBooks={reloadPriceBooks} items={items} currentUser={currentUser} logAction={logAction} lang={lang} />}
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 className="mis-eyebrow">{t(lang, "ua.userAccounts")}</h3>
@@ -6586,6 +6636,11 @@ function SetvacoBusinessSystem() {
   async function reloadServiceContracts() {
     setServiceContracts((await fetchServiceContracts()).map(mapServiceContractFromDb));
   }
+  async function reloadPriceBooks() {
+    const [bookRows, entryRows] = await Promise.all([fetchPriceBooks(), fetchPriceBookEntries()]);
+    setPriceBooks(bookRows.map(mapPriceBookFromDb));
+    setPriceBookEntries(entryRows.map(mapPriceBookEntryFromDb));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -6602,7 +6657,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6613,6 +6668,8 @@ function SetvacoBusinessSystem() {
           setAssets(assetRows.map(mapAssetFromDb));
           setServiceJobs(serviceJobRows.map(mapServiceJobFromDb));
           setServiceContracts(contractRows.map(mapServiceContractFromDb));
+          setPriceBooks(priceBookRows.map(mapPriceBookFromDb));
+          setPriceBookEntries(priceBookEntryRows.map(mapPriceBookEntryFromDb));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -6661,8 +6718,10 @@ function SetvacoBusinessSystem() {
   const [assets, setAssets] = useState([]);
   const [serviceContracts, setServiceContracts] = useState([]);
   const [savedReports, setSavedReports] = useState(() => (persisted && persisted.savedReports) || []);
-  const [priceBooks, setPriceBooks] = useState(() => (persisted && persisted.priceBooks) || initialPriceBooks);
-  const [priceBookEntries, setPriceBookEntries] = useState(() => (persisted && persisted.priceBookEntries) || initialPriceBookEntries);
+  // Price Books/entries load from the real database (see the data-fetching
+  // useEffect below) — no local demo fallback, same as customers/stock.
+  const [priceBooks, setPriceBooks] = useState([]);
+  const [priceBookEntries, setPriceBookEntries] = useState([]);
   const [users, setUsers] = useState([]);
   const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
   const [notifications, setNotifications] = useState(() => (persisted && persisted.notifications) || initialNotifications);
@@ -6880,7 +6939,7 @@ function SetvacoBusinessSystem() {
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
           {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
           {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
-          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} reloadUsers={reloadUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} setPriceBooks={setPriceBooks} priceBookEntries={priceBookEntries} setPriceBookEntries={setPriceBookEntries} items={items} logAction={logAction} lang={lang} />}
+          {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} reloadUsers={reloadUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} priceBookEntries={priceBookEntries} reloadPriceBooks={reloadPriceBooks} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
           {nav === "meetingroom" && <MeetingRoomPanel currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "meetingscheduled" && <ComingSoonPanel title="Scheduled Meetings" note="Meeting scheduling is planned for a later phase — Start a Meeting works today for instant calls." />}
