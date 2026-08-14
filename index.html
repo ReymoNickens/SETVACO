@@ -6411,7 +6411,16 @@ function MeetingRoomPanel({ currentUser, logAction, lang }) {
     setBusy(true);
     setError("");
     try {
-      const { data, error: invokeError } = await window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } });
+      // Without this, a hung request to the Edge Function (e.g. Daily.co's
+      // own API stalling) left the button stuck on "Starting…" forever —
+      // no error, no way to tell the user anything was wrong. Racing
+      // against a timeout guarantees this always resolves to a clear
+      // error instead of hanging silently.
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("The meeting service didn't respond in time. Please try again.")), 15000));
+      const { data, error: invokeError } = await Promise.race([
+        window.sb.functions.invoke("create-meeting-room", { body: { title: title.trim() } }),
+        timeout,
+      ]);
       // supabase-js only rejects on network failure — a 503/502/500 from
       // the function still resolves here with `data` holding the error
       // body, so both paths need checking.
