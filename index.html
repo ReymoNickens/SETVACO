@@ -2277,15 +2277,30 @@ function TInput(props) { const { className, ...rest } = props; return <input {..
 function TSelect({ children, className, ...rest }) { return <select {...rest} className={"mis-select mis-focus " + (className || "")}>{children}</select>; }
 function TArea(props) { const { className, ...rest } = props; return <textarea {...rest} className={"mis-textarea mis-focus " + (className || "")} />; }
 
-// Modal/Drawer/Sheet all render via a portal straight into <body>, not
-// wherever they're invoked in the component tree. Reason: every page view
-// is wrapped in .mis-view-enter for its enter animation, and a CSS
-// `transform` on an ancestor (even one that resolves to the identity
-// matrix) creates a new containing block for any descendant
+// Modal/Drawer/Sheet all render via a portal into a dedicated node appended
+// to <body>, not wherever they're invoked in the component tree. Reason:
+// every page view is wrapped in .mis-view-enter for its enter animation,
+// and a CSS `transform` on an ancestor (even one that resolves to the
+// identity matrix) creates a new containing block for any descendant
 // `position: fixed` element — so without the portal, these overlays were
-// sized/positioned relative to that page wrapper's box instead of the
-// real viewport, making them look "squeezed into the page" instead of
-// properly covering the screen.
+// sized/positioned relative to that page wrapper's box instead of the real
+// viewport, making them look "squeezed into the page" instead of properly
+// covering the screen. The portal target itself carries the `mis-root`
+// class so it re-declares the theme's CSS custom properties (--panel,
+// --border, --text-primary, etc., all scoped to `.mis-root` rather than
+// `:root`) — otherwise the portaled content would sit outside the DOM
+// subtree those variables cascade through and render with no theme colors
+// (transparent/faint backgrounds and text).
+function getOverlayPortalRoot() {
+  let node = document.getElementById("mis-overlay-root");
+  if (!node) {
+    node = document.createElement("div");
+    node.id = "mis-overlay-root";
+    node.className = "mis-root";
+    document.body.appendChild(node);
+  }
+  return node;
+}
 function Modal({ title, onClose, children, footer, wide }) {
   return ReactDOM.createPortal(
     <div className="mis-modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -2298,7 +2313,7 @@ function Modal({ title, onClose, children, footer, wide }) {
         {footer && <div className="mis-modal-foot">{footer}</div>}
       </div>
     </div>,
-    document.body
+    getOverlayPortalRoot()
   );
 }
 function Drawer({ title, onClose, children }) {
@@ -2313,7 +2328,7 @@ function Drawer({ title, onClose, children }) {
         <div style={{ padding: 18 }}>{children}</div>
       </div>
     </React.Fragment>,
-    document.body
+    getOverlayPortalRoot()
   );
 }
 // A near-fullscreen overlay for a single record's whole picture — bigger
@@ -2338,7 +2353,7 @@ function Sheet({ title, subtitle, onClose, headerExtra, children }) {
         <div className="mis-sheet-body">{children}</div>
       </div>
     </div>,
-    document.body
+    getOverlayPortalRoot()
   );
 }
 function Tabs({ tabs, active, onChange }) {
