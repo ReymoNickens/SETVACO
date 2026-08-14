@@ -823,6 +823,8 @@ const TRANSLATIONS = {
     "inv.noActivityForRecord": "No recorded activity yet for this record.",
     "common.status": "Status",
     "common.actions": "Actions",
+    "common.refresh": "Refresh",
+    "common.refreshing": "Refreshing…",
     "common.import": "Import",
     "common.phone": "Phone",
     "common.email": "Email",
@@ -1051,6 +1053,7 @@ const TRANSLATIONS = {
     "dash.contractsExpiring": "Contracts Expiring Soon",
     "dash.within60Days": "Renewal due within 60 days",
     "va.varianceDesc": "Variance entries are raised when a branch stock count doesn't reconcile with sales, purchasing, and service-job transactions for that part.",
+    "va.auditLogDesc": "This is the system's own record of state-changing actions (quotations, invoices, payroll runs, purchase orders, and similar) — it does not include every click logged elsewhere in the app.",
     "va.idCol": "ID",
     "va.countedCol": "Counted",
     "va.deltaCol": "Delta",
@@ -1369,6 +1372,8 @@ const TRANSLATIONS = {
     "inv.noActivityForRecord": "Aucune activité enregistrée pour cet article.",
     "common.status": "Statut",
     "common.actions": "Actions",
+    "common.refresh": "Actualiser",
+    "common.refreshing": "Actualisation…",
     "common.import": "Importer",
     "common.phone": "Téléphone",
     "common.email": "E-mail",
@@ -1597,6 +1602,7 @@ const TRANSLATIONS = {
     "dash.contractsExpiring": "Contrats arrivant à échéance",
     "dash.within60Days": "Renouvellement dû sous 60 jours",
     "va.varianceDesc": "Les écarts sont signalés lorsqu'un comptage de stock en succursale ne concorde pas avec les transactions de ventes, d'achats et d'interventions de service pour cette pièce.",
+    "va.auditLogDesc": "Ceci est le registre propre au système des actions modifiant l'état (devis, factures, cycles de paie, bons de commande, etc.) — il n'inclut pas chaque action enregistrée ailleurs dans l'application.",
     "va.idCol": "ID",
     "va.countedCol": "Compté",
     "va.deltaCol": "Écart",
@@ -2122,6 +2128,20 @@ function mapNotificationFromDb(row) {
 }
 async function fetchNotifications() {
   const { data, error } = await window.sb.from("notifications").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+// audit_log carries actor_id (a profile uuid), not a name — resolved
+// against the already-loaded profiles list rather than joining server-side,
+// same approach as mapCustomerFromDb's countryNameByCode. No `comments`
+// field: the real table has no such column (see StaffActivityTab/Sheet,
+// which no longer offer commenting on an entry for exactly this reason).
+function mapAuditLogFromDb(row, usersById) {
+  const actor = usersById[row.actor_id];
+  return { id: row.id, ts: row.created_at, user: actor ? actor.name : "—", module: row.module || "", action: row.action };
+}
+async function fetchAuditLog() {
+  const { data, error } = await window.sb.from("audit_log").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -4474,8 +4494,14 @@ function UsersAccess({ role, currentUser, users, reloadUsers, approvalSettings, 
 // ---------------------------------------------------------------------------
 // VARIANCE & AUDIT
 // ---------------------------------------------------------------------------
-function VarianceAudit({ auditLog, lang }) {
+function VarianceAudit({ auditLog, reloadAuditLog, lang }) {
   const [sub, setSub] = useState("variance");
+  const [refreshing, setRefreshing] = useState(false);
+  async function refresh() {
+    if (refreshing) return;
+    setRefreshing(true);
+    try { await reloadAuditLog(); } finally { setRefreshing(false); }
+  }
   return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <Tabs tabs={[{ key: "variance", label: t(lang, "va.stockVariance") }, { key: "audit", label: t(lang, "va.auditLog") }]} active={sub} onChange={setSub} />
     {sub === "variance" && <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -4494,12 +4520,18 @@ function VarianceAudit({ auditLog, lang }) {
         { header: t(lang, "va.noteCol"), render: v => <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{v.note}</span> }
       ]} rows={varianceLog} rowKey={v => v.id} empty={t(lang, "va.noVarianceFlags")} />
     </div>}
-    {sub === "audit" && <DataTable columns={[
+    {sub === "audit" && <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+      <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{t(lang, "va.auditLogDesc")}</p>
+      <button type="button" disabled={refreshing} className="mis-btn-ghost mis-focus" style={{ flexShrink: 0 }} onClick={refresh}>{refreshing ? t(lang, "common.refreshing") : t(lang, "common.refresh")}</button>
+    </div>
+    <DataTable columns={[
       { header: t(lang, "va.whenCol"), render: a => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span> },
       { header: t(lang, "va.userCol"), render: a => <span style={{ color: "var(--text-primary)" }}>{a.user}</span> },
       { header: t(lang, "va.moduleCol"), render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.module}</span> },
       { header: t(lang, "va.actionCol"), render: a => <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.action}</span> }
-    ]} rows={auditLog} rowKey={a => a.id} empty={t(lang, "dash.noActivityYet")} />}
+    ]} rows={auditLog} rowKey={a => a.id} empty={t(lang, "dash.noActivityYet")} />
+    </div>}
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -4580,9 +4612,8 @@ function ModuleBreakdownChart({ entries, lang }) {
   </div>;
 }
 
-function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSendMessage, onClose, lang }) {
+function StaffActivitySheet({ staffUser, auditLog, currentUser, onSendMessage, onClose, lang }) {
   const [messageDraft, setMessageDraft] = useState("");
-  const [commentDraft, setCommentDraft] = useState({});
   const entries = auditLog.filter(a => a.user === staffUser.name).slice().sort((a, b) => b.ts.localeCompare(a.ts));
   const weekAgoISO = new Date(Date.now() - 7 * 86400000).toISOString();
   const thisWeek = entries.filter(a => a.ts >= weekAgoISO).length;
@@ -4635,23 +4666,14 @@ function StaffActivitySheet({ staffUser, auditLog, currentUser, onComment, onSen
           <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
-        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 2 }}>
-          <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
-          <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
-        </div>)}
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <TInput value={commentDraft[a.id] || ""} onChange={e => setCommentDraft(d => ({ ...d, [a.id]: e.target.value }))} placeholder={t(lang, "sa.commentPlaceholder")} />
-          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onComment(a.id, commentDraft[a.id]); setCommentDraft(d => ({ ...d, [a.id]: "" })); }}>{t(lang, "sa.commentBtn")}</button>
-        </div>
       </div>)}
     </div>
   </Sheet>;
 }
 
-function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessage, lang }) {
+function StaffActivityTab({ users, auditLog, currentUser, onSendMessage, lang }) {
   const [composingFor, setComposingFor] = useState(null);
   const [messageDraft, setMessageDraft] = useState({});
-  const [commentDraft, setCommentDraft] = useState({});
   const [openStaff, setOpenStaff] = useState(null);
   const staff = users.filter(u => u.status === "Active");
   function countFor(name) { return auditLog.filter(a => a.user === name).length; }
@@ -4686,17 +4708,9 @@ function StaffActivityTab({ users, auditLog, currentUser, onComment, onSendMessa
           <span className="mis-mono" style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{fmtDateTime(a.ts)}</span>
         </div>
         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{a.module}</div>
-        {(a.comments || []).map((c, i) => <div key={i} style={{ marginTop: 6, marginLeft: 12, padding: "6px 10px", background: "var(--panel-alt)", borderRadius: 2 }}>
-          <div style={{ fontSize: 12, color: "var(--text-primary)" }}>{c.note}</div>
-          <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{c.by} · {fmtDateTime(c.ts)}</div>
-        </div>)}
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <TInput value={commentDraft[a.id] || ""} onChange={e => setCommentDraft(d => ({ ...d, [a.id]: e.target.value }))} placeholder={t(lang, "sa.commentPlaceholder")} />
-          <button type="button" className="mis-btn-ghost mis-focus" onClick={() => { onComment(a.id, commentDraft[a.id]); setCommentDraft(d => ({ ...d, [a.id]: "" })); }}>{t(lang, "sa.commentBtn")}</button>
-        </div>
       </div>)}
     </div>
-    {openStaff && <StaffActivitySheet staffUser={openStaff} auditLog={auditLog} currentUser={currentUser} onComment={onComment} onSendMessage={onSendMessage} onClose={() => setOpenStaff(null)} lang={lang} />}
+    {openStaff && <StaffActivitySheet staffUser={openStaff} auditLog={auditLog} currentUser={currentUser} onSendMessage={onSendMessage} onClose={() => setOpenStaff(null)} lang={lang} />}
   </div>;
 }
 
@@ -6662,6 +6676,12 @@ function SetvacoBusinessSystem() {
     const rows = await fetchNotifications();
     setNotifications(rows.map(mapNotificationFromDb));
   }
+  async function reloadAuditLog() {
+    const rows = await fetchAuditLog();
+    const usersById = {};
+    users.forEach(u => { usersById[u.id] = u; });
+    setAuditLog(rows.map(r => mapAuditLogFromDb(r, usersById)));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -6678,7 +6698,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6692,6 +6712,9 @@ function SetvacoBusinessSystem() {
           setPriceBooks(priceBookRows.map(mapPriceBookFromDb));
           setPriceBookEntries(priceBookEntryRows.map(mapPriceBookEntryFromDb));
           setNotifications(notificationRows.map(mapNotificationFromDb));
+          const usersById = {};
+          profileRows.forEach(u => { usersById[u.id] = u; });
+          setAuditLog(auditLogRows.map(r => mapAuditLogFromDb(r, usersById)));
           const mappedRooms = roomRows.map(mapStockRoomFromDb);
           setStockRooms(mappedRooms);
           const roomsById = {};
@@ -6745,7 +6768,11 @@ function SetvacoBusinessSystem() {
   const [priceBooks, setPriceBooks] = useState([]);
   const [priceBookEntries, setPriceBookEntries] = useState([]);
   const [users, setUsers] = useState([]);
-  const [auditLog, setAuditLog] = useState(() => (persisted && persisted.auditLog) || initialAuditLog);
+  // Audit log loads from the real database (see the data-fetching useEffect
+  // below) — no local demo fallback, same as customers/stock. Only reflects
+  // actions written by a SECURITY DEFINER RPC (see profiles_security.sql);
+  // most logAction() calls elsewhere in this file have no such backing.
+  const [auditLog, setAuditLog] = useState([]);
   // Notifications load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
   const [notifications, setNotifications] = useState([]);
@@ -6796,8 +6823,14 @@ function SetvacoBusinessSystem() {
   }, []);
 
   function showToast(msg) { setToast({ msg, id: Date.now() }); setTimeout(() => setToast(t => (t && t.msg === msg ? null : t)), 3200); }
+  // audit_log is written only from inside SECURITY DEFINER RPCs (see
+  // profiles_security.sql's header comment) — there is no client insert
+  // path, deliberately, since it's a trust-sensitive record. Most calls to
+  // this function are for actions with no backing RPC (HR panels, Meeting
+  // Room, Price Books, ...), so they were never going to appear in the
+  // real audit trail either way. This still shows the toast — that part
+  // was always just UI feedback, unrelated to persistence.
   function logAction(user, action, mod) {
-    setAuditLog(al => [{ id: uid("AL", al, 3), ts: nowISO(), user, action, module: mod, comments: [] }, ...al]);
     showToast(action);
   }
   // forUser is a display name (matching every existing call site, and how
@@ -6810,16 +6843,6 @@ function SetvacoBusinessSystem() {
     const target = forUser ? users.find(u => u.name === forUser) : null;
     window.sb.from("notifications").insert({ type, message, for_profile_id: target ? target.id : null })
       .then(({ error }) => { if (error) { console.error("pushNotification failed:", error); return; } reloadNotifications(); });
-  }
-  function commentOnActivity(entryId, note) {
-    if (!note || !note.trim()) return;
-    let targetUser = "";
-    setAuditLog(al => al.map(a => {
-      if (a.id !== entryId) return a;
-      targetUser = a.user;
-      return { ...a, comments: [...(a.comments || []), { ts: nowISO(), note: note.trim(), by: currentUser }] };
-    }));
-    if (targetUser && targetUser !== currentUser) pushNotification("comment", note.trim(), targetUser);
   }
   function sendStaffMessage(toUserName, note) {
     if (!note || !note.trim()) return;
@@ -6969,8 +6992,8 @@ function SetvacoBusinessSystem() {
           {nav === "employeeDocuments" && <EmployeeDocumentsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "expenses" && <ExpensesPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "customers" && <Customers role={role} currentUser={currentUser} customers={customers} setCustomers={setCustomers} countries={countries} reloadCustomers={reloadCustomers} dataLoading={dataLoading} dataError={dataError} quotations={quotations} invoices={invoices} auditLog={auditLog} priceBooks={priceBooks} logAction={logAction} lang={lang} />}
-          {nav === "variance" && <VarianceAudit auditLog={auditLog} lang={lang} />}
-          {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onComment={commentOnActivity} onSendMessage={sendStaffMessage} lang={lang} />}
+          {nav === "variance" && <VarianceAudit auditLog={auditLog} reloadAuditLog={reloadAuditLog} lang={lang} />}
+          {nav === "staffActivity" && <StaffActivityTab users={users} auditLog={auditLog} currentUser={currentUser} onSendMessage={sendStaffMessage} lang={lang} />}
           {nav === "access" && <UsersAccess role={role} currentUser={currentUser} users={users} reloadUsers={reloadUsers} approvalSettings={approvalSettings} setApprovalSettings={setApprovalSettings} emailTemplates={emailTemplates} setEmailTemplates={setEmailTemplates} priceBooks={priceBooks} priceBookEntries={priceBookEntries} reloadPriceBooks={reloadPriceBooks} items={items} logAction={logAction} lang={lang} />}
           {nav === "financials" && <CompanyFinancials items={items} quotations={quotations} customers={customers} lang={lang} />}
           {nav === "meetingroom" && <MeetingRoomPanel currentUser={currentUser} logAction={logAction} lang={lang} />}

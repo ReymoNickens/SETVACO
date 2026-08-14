@@ -320,11 +320,33 @@ admin can escalate it.
   local-state version already had, not a new gap. See
   `20260814132759_notifications.sql`.
 
+- Variance & Audit's "Audit Log" sub-tab and Staff Activity now read from
+  the real `audit_log` table instead of local state. `audit_log` already
+  existed (`profiles_security.sql`) and was already being written to by 8
+  different RPCs (`create_quotation`, `run_payroll`, purchasing, ...) —
+  only the frontend read path was stale. It's deliberately RPC-only
+  (`revoke insert, update, delete on audit_log from authenticated` —
+  no client insert path, since it's a trust-sensitive record), so most
+  `logAction()` call sites elsewhere in index.html (HR panels, Meeting
+  Room, Price Books, ...) still have no real backing and never show up
+  here — the UI says so directly (`va.auditLogDesc`) rather than
+  implying this is a complete trail. The per-entry commenting feature
+  StaffActivityTab/Sheet used to offer is removed: the real table has no
+  place to store it, so keeping it would have meant comments that
+  silently vanished on reload. Staff messaging (unrelated — backed by
+  the real `notifications` table) is unaffected.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): reports, variance/audit. `nav_permissions`
-(server-side mirror of the role→nav-item matrix) also doesn't exist yet in
-this schema. Accounts Payable and Bank Reconciliation (Finance) are natural
-next steps now that Purchasing/Vendors are real, but aren't built yet.
+this schema): reports, and the Stock Variance sub-tab specifically
+(`varianceLog` — a hardcoded const, not even React state; there is no
+stock-count/cycle-count feature built yet for it to read from).
+`nav_permissions` (server-side mirror of the role→nav-item matrix) also
+doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
+(Finance) are natural next steps now that Purchasing/Vendors are real, but
+aren't built yet. Full audit parity (adding `audit_log` writes to every
+remaining RPC/Edge Function so all logged actions become real) was
+considered and deliberately deferred — see this migration's commit for
+the tradeoff.
 
 ## Migrations
 
