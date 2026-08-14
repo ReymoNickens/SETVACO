@@ -336,10 +336,19 @@ admin can escalate it.
   silently vanished on reload. Staff messaging (unrelated — backed by
   the real `notifications` table) is unaffected.
 
+- Reports: the report *data* (quotations, invoices, service jobs, purchase
+  orders, items, customers) has been real since those modules were
+  migrated — `computeReport()` always worked against live data. Only the
+  saved report *definitions* (a named source/groupBy/metric preset) were
+  still local state, meaning a saved report never survived a browser
+  switch. Now backed by `saved_reports`, company-wide visible like a price
+  book, delete restricted to the creator or an admin. See
+  `20260814153300_saved_reports.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
-this schema): reports, and the Stock Variance sub-tab specifically
-(`varianceLog` — a hardcoded const, not even React state; there is no
-stock-count/cycle-count feature built yet for it to read from).
+this schema): the Stock Variance sub-tab specifically (`varianceLog` — a
+hardcoded const, not even React state; there is no stock-count/cycle-count
+feature built yet for it to read from).
 `nav_permissions` (server-side mirror of the role→nav-item matrix) also
 doesn't exist yet in this schema. Accounts Payable and Bank Reconciliation
 (Finance) are natural next steps now that Purchasing/Vendors are real, but

@@ -2145,6 +2145,14 @@ async function fetchAuditLog() {
   if (error) throw error;
   return data;
 }
+function mapSavedReportFromDb(row) {
+  return { id: row.id, name: row.name, source: row.source, groupBy: row.group_by, metric: row.metric };
+}
+async function fetchSavedReports() {
+  const { data, error } = await window.sb.from("saved_reports").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 function mapAssetFromDb(row) {
   return {
     id: row.display_code,
@@ -4190,12 +4198,13 @@ function computeReport(rows, groupBy, metric) {
   });
   return Object.entries(buckets).map(([key, value]) => ({ key, value })).sort((a, b) => b.value - a.value);
 }
-function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, customers, savedReports, setSavedReports, currentUser, logAction, lang }) {
+function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, customers, savedReports, reloadSavedReports, currentUser, logAction, lang }) {
   const DATA = { quotations, invoices, serviceJobs, purchaseOrders, items, customers };
   const [source, setSource] = useState("quotations");
   const [groupBy, setGroupBy] = useState(REPORT_GROUP_FIELDS.quotations[0]);
   const [metric, setMetric] = useState(REPORT_METRICS.quotations[0]);
   const [reportName, setReportName] = useState("");
+  const [busy, setBusy] = useState(false);
 
   function changeSource(next) {
     setSource(next);
@@ -4207,15 +4216,35 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
   const isCurrency = REPORT_CURRENCY_METRICS.includes(metric);
   const maxValue = Math.max(1, ...results.map(r => r.value));
 
-  function saveReport() {
-    if (!reportName.trim()) return;
-    const report = { id: uid("RPT", savedReports, 3), name: reportName.trim(), source, groupBy, metric };
-    setSavedReports(rs => [report, ...rs]);
-    logAction(currentUser, `Saved report "${report.name}"`, "Reports");
-    setReportName("");
+  async function saveReport() {
+    if (!reportName.trim() || busy) return;
+    setBusy(true);
+    try {
+      const { error } = await window.sb.from("saved_reports").insert({ name: reportName.trim(), source, group_by: groupBy, metric });
+      if (error) throw error;
+      await reloadSavedReports();
+      logAction(currentUser, `Saved report "${reportName.trim()}"`, "Reports");
+      setReportName("");
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
   function loadReport(r) { setSource(r.source); setGroupBy(r.groupBy); setMetric(r.metric); }
-  function deleteReport(id) { setSavedReports(rs => rs.filter(r => r.id !== id)); }
+  async function deleteReport(id) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { error } = await window.sb.from("saved_reports").delete().eq("id", id);
+      if (error) throw error;
+      await reloadSavedReports();
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
     <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -4239,7 +4268,7 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <TInput value={reportName} onChange={e => setReportName(e.target.value)} placeholder={t(lang, "report.namePlaceholder")} />
-        <button type="button" className="mis-btn-ghost mis-focus" onClick={saveReport}><Plus size={14} /> {t(lang, "report.saveReport")}</button>
+        <button type="button" disabled={busy} className="mis-btn-ghost mis-focus" onClick={saveReport}><Plus size={14} /> {t(lang, "report.saveReport")}</button>
       </div>
     </div>
     {savedReports.length > 0 && <div className="mis-panel" style={{ borderRadius: 2, padding: 16 }}>
@@ -4247,7 +4276,7 @@ function ReportsTab({ quotations, invoices, serviceJobs, purchaseOrders, items, 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {savedReports.map(r => <div key={r.id} className="mis-panel-alt" style={{ borderRadius: 999, padding: "6px 6px 6px 12px", display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
           <button type="button" className="mis-link-btn" onClick={() => loadReport(r)}>{r.name}</button>
-          <button type="button" className="mis-btn-ghost mis-focus" style={{ padding: "2px 6px" }} onClick={() => deleteReport(r.id)}><X size={11} /></button>
+          <button type="button" disabled={busy} className="mis-btn-ghost mis-focus" style={{ padding: "2px 6px" }} onClick={() => deleteReport(r.id)}><X size={11} /></button>
         </div>)}
       </div>
     </div>}
@@ -6682,6 +6711,9 @@ function SetvacoBusinessSystem() {
     users.forEach(u => { usersById[u.id] = u; });
     setAuditLog(rows.map(r => mapAuditLogFromDb(r, usersById)));
   }
+  async function reloadSavedReports() {
+    setSavedReports((await fetchSavedReports()).map(mapSavedReportFromDb));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -6698,7 +6730,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog(), fetchSavedReports()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows, savedReportRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -6712,6 +6744,7 @@ function SetvacoBusinessSystem() {
           setPriceBooks(priceBookRows.map(mapPriceBookFromDb));
           setPriceBookEntries(priceBookEntryRows.map(mapPriceBookEntryFromDb));
           setNotifications(notificationRows.map(mapNotificationFromDb));
+          setSavedReports(savedReportRows.map(mapSavedReportFromDb));
           const usersById = {};
           profileRows.forEach(u => { usersById[u.id] = u; });
           setAuditLog(auditLogRows.map(r => mapAuditLogFromDb(r, usersById)));
@@ -6762,7 +6795,11 @@ function SetvacoBusinessSystem() {
   const [serviceJobs, setServiceJobs] = useState([]);
   const [assets, setAssets] = useState([]);
   const [serviceContracts, setServiceContracts] = useState([]);
-  const [savedReports, setSavedReports] = useState(() => (persisted && persisted.savedReports) || []);
+  // Saved report definitions load from the real database (see the
+  // data-fetching useEffect below) — no local demo fallback, same as
+  // customers/stock. The report data itself (quotations, invoices, ...)
+  // was already real; only these saved presets were still local.
+  const [savedReports, setSavedReports] = useState([]);
   // Price Books/entries load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
   const [priceBooks, setPriceBooks] = useState([]);
@@ -6976,7 +7013,7 @@ function SetvacoBusinessSystem() {
           {(nav === "partsales" || nav === "equipmentsales") && <SalesQuotations page={nav} role={role} currentUser={currentUser} customers={customers} items={items} taxProfiles={taxProfiles} reloadSales={reloadSales} reloadCustomers={reloadCustomers} reloadStock={reloadStock} quotations={quotations} setQuotations={setQuotations} invoices={invoices} approvalSettings={approvalSettings} users={users} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "assets" && <AssetsTab role={role} currentUser={currentUser} assets={assets} reloadAssets={reloadAssets} customers={customers} items={items} serviceJobs={serviceJobs} logAction={logAction} lang={lang} />}
           {nav === "contracts" && <ContractsTab role={role} currentUser={currentUser} contracts={serviceContracts} reloadServiceContracts={reloadServiceContracts} customers={customers} assets={assets} logAction={logAction} lang={lang} />}
-          {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} setSavedReports={setSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "reports" && <ReportsTab quotations={quotations} invoices={invoices} serviceJobs={serviceJobs} purchaseOrders={purchaseOrders} items={items} customers={customers} savedReports={savedReports} reloadSavedReports={reloadSavedReports} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} reloadServiceJobs={reloadServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} vendors={vendors} reloadVendors={reloadVendors} items={items} reloadStock={reloadStock} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
