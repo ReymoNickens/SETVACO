@@ -363,15 +363,34 @@ admin can escalate it.
   with a Post action for anything still Open. See
   `20260814160422_stock_counts.sql`.
 
+- Accounts Payable: a new feature, scoped to PO-receipt-only (not manual
+  bill entry) per the brief. `purchase_order_lines.unit_cost` existed
+  since the original Purchasing migration but nothing ever populated it —
+  the manual PO form, the Excel bulk-upload path, and
+  `create_purchase_order()`'s p_lines shape all needed a unit_cost field
+  added first, since a payable can't have an amount without one (the
+  manual form defaults it from the item's own `cost`, still editable; the
+  Excel path reads a Unit Cost/Price/Cost column if present, same
+  item-cost fallback if not). `advance_purchase_order()` now inserts one
+  `vendor_bills` row when a **vendor-sourced** PO (never a
+  customer-matched one — nothing is owed there) reaches Received, summing
+  `qty_ordered * unit_cost` across the PO's own lines. Payment terms are a
+  flat net-30 for every vendor — no per-vendor terms field exists, and
+  adding one is its own decision, not needed to make this feature work
+  (documented simplification, same spirit as payroll's Ghana-tax-bands
+  note). `pay_vendor_bill()` is a simple Open→Paid transition, admin/
+  finance only, matching `mark_invoice_paid()`'s own posture on the AR
+  side — no real bank/cash movement here either. See
+  `20260814201430_accounts_payable.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
 this schema): `nav_permissions` (server-side mirror of the role→nav-item
-matrix) doesn't exist yet in this schema. Accounts Payable and Bank
-Reconciliation (Finance) are natural next steps now that Purchasing/Vendors
-are real, but
-aren't built yet. Full audit parity (adding `audit_log` writes to every
+matrix) doesn't exist yet in this schema. Bank Reconciliation (Finance) is
+a natural next step now that Purchasing/Accounts Payable are real, but
+isn't built yet. Full audit parity (adding `audit_log` writes to every
 remaining RPC/Edge Function so all logged actions become real) was
-considered and deliberately deferred — see this migration's commit for
-the tradeoff.
+considered and deliberately deferred — see the audit_log migration's
+commit for the tradeoff.
 
 ## Migrations
 
