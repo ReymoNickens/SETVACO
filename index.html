@@ -564,6 +564,7 @@ const ROOMS = [
     { key: "budgets", label: "Budgets", icon: Sliders, feature: "budgets", roles: ["director", "admin", "finance"] },
     { key: "payroll", label: "Payroll", icon: Banknote, feature: "payroll", roles: ["director", "admin", "finance"] },
     { key: "accountsPayable", label: "Accounts Payable", icon: Receipt, feature: "accounts_payable", roles: ["director", "admin", "procurement", "finance"] },
+    { key: "bankReconciliation", label: "Bank Reconciliation", icon: Banknote, feature: "bank_reconciliation", roles: ["director", "admin", "finance"] },
     { key: "reports", label: "Reports", icon: Sliders, roles: ["director", "admin", "finance", "sales"] },
     { key: "variance", label: "Variance & Audit", icon: ShieldAlert, roles: ["director", "admin", "finance"] },
   ] },
@@ -636,6 +637,7 @@ const TRANSLATIONS = {
     "nav.payrollSetup": "Payroll Setup",
     "nav.payroll": "Payroll",
     "nav.accountsPayable": "Accounts Payable",
+    "nav.bankReconciliation": "Bank Reconciliation",
     "nav.performance": "Performance & Discipline",
     "nav.pettyCash": "Petty Cash",
     "nav.certifications": "Training & Certifications",
@@ -862,6 +864,22 @@ const TRANSLATIONS = {
     "ap.paying": "Marking paid…",
     "ap.noBills": "No vendor bills yet.",
     "ap.payConfirm": "Mark this bill as paid? This can't be undone.",
+    "br.desc": "A simple checklist: enter each bank statement line by hand, then mark it Reconciled once you've verified it against your own records. This doesn't match against invoices, bills, or expenses automatically.",
+    "br.addLine": "Add bank line",
+    "br.addTitle": "Add a Bank Statement Line",
+    "br.dateLabel": "Date",
+    "br.descLabel": "Description",
+    "br.amountLabel": "Amount (+ in, − out)",
+    "br.noteLabel": "Note (optional)",
+    "br.dateCol": "Date",
+    "br.descCol": "Description",
+    "br.amountCol": "Amount",
+    "br.statusUnreconciled": "Unreconciled",
+    "br.statusReconciled": "Reconciled",
+    "br.markReconciled": "Mark reconciled",
+    "br.markUnreconciled": "Unmark",
+    "br.noLines": "No bank statement lines yet.",
+    "br.unreconciledCount": "Unreconciled lines",
     "ven.addVendor": "Add vendor",
     "ven.restricted": "Vendor creation is restricted to Procurement and Admin roles.",
     "ven.dropFile": "Click or drop an Excel/CSV vendor list to bulk-upload",
@@ -1215,6 +1233,7 @@ const TRANSLATIONS = {
     "nav.payrollSetup": "Configuration de la paie",
     "nav.payroll": "Paie",
     "nav.accountsPayable": "Comptes fournisseurs",
+    "nav.bankReconciliation": "Rapprochement bancaire",
     "nav.performance": "Performance et discipline",
     "nav.pettyCash": "Petite caisse",
     "nav.certifications": "Formation et certifications",
@@ -1441,6 +1460,22 @@ const TRANSLATIONS = {
     "ap.paying": "Marquage en cours…",
     "ap.noBills": "Aucune facture fournisseur pour le moment.",
     "ap.payConfirm": "Marquer cette facture comme payée ? Action irréversible.",
+    "br.desc": "Une simple liste de vérification : saisissez chaque ligne de relevé bancaire à la main, puis marquez-la Rapprochée une fois vérifiée par rapport à vos propres registres. Ceci ne rapproche pas automatiquement avec les factures, les factures fournisseurs ou les dépenses.",
+    "br.addLine": "Ajouter une ligne",
+    "br.addTitle": "Ajouter une ligne de relevé bancaire",
+    "br.dateLabel": "Date",
+    "br.descLabel": "Description",
+    "br.amountLabel": "Montant (+ entrée, − sortie)",
+    "br.noteLabel": "Note (facultatif)",
+    "br.dateCol": "Date",
+    "br.descCol": "Description",
+    "br.amountCol": "Montant",
+    "br.statusUnreconciled": "Non rapprochée",
+    "br.statusReconciled": "Rapprochée",
+    "br.markReconciled": "Marquer rapprochée",
+    "br.markUnreconciled": "Annuler",
+    "br.noLines": "Aucune ligne de relevé bancaire pour le moment.",
+    "br.unreconciledCount": "Lignes non rapprochées",
     "ven.addVendor": "Ajouter un fournisseur",
     "ven.restricted": "La création de fournisseurs est réservée aux rôles Achats et Administration.",
     "ven.dropFile": "Cliquer ou déposer une liste de fournisseurs Excel/CSV pour import groupé",
@@ -2249,6 +2284,18 @@ async function fetchVendorBills() {
   if (error) throw error;
   return data;
 }
+function mapBankTransactionFromDb(row) {
+  return {
+    id: row.id, displayCode: row.display_code, bankDate: row.bank_date, description: row.description,
+    amount: Number(row.amount), note: row.note || "", status: row.status,
+    reconciledAt: row.reconciled_at
+  };
+}
+async function fetchBankTransactions() {
+  const { data, error } = await window.sb.from("bank_transactions").select("*").order("bank_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
 function mapAssetFromDb(row) {
   return {
     id: row.display_code,
@@ -2381,7 +2428,9 @@ function statusColor(status) {
     Expired: ["var(--vital)", "var(--vital-soft)"],
     Pending: ["var(--caution)", "var(--caution-soft)"],
     Approved: ["var(--safe)", "var(--safe-soft)"],
-    Posted: ["var(--safe)", "var(--safe-soft)"]
+    Posted: ["var(--safe)", "var(--safe-soft)"],
+    Reconciled: ["var(--safe)", "var(--safe-soft)"],
+    Unreconciled: ["var(--caution)", "var(--caution-soft)"]
   };
   return map[status] || ["var(--text-secondary)", "var(--panel-alt)"];
 }
@@ -3951,6 +4000,87 @@ function AccountsPayablePanel({ vendorBills, reloadVendorBills, role, currentUse
       { header: t(lang, "common.status"), render: b => { const cs = statusColor(b.status); return <Badge color={cs[0]} soft={cs[1]}>{t(lang, b.status === "Paid" ? "ap.statusPaid" : "ap.statusOpen")}</Badge>; } },
       { header: t(lang, "common.actions"), render: b => canPay && b.status === "Open" ? <button type="button" disabled={payingId === b.id} className="mis-link-btn" onClick={() => pay(b)}>{payingId === b.id ? t(lang, "ap.paying") : t(lang, "ap.payBtn")}</button> : null }
     ]} rows={vendorBills} rowKey={b => b.id} empty={t(lang, "ap.noBills")} />
+  </div>;
+}
+// ---------------------------------------------------------------------------
+// BANK RECONCILIATION — a simple checklist, not automated matching. See
+// this table's migration header comment for why.
+// ---------------------------------------------------------------------------
+function AddBankLineModal({ onClose, onCreated, lang }) {
+  const [form, setForm] = useState({ bankDate: todayISO(), description: "", amount: "", note: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.bankDate || !form.description.trim() || form.amount === "" || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error: insertError } = await window.sb.from("bank_transactions").insert({
+        bank_date: form.bankDate, description: form.description.trim(),
+        amount: Number(form.amount), note: form.note.trim() || null,
+      });
+      if (insertError) throw insertError;
+      await onCreated();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return <Modal title={t(lang, "br.addTitle")} onClose={onClose} footer={<React.Fragment>
+    <button type="button" className="mis-btn-ghost mis-focus" onClick={onClose}>{t(lang, "common.cancel")}</button>
+    <button type="button" disabled={busy} className="mis-btn-primary mis-focus" onClick={submit}>{busy ? t(lang, "common.saving") : t(lang, "br.addLine")}</button>
+  </React.Fragment>}>
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {error && <p style={{ fontSize: 12, color: "var(--vital)" }}>{error}</p>}
+      <div className="mis-grid-2">
+        <Field label={t(lang, "br.dateLabel")}><TInput required type="date" value={form.bankDate} onChange={e => setForm(f => ({ ...f, bankDate: e.target.value }))} /></Field>
+        <Field label={t(lang, "br.amountLabel")}><TInput required type="number" step="any" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} /></Field>
+      </div>
+      <Field label={t(lang, "br.descLabel")}><TInput required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></Field>
+      <Field label={t(lang, "br.noteLabel")}><TInput value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} /></Field>
+    </form>
+  </Modal>;
+}
+function BankReconciliationPanel({ bankTransactions, reloadBankTransactions, role, currentUser, logAction, lang }) {
+  const canManage = ["admin", "finance"].includes(role);
+  const [showAdd, setShowAdd] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const unreconciledCount = bankTransactions.filter(line => line.status === "Unreconciled").length;
+  async function toggleReconciled(line) {
+    if (busyId) return;
+    setBusyId(line.id);
+    try {
+      const nextStatus = line.status === "Reconciled" ? "Unreconciled" : "Reconciled";
+      const { error } = await window.sb.from("bank_transactions").update({ status: nextStatus }).eq("id", line.id);
+      if (error) throw error;
+      if (nextStatus === "Reconciled") logAction(currentUser, `Reconciled bank line "${line.description}"`, "Bank Reconciliation");
+      await reloadBankTransactions();
+    } catch (err) {
+      window.alert(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+  return <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="mis-panel" style={{ borderRadius: 2, padding: 16, display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Banknote size={18} style={{ color: "var(--brand)" }} />
+        <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>{t(lang, "br.desc")}</p>
+      </div>
+      {canManage && <button type="button" className="mis-btn-primary mis-focus" style={{ flexShrink: 0 }} onClick={() => setShowAdd(true)}><Plus size={14} /> {t(lang, "br.addLine")}</button>}
+    </div>
+    <StatCard label={t(lang, "br.unreconciledCount")} value={unreconciledCount} tint={unreconciledCount > 0 ? "var(--caution)" : "var(--safe)"} soft={unreconciledCount > 0 ? "var(--caution-soft)" : "var(--safe-soft)"} />
+    <DataTable columns={[
+      { header: t(lang, "va.idCol"), render: b => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{b.displayCode}</span> },
+      { header: t(lang, "br.dateCol"), render: b => <span className="mis-mono" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{b.bankDate}</span> },
+      { header: t(lang, "br.descCol"), render: b => <span style={{ color: "var(--text-primary)" }}>{b.description}</span> },
+      { header: t(lang, "br.amountCol"), render: b => <span className="mis-mono" style={{ color: b.amount < 0 ? "var(--vital)" : "var(--safe)" }}>{fmtGHS(b.amount)}</span> },
+      { header: t(lang, "common.status"), render: b => { const cs = statusColor(b.status); return <Badge color={cs[0]} soft={cs[1]}>{t(lang, b.status === "Reconciled" ? "br.statusReconciled" : "br.statusUnreconciled")}</Badge>; } },
+      { header: t(lang, "common.actions"), render: b => canManage ? <button type="button" disabled={busyId === b.id} className="mis-link-btn" onClick={() => toggleReconciled(b)}>{t(lang, b.status === "Reconciled" ? "br.markUnreconciled" : "br.markReconciled")}</button> : null }
+    ]} rows={bankTransactions} rowKey={b => b.id} empty={t(lang, "br.noLines")} />
+    {showAdd && <AddBankLineModal onClose={() => setShowAdd(false)} onCreated={async () => { setShowAdd(false); await reloadBankTransactions(); }} lang={lang} />}
   </div>;
 }
 // ---------------------------------------------------------------------------
@@ -7002,6 +7132,9 @@ function SetvacoBusinessSystem() {
     purchaseOrders.forEach(p => { purchaseOrdersById[p.realId] = p; });
     setVendorBills(rows.map(r => mapVendorBillFromDb(r, vendorsById, purchaseOrdersById)));
   }
+  async function reloadBankTransactions() {
+    setBankTransactions((await fetchBankTransactions()).map(mapBankTransactionFromDb));
+  }
 
   // Loads real Customers/Stock Room/Sales/Users/Purchasing/Service Bay
   // data once we know who's signed in (RLS needs an authenticated session
@@ -7018,7 +7151,7 @@ function SetvacoBusinessSystem() {
         setRealBranches(branchRows);
         setTaxProfiles(taxProfileRows);
         const nameByCode = code => { const c = countryRows.find(x => x.code === code); return c ? c.name : (code || ""); };
-        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog(), fetchSavedReports(), fetchStockCounts(), fetchVendorBills()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows, savedReportRows, stockCountRows, vendorBillRows]) => {
+        return Promise.all([fetchCustomers(), fetchStockRooms(), fetchQuotations(), fetchInvoices(), fetchProfiles(), fetchVendors(), fetchPurchaseOrders(), fetchAssets(), fetchServiceJobs(), fetchServiceContracts(), fetchPriceBooks(), fetchPriceBookEntries(), fetchNotifications(), fetchAuditLog(), fetchSavedReports(), fetchStockCounts(), fetchVendorBills(), fetchBankTransactions()]).then(([customerRows, roomRows, quotationRows, invoiceRows, profileRows, vendorRows, poRows, assetRows, serviceJobRows, contractRows, priceBookRows, priceBookEntryRows, notificationRows, auditLogRows, savedReportRows, stockCountRows, vendorBillRows, bankTransactionRows]) => {
           if (cancelled) return;
           setCustomers(customerRows.map(r => mapCustomerFromDb(r, nameByCode)));
           setQuotations(quotationRows.map(mapQuotationFromDb));
@@ -7033,6 +7166,7 @@ function SetvacoBusinessSystem() {
           const purchaseOrdersById = {};
           mappedPOs.forEach(p => { purchaseOrdersById[p.realId] = p; });
           setVendorBills(vendorBillRows.map(r => mapVendorBillFromDb(r, vendorsById, purchaseOrdersById)));
+          setBankTransactions(bankTransactionRows.map(mapBankTransactionFromDb));
           setAssets(assetRows.map(mapAssetFromDb));
           setServiceJobs(serviceJobRows.map(mapServiceJobFromDb));
           setServiceContracts(contractRows.map(mapServiceContractFromDb));
@@ -7100,6 +7234,8 @@ function SetvacoBusinessSystem() {
   const [stockCounts, setStockCounts] = useState([]);
   // Vendor bills load from the real database — no local demo fallback.
   const [vendorBills, setVendorBills] = useState([]);
+  // Bank transactions load from the real database — no local demo fallback.
+  const [bankTransactions, setBankTransactions] = useState([]);
   // Price Books/entries load from the real database (see the data-fetching
   // useEffect below) — no local demo fallback, same as customers/stock.
   const [priceBooks, setPriceBooks] = useState([]);
@@ -7317,6 +7453,7 @@ function SetvacoBusinessSystem() {
           {nav === "servicejobs" && <ServiceJobsTab serviceJobs={serviceJobs} reloadServiceJobs={reloadServiceJobs} customers={customers} setCustomers={setCustomers} reloadCustomers={reloadCustomers} items={items} quotations={quotations} setQuotations={setQuotations} approvalSettings={approvalSettings} priceBooks={priceBooks} priceBookEntries={priceBookEntries} users={users} assets={assets} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} emailTemplates={emailTemplates} lang={lang} />}
           {nav === "purchasing" && <Purchasing role={role} currentUser={currentUser} purchaseOrders={purchaseOrders} reloadPurchaseOrders={reloadPurchaseOrders} vendors={vendors} reloadVendors={reloadVendors} items={items} reloadStock={reloadStock} reloadVendorBills={reloadVendorBills} customers={customers} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "accountsPayable" && <AccountsPayablePanel vendorBills={vendorBills} reloadVendorBills={reloadVendorBills} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
+          {nav === "bankReconciliation" && <BankReconciliationPanel bankTransactions={bankTransactions} reloadBankTransactions={reloadBankTransactions} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "employees" && <EmployeesPanel currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}
           {nav === "attendance" && <AttendancePanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} lang={lang} />}
           {nav === "leaverequests" && <LeaveRequestsPanel profile={profile} role={role} currentUser={currentUser} logAction={logAction} pushNotification={pushNotification} lang={lang} />}

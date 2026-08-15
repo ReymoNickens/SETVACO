@@ -383,14 +383,28 @@ admin can escalate it.
   side — no real bank/cash movement here either. See
   `20260814201430_accounts_payable.sql`.
 
+- Bank Reconciliation: a new feature, scoped as a simple checklist per the
+  brief — no cross-table matching against invoices/bills/expenses, since
+  there's no live bank feed to pull from either way. Finance enters each
+  bank statement line by hand and marks it Reconciled once verified
+  against their own records elsewhere. No RPC, unlike Accounts Payable/
+  Stock Counts: there's no derived amount to compute and no other table's
+  state to touch, so a direct client insert/update under RLS is enough
+  (same posture as notifications/petty cash) — a trigger still owns who/
+  when a line was reconciled, never trusted from the client, and since
+  it's already SECURITY DEFINER, logs the reconciliation to the real
+  Audit Log too. Payment terms/matching logic against AP or AR — a much
+  bigger, more rigorous feature — was explicitly not built; the tab says
+  so directly. See `20260815074044_bank_reconciliation.sql`.
+
 **Still local demo state in `index.html`** (untouched, not yet migrated to
 this schema): `nav_permissions` (server-side mirror of the role→nav-item
-matrix) doesn't exist yet in this schema. Bank Reconciliation (Finance) is
-a natural next step now that Purchasing/Accounts Payable are real, but
-isn't built yet. Full audit parity (adding `audit_log` writes to every
-remaining RPC/Edge Function so all logged actions become real) was
-considered and deliberately deferred — see the audit_log migration's
-commit for the tradeoff.
+matrix) doesn't exist yet in this schema. Full audit parity (adding
+`audit_log` writes to every remaining RPC/Edge Function so all logged
+actions become real) was considered and deliberately deferred — see the
+audit_log migration's commit for the tradeoff. Every finance module named
+in the original hardening/build brief (Purchasing, Accounts Payable, Bank
+Reconciliation) is now real.
 
 ## Migrations
 
